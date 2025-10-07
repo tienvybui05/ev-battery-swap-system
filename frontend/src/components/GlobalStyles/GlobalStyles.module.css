@@ -1,0 +1,66 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+:root {
+  --desktop: 1025px;
+  --tablet: 768px;
+  --phone: 480px;
+
+  --height-header: 64px;
+  /* 32px */
+  --h1-font-size: 2rem;
+  /* 36px */
+  --h1-line-height: 2.25rem;
+
+  /* 26px */
+  --h2-font-size: 1.6rem;
+  /* 32px */
+  --h2-line-height: 2rem;
+
+  /* 20px */
+  --h3-font-size: 1.266rem;
+  /* 24px */
+  --h3-line-height: 1.5rem;
+
+  /* 18px */
+  --h4-font-size: 1.125rem;
+  /* 16px */
+  --h4-line-height: 1.5rem;
+
+  /* 16px */
+  --p-font-size: 1rem;
+  /* 24px */
+  --p-line-height: 1.5rem;
+
+  --p-letter-spacing: 0.025rem;
+
+  /* 12px */
+  --caption-font-size: 0.875rem;
+  /* 16px */
+  --caption-line-height: 1rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+a {
+  text-decoration: none;
+}
+input,
+button {
+  outline: none;
+  border: none;
+}
+a,
+button {
+  cursor: pointer;
+}
+body {
+  font-family: "Roboto", sans-serif;
+  text-rendering: optimizespeed;
+}
