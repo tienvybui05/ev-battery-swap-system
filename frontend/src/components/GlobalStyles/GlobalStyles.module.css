@@ -1,5 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 :root {
+  /* Color */
+
+  --primary: rgb(36, 156, 182);
+  --second:rgb(2, 110, 135);
+  --white : white;
+  --black : black;
+  --color-gray-400:rgb(153, 161, 175);
+  --color-gray-600:rgb(106, 114, 130);
+  --color-gray-900: rgb(16, 24, 40);
+  --height-header: 64px;
+  --default-layout-width: 1216px;
+
   --desktop: 1025px;
   --tablet: 768px;
   --phone: 480px;
@@ -31,7 +43,12 @@
   --p-line-height: 1.5rem;
 
   --p-letter-spacing: 0.025rem;
+    /*  */
+  --pn-font-size: 0.875rem;
+  /* 24px */
+  --pn-line-height: 1.5rem;
 
+  --pn-letter-spacing: 0.025rem;
   /* 12px */
   --caption-font-size: 0.875rem;
   /* 16px */

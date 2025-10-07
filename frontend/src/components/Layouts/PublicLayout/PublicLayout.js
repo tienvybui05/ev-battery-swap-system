@@ -10,7 +10,9 @@ function PublicLayout() {
     <>
       <GlobalStyles>
         <div className={styles.wrapper}>
-          <Header />
+            <div className={styles.header}>
+                 <Header />
+            </div>
           <div className={styles.main}>
             <Main>
               <Outlet />

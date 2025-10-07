@@ -4,9 +4,12 @@
   min-height: 100vh;
   max-width: 1568px;
   margin: 0 auto;
-
+}
+.header{
+    display: flex;
+    justify-content: center;
+    border-bottom: 0.5px solid rgb(212, 212, 212);
 }
 .main {
   flex: 1;
-  background-color: rgb(243 244 246);
 }
