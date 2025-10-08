@@ -14,7 +14,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/dashboard" element={<PrivateLayout />}>
-            <Route index element={<Dashboard/>} />
+            <Route index element={<Dashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>

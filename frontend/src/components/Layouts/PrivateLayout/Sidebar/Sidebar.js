@@ -4,7 +4,7 @@ import styles from "./Sidebar.module.css";
 import logo from "../../../../assets/logo/logo.svg";
 import menu from "./menuConfig";
 function Sidebar() {
-  var role = "admin";
+  var role = "driver";
   const currentMenu = menu[role] || [];
 
   return (
