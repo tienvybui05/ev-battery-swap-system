@@ -3,25 +3,35 @@
   /* Color */
 
   --primary: rgb(36, 156, 182);
-  --second:rgb(2, 110, 135);
-  --white : white;
-  --black : black;
-  --color-gray-400:rgb(153, 161, 175);
-  --color-gray-600:rgb(106, 114, 130);
+  --second: rgb(2, 110, 135);
+  --color-gray-200: #d6f3f7;
+  --color-gray-300: #7cd5e4;
+  --color-gray-400: #40b8d0;
+  --color-gray-500: #249cb6;
+  --color-gray-600: #217e99;
+  --color-gray-700: #21667d;
+
+  --white: white;
+  --black: black;
+  --color-gray-400: rgb(153, 161, 175);
+  --color-gray-600: rgb(106, 114, 130);
   --color-gray-900: rgb(16, 24, 40);
 
-
-  --border:1px solid rgba(0, 0, 0, 0.102);
-  --color-sidebar:rgb(250, 250, 250);
+  --border: 1px solid rgba(0, 0, 0, 0.102);
+  --color-sidebar: rgb(250, 250, 250);
   --height-header: 64px;
   --default-layout-width: 1216px;
-  --width-sidebar : 255px;
+  --width-sidebar: 255px;
   --desktop: 1025px;
   --tablet: 768px;
   --phone: 480px;
 
   --height-header: 64px;
   /* 32px */
+
+  --h1-big-font-size: 3.75rem;
+  --h1-big-line-height: 4rem;
+  
   --h1-font-size: 2rem;
   /* 36px */
   --h1-line-height: 2.25rem;
@@ -47,7 +57,7 @@
   --p-line-height: 1.5rem;
 
   --p-letter-spacing: 0.025rem;
-    /*  */
+  /*  */
   --pn-font-size: 0.875rem;
   /* 24px */
   --pn-line-height: 1.5rem;
