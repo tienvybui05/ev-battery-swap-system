@@ -20,10 +20,10 @@ function Header() {
         <Link to="/">Liên hệ</Link>
       </nav>
       <div className={styles.actions}>
-        <LinkButton to="/manager" text>
+        <LinkButton to="/dashboard" text>
           Đăng nhập
         </LinkButton>
-        <LinkButton to="/manager" primary>
+        <LinkButton to="/dashboard" primary>
           Đăng ký
         </LinkButton>
       </div>

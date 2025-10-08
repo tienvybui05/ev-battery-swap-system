@@ -1,0 +1,93 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faLocationDot,
+  faBatteryFull,
+  faClockRotateLeft,
+  faCircleUser,
+  faPhone,
+  faGlobe,
+  faChargingStation,
+  faUsers,
+  faUserTie,
+  faComment,
+} from "@fortawesome/free-solid-svg-icons";
+const menu = {
+    driver: [
+      {
+        title: "Tìm trạm",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faLocationDot} />,
+      },
+      {
+        title: "Thay pin",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faBatteryFull} />,
+      },
+      {
+        title: "Lịch sử",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faClockRotateLeft} />,
+      },
+      {
+        title: "Hồ sơ",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faCircleUser} />,
+      },
+      {
+        title: "Hổ trợ",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faPhone} />,
+      },
+    ],
+    admin: [
+      {
+        title: "Tổng quan",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faGlobe} />,
+      },
+      {
+        title: "Trạm",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faChargingStation} />,
+      },
+      {
+        title: "Nhân viên",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faUserTie} />,
+      },
+      {
+        title: "Khách hàng",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faUsers} />,
+      },
+      {
+        title: "Cảnh báo",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faComment} />,
+      },
+    ],
+
+    staff: [
+      {
+        title: "Quản lý hàng chờ",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faGlobe} />,
+      },
+      {
+        title: "Kho hàng",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faChargingStation} />,
+      },
+      {
+        title: "Giao dịch",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faUserTie} />,
+      },
+      {
+        title: "Báo cáo",
+        href: "/dashboard",
+        icon: <FontAwesomeIcon icon={faUsers} />,
+      },
+    ],
+  }
+  export default menu;
