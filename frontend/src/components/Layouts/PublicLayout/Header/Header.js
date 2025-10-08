@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import styles from "./Header.module.css";
-import Button from "../../../Shares/Button/Button";
 import logo from "../../../../assets/logo/logo.svg";
+import LinkButton from "../../../Shares/LinkButton/LinkButton";
 function Header() {
   return (
     <header className={styles.wrapper}>
@@ -20,8 +20,12 @@ function Header() {
         <Link to="/">Liên hệ</Link>
       </nav>
       <div className={styles.actions}>
-        <Button text>Đăng nhập</Button>
-        <Button primary>Đăng ký</Button>
+        <LinkButton to="/manager" text>
+          Đăng nhập
+        </LinkButton>
+        <LinkButton to="/manager" primary>
+          Đăng ký
+        </LinkButton>
       </div>
     </header>
   );

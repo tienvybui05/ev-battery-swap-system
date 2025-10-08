@@ -1,5 +1,21 @@
 .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%; 
+    padding: 0 16px;
     height: var(--height-header);
     border-bottom: var(--border);
+}
+.wrapper .left{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.wrapper .left .title{
+    color: var(--color-gray-900);
+    font-size: var(--h3-font-size);
+    line-height: var(--h3-line-height);
+    letter-spacing: var(--h3-letter-spacing);
+    font-weight: 600;
 }
