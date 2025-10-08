@@ -1,0 +1,5 @@
+.wrapper{
+    width: 100%; 
+    height: var(--height-header);
+    border-bottom: var(--border);
+}

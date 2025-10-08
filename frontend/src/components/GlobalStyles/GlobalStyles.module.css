@@ -9,9 +9,12 @@
   --color-gray-400:rgb(153, 161, 175);
   --color-gray-600:rgb(106, 114, 130);
   --color-gray-900: rgb(16, 24, 40);
+
+  --border:1px solid rgba(0, 0, 0, 0.102);
+  --color-sidebar:rgb(250, 250, 250);
   --height-header: 64px;
   --default-layout-width: 1216px;
-
+  --width-sidebar : 255px;
   --desktop: 1025px;
   --tablet: 768px;
   --phone: 480px;
