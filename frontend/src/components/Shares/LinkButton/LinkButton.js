@@ -6,6 +6,7 @@ function LinkButton({
   primary = false,
   outline = false,
   oulineBlack = false,
+  black = false,
   children,
 }) {
   var classes = styles.wrapper;
@@ -20,6 +21,9 @@ function LinkButton({
   }
    if (oulineBlack) {
     classes += ` ${styles.oulineBlack}`;
+  }
+    if (black) {
+    classes += ` ${styles.black}`;
   }
   return (
     <Link className={classes} to={to}>

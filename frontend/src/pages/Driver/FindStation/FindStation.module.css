@@ -1,0 +1,105 @@
+.wrapper {
+    --a: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--a);
+}
+
+.nearstation {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+    gap: var(--a);
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--h4-letter-spacing);
+    font-weight: 500;
+}
+
+.header p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+
+}
+
+.map {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background-color: var(--color-gray-alpha);
+    border-radius: 10px;
+    height: 250px;
+
+}
+
+.faLocationDot {
+    color: #00766c;
+    width: 30px;
+    height: 30px;
+}
+
+@media(max-width:760px) {
+    .wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* already */
+.alreadystation {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+    gap: var(--a);
+}
+
+
+.alreadystation .header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--h4-letter-spacing);
+    font-weight: 300;
+}
+
+.filter {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.filter .input {
+    display: flex;
+    align-items: center;
+    border: var(--border);
+    border-radius: 10px;
+    width: 100%;
+    gap: 2px;
+}
+
+.filter .input input {
+    padding: 4px, 12px, 4px, 50px;
+    width: 100%;
+}
+
+.faMagnifyingGlass {
+    color: #00766c;
+    width: 16px;
+    height: 16px;
+}

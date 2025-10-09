@@ -74,7 +74,7 @@
   image-rendering: pixelated; /* nếu muốn nét từng pixel, ví dụ icon 16x16 */
   width: 500px; /* đặt đúng kích thước */
   height: 500px;
-  box-shadow: 4px 8px 8px rgb(242, 242, 242);
+  box-shadow: 4px 8px 8px rgb(197, 250, 243);
 }
 .imageHome .animation {
   position: absolute;

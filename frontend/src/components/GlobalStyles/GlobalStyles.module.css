@@ -4,12 +4,13 @@
 
   --primary: rgb(36, 156, 182);
   --second: rgb(2, 110, 135);
-  --color-gray-200: #d6f3f7;
+  --color-gray-200: rgb(214, 243, 247);
   --color-gray-300: #7cd5e4;
   --color-gray-400: #40b8d0;
   --color-gray-500: #249cb6;
   --color-gray-600: #217e99;
   --color-gray-700: #21667d;
+  --color-gray-alpha: rgba(214, 243, 247, 0.5);
 
   --white: white;
   --black: black;
