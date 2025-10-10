@@ -23,9 +23,9 @@ function FindStation() {
                 <div className={styles.header}>
                     <h1>Trạm có sẵn</h1>
                     <div className={styles.filter}>
-                        <Button>Lọc</Button>
+                        <Button text blackoutline small>Lọc</Button>
                         <div className={styles.input}>
-                            <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.faMagnifyingGlass} />
+                            <label><FontAwesomeIcon icon={faMagnifyingGlass} className={styles.faMagnifyingGlass} /></label>
                             <input type="text" placeholder="Tìm trạm" />
                         </div>
                     </div>

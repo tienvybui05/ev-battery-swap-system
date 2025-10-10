@@ -94,11 +94,12 @@
 }
 
 .filter .input input {
-    padding: 4px, 12px, 4px, 50px;
+    /* padding: 4px, 12px, 4px, 50px; */
     width: 100%;
 }
 
 .faMagnifyingGlass {
+    padding: 10px;
     color: #00766c;
     width: 16px;
     height: 16px;

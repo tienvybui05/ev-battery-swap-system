@@ -1,24 +1,41 @@
-.wrapper{
+.wrapper {
     padding: 8px 16px;
     border-radius: 8px;
     font-size: var(--pn-font-size);
     line-height: var(--p-line-height);
     letter-spacing: var(--p-letter-spacing);
     font-weight: 600;
-   
+
 }
-.primary{
+
+.primary {
     background-color: var(--primary);
     color: var(--white);
-     transition: all 0.3s ease;
+    transition: all 0.3s ease;
 }
-.primary:hover{
+
+.primary:hover {
     background-color: var(--second);
 }
-.text{
+
+.text {
     background-color: var(--white);
     transition: all 0.3s ease;
 }
-.text:hover{
+
+.text:hover {
     background-color: rgb(241, 241, 241);
+}
+
+.blackoutline {
+    border: 1px, black, solid;
+}
+
+.small {
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: var(--pn-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 600;
 }
