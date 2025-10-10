@@ -64,11 +64,6 @@ function Features() {
             </p>
           </div>
         </div>
-        <img
-          src={vinfastLuxSa}
-          alt="Vinfast Lux SA"
-          className={styles.animationvinfastLuxSa}
-        />
       </div>
     </div>
   );

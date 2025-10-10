@@ -4,10 +4,13 @@
 
   --primary: rgb(36, 156, 182);
   --second: rgb(2, 110, 135);
+  --color-gray-25: rgb(239, 252, 252);
+  --color-gray-50: rgb(214, 243, 247);
+  --color-gray-100: rgb(124, 213, 228);
   --color-gray-200: rgb(214, 243, 247);
   --color-gray-300: #7cd5e4;
-  --color-gray-400: #40b8d0;
-  --color-gray-500: #249cb6;
+  --color-grayb-400: #40b8d0;
+  --color-grayb-500: #249cb6;
   --color-gray-600: #217e99;
   --color-gray-700: #21667d;
   --color-gray-alpha: rgba(214, 243, 247, 0.5);
@@ -32,7 +35,7 @@
 
   --h1-big-font-size: 3.75rem;
   --h1-big-line-height: 4rem;
-  
+
   --h1-font-size: 2rem;
   /* 36px */
   --h1-line-height: 2.25rem;

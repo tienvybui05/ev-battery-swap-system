@@ -3,10 +3,14 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  background: #d9fffe;
+  /* background: #d9fffe;
   background: -moz-linear-gradient(to top, #d9fffe 0%, #fffeff 100%);
   background: -webkit-linear-gradient(to top, #d9fffe 0%, #fffeff 100%);
-  background: linear-gradient(to top, #d9fffe 0%, #fffeff 100%);
+  background: linear-gradient(to top, #d9fffe 0%, #fffeff 100%); */
+  background: #d9fffe;
+  background: -moz-linear-gradient(to bottom, #d9fffe 0%, #fffeff 100%);
+  background: -webkit-linear-gradient(to bottom, #d9fffe 0%, #fffeff 100%);
+  background: linear-gradient(to bottom, #d9fffe 0%, #fffeff 100%);
 }
 .container {
   padding: 80px 0 20px 0;
@@ -45,9 +49,10 @@
   flex-direction: column;
   width: 150px;
   height: 100px;
-  background-color: var(--white);
+  background-color: var(--color-gray-200);
   border-radius: 5px;
   gap: 10px;
+  box-shadow: 4px 8px 8px #f4f4f4;
 }
 .statistical .box span {
   color: var(--black);
@@ -74,7 +79,7 @@
   image-rendering: pixelated; /* nếu muốn nét từng pixel, ví dụ icon 16x16 */
   width: 500px; /* đặt đúng kích thước */
   height: 500px;
-  box-shadow: 4px 8px 8px rgb(197, 250, 243);
+  box-shadow: 4px 8px 8px #e1f8f7;
 }
 .imageHome .animation {
   position: absolute;
