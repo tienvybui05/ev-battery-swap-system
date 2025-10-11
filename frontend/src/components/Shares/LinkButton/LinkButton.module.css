@@ -10,9 +10,11 @@
   font-weight: 600;
   transition: all 0.3s ease;
 }
-.wrapper:hover{
-  background-color:var(--color-gray-400);
+
+.wrapper:hover {
+  background-color: var(--color-gray-400);
 }
+
 .primary {
   background-color: var(--primary);
   color: var(--white);
@@ -58,4 +60,9 @@
 .black {
   background-color: var(--color-gray-900);
   color: var(--white);
+}
+
+.black:hover {
+  color: var(--black);
+  background-color: var(--color-gray-400)
 }
