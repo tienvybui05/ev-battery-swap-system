@@ -1,0 +1,386 @@
+.inventoryPage {
+  padding: 20px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* header row with title and buttons */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.headerRow h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filterBtn {
+  background: white;
+  border: 1px solid #e6e6ea;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.primaryBtn {
+  background: #0f1724;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* grid of cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+/* card */
+.card {
+  background: white;
+  border: 1px solid #e8e8ec;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.type {
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+/* status badge */
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.statusText {
+  background: rgba(0,0,0,0.04);
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* metrics grid inside card */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 18px;
+}
+
+.metricLabel {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.metricValue {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* progress */
+.progressWrap {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progressTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.batteryLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.batteryIcon {
+  font-size: 18px;
+}
+
+.batteryText {
+  font-size: 13px;
+}
+
+.levelNote {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* progress bar */
+.progressBar {
+  height: 12px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 12px;
+  width: 20%;
+  background: #111827;
+  border-radius: 8px;
+  transition: width 0.4s ease, background 0.2s ease;
+}
+
+/* actions row */
+.cardActions {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.action {
+  flex: 1;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e7e7ea;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.actionText {
+  font-size: 13px;
+}
+
+/* modal common */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12,12,12,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.modal {
+  background: white;
+  border-radius: 10px;
+  width: 680px;
+  max-width: 96%;
+  max-height: 92vh;
+  overflow: auto;
+  padding: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+.modal.large {
+  width: 900px;
+}
+
+/* modal header / footer */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modalBody {
+  padding: 12px 6px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 6px;
+}
+
+/* small UI bits */
+.radioGroup {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.radio label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.secondaryBtn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #111827;
+}
+
+/* logs */
+.logList {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 8px;
+}
+
+/* checklist and form */
+.twoCols {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.checklist {
+  display: block;
+}
+
+.checklistGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.formRow input[type="number"],
+.formRow input[type="text"],
+.modalBody input,
+.modalBody textarea {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6e6ea;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modalBody textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* filter */
+.checkboxRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* settings internal */
+.settingsActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.settingsCard {
+  border: 1px solid #eef2ff;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 8px;
+  flex: 1;
+}
+
+.settingsRow {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+/* filter & check input error */
+.inputError {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.formErrors {
+  background: #fff7f7;
+  border: 1px solid #fee2e2;
+  padding: 8px;
+  border-radius: 8px;
+  color: #991b1b;
+  margin-top: 8px;
+}
+
+/* empty state */
+.emptyState {
+  padding: 30px;
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  grid-column: 1 / -1;
+}
