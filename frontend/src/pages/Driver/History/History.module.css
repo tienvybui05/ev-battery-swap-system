@@ -1,0 +1,96 @@
+.wrapper {
+    --a: 24px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--a);
+    letter-spacing: var(--p-letter-spacing);
+    border: var(--border);
+    padding: var(--a);
+    border-radius: 10px;
+}
+
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.header p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+
+}
+
+.orderhistory {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.orderhistory .statoninfo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+
+.orderhistory .statoninfo .addresstime h1 {
+    color: var(--black);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.orderhistory .statoninfo .addresstime p {
+    color: var(--color-gray-600);
+    font-size: 0.875rem;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing)
+}
+
+.faBatteryEmpty {
+    color: red;
+    height: 32px;
+    width: 32px;
+    margin-right: 16px;
+}
+
+
+.orderhistory .pricestatus .price {
+    color: var(--black);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.orderhistory .pricestatus .status {
+    color: var(--black);
+    font-size: 12px;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    background-color: var(--color-gray-25);
+    border: var(--border);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-weight: 500;
+    display: inline-block;
+}

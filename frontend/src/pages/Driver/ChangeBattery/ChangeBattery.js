@@ -28,20 +28,22 @@ function ChangeBattery() {
                     <h1>Trạng thái đăng ký</h1>
                     <p>Gói và sử dụng hiện tại của bạn</p>
                 </div>
-                <div className={styles.packagename}>
-                    <h1>Đăng ký tháng</h1>
-                    <p>Hoạt Động</p>
-                </div>
-                <div className={styles.change}>
-                    <p>Lần Thay Đã Sử Dụng</p>
-                    <p>24/60</p>
-                </div>
-                <div className={styles.progresscontainer}>
-                    <div className={styles.progressbar} style={{ width: "40%" }}></div>
-                </div>
-                <div className={styles.nextorder}>
-                    <p>Hóa Đơn Tiếp Theo</p>
-                    <p>12/10/2025</p>
+                <div>
+                    <div className={styles.packagename}>
+                        <h1>Đăng ký tháng</h1>
+                        <p>Hoạt Động</p>
+                    </div>
+                    <div className={styles.change}>
+                        <p>Lần Thay Đã Sử Dụng</p>
+                        <p>24/60</p>
+                    </div>
+                    <div className={styles.progresscontainer}>
+                        <div className={styles.progressbar} style={{ width: "40%" }}></div>
+                    </div>
+                    <div className={styles.nextorder}>
+                        <p>Hóa Đơn Tiếp Theo</p>
+                        <p>12/10/2025</p>
+                    </div>
                 </div>
                 <Button white blackoutline className={styles.button}>Quản Lý Gói</Button>
             </div>

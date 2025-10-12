@@ -108,6 +108,9 @@
     justify-content: space-between;
 }
 
+.statusregister .packagename {
+    margin-bottom: 16px;
+}
 
 .statusregister .packagename p {
     color: var(--white);
@@ -129,6 +132,9 @@
     font-weight: 500;
 }
 
+.statusregister .change {
+    margin-bottom: 5px;
+}
 
 .statusregister .change,
 .nextorder p {
@@ -148,6 +154,7 @@
     background-color: #e5e7eb;
     border-radius: 9999px;
     overflow: hidden;
+    margin-bottom: 16px;
 }
 
 .statusregister .progresscontainer .progressbar {
