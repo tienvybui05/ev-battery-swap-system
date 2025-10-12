@@ -5,7 +5,9 @@
     line-height: var(--p-line-height);
     letter-spacing: var(--p-letter-spacing);
     font-weight: 600;
-
+    transition: all 0.3s ease;
+    font-family: "Roboto", sans-serif;
+    text-rendering: optimizespeed;
 }
 
 .primary {
@@ -48,6 +50,16 @@
 
 
 .order:hover {
+    color: var(--black);
+    background-color: var(--color-gray-400)
+}
+
+.white {
+    background-color: var(--white);
+    color: var(--black);
+}
+
+.white:hover {
     color: var(--black);
     background-color: var(--color-gray-400)
 }

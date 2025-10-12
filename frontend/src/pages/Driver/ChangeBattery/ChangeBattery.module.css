@@ -1,0 +1,158 @@
+.wrapper {
+    --a: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--a);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.orderplace {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+    gap: var(--a);
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.header p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+
+}
+
+.orderplace .info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.orderplace .info .status {
+    color: red;
+    background-color: #DCFCE7;
+    padding: 2px 8px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.orderplace .info h3 {
+    color: var(--black);
+    font-size: var(--h3-font-size);
+    line-height: var(--h3-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.orderplace .info .time {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.orderplace .orderid {
+    background-color: var(--color-gray-25);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 16px;
+}
+
+.faMapLocationDot {
+    color: purple;
+    width: 96px;
+    height: 96px;
+}
+
+
+/* .statusregister */
+
+.statusregister {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+    gap: 16px;
+}
+
+.statusregister .packagename,
+.change,
+.nextorder {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+.statusregister .packagename p {
+    color: var(--white);
+    font-size: 12px;
+    line-height: var(--caption-line-height);
+    background-color: black;
+    border: var(--border);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.statusregister .packagename h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+
+.statusregister .change,
+.nextorder p {
+    font-size: 0.875rem;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.statusregister .button {
+    font-size: 0.875rem;
+}
+
+/* thanh để số lượng pin */
+.statusregister .progresscontainer {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.statusregister .progresscontainer .progressbar {
+    height: 100%;
+    background-color: var(--primary);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}

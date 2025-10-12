@@ -3,6 +3,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--a);
+    letter-spacing: var(--p-letter-spacing);
 }
 
 .nearstation {
@@ -24,7 +25,7 @@
     color: var(--black);
     font-size: var(--h4-font-size);
     line-height: var(--h4-line-height);
-    letter-spacing: var(--h4-letter-spacing);
+    letter-spacing: var(--p-letter-spacing);
     font-weight: 500;
 }
 
@@ -102,7 +103,7 @@
     color: var(--black);
     font-size: var(--h4-font-size);
     line-height: var(--h4-line-height);
-    letter-spacing: var(--h4-letter-spacing);
+    letter-spacing: var(--p-letter-spacing);
     font-weight: 300;
 }
 
@@ -168,7 +169,7 @@
     letter-spacing: var(--p-letter-spacing);
     background-color: black;
     border: var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 2px 8px;
     font-weight: 500;
     display: inline-block;

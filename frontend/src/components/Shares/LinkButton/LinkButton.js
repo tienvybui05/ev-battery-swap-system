@@ -19,10 +19,10 @@ function LinkButton({
   if (outline) {
     classes += ` ${styles.outline}`;
   }
-   if (oulineBlack) {
+  if (oulineBlack) {
     classes += ` ${styles.oulineBlack}`;
   }
-    if (black) {
+  if (black) {
     classes += ` ${styles.black}`;
   }
   return (
