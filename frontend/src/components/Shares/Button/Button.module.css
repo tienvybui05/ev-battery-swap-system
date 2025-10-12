@@ -48,6 +48,20 @@
     transition: all 0.3s ease;
 }
 
+.change {
+    color: var(--white);
+    background-color: var(--color-gray-900);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.change:hover {
+    color: var(--black);
+    background-color: var(--color-gray-400)
+}
 
 .order:hover {
     color: var(--black);

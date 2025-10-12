@@ -1,0 +1,127 @@
+.wrapper {
+    --a: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--a);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.userdatail {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+}
+
+
+.header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+
+.header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.header p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+
+}
+
+.formdetail {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+.formdetail label {
+    font-size: 0.875rem;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    margin-bottom: 3px;
+    cursor: pointer;
+}
+
+.formdetail input {
+    padding: 12px 16px;
+    background-color: #F3F3F5;
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+
+/* thông tin xe */
+
+.cardetail {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+}
+
+.cardatail h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.cardatail p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.carname {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.carname .icon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.faCarSide {
+    width: 32px;
+    height: 32px;
+    color: var(--primary);
+    margin-right: 12px;
+}
+
+.namevin .name {
+    color: var(--black);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.namevin .vin {
+    color: var(--black);
+    font-size: 0.875rem;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 300;
+}
