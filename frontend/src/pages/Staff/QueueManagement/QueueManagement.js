@@ -2,9 +2,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock, faCheck, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./QueueManagement.module.css";
+import { useState } from "react";
+import BatterySwapModal from "./BatterySwapModal";
 
 function QueueManagement() {
-  const orders = [
+  // ✅ Dùng state thay vì const tĩnh
+  const [orders, setOrders] = useState([
     {
       id: 1,
       time: "15:30",
@@ -12,7 +15,7 @@ function QueueManagement() {
       car: "Tesla Model 3",
       code: "SW-2024-001",
       status: "đang chờ",
-      color: "#3B82F6", // xanh dương nhạt
+      color: "#3B82F6",
     },
     {
       id: 2,
@@ -21,7 +24,7 @@ function QueueManagement() {
       car: "BMW iX3",
       code: "SW-2024-002",
       status: "hoàn thành",
-      color: "#10B981", // xanh lá
+      color: "#10B981",
     },
     {
       id: 3,
@@ -30,7 +33,7 @@ function QueueManagement() {
       car: "Nissan Leaf",
       code: "SW-2024-003",
       status: "đã xác nhận",
-      color: "#6B7280", // xám trung bình
+      color: "#6B7280",
     },
     {
       id: 4,
@@ -39,7 +42,7 @@ function QueueManagement() {
       car: "VinFast VF8",
       code: "SW-2024-004",
       status: "đang chờ",
-      color: "#3B82F6", // xanh dương nhạt
+      color: "#3B82F6",
     },
     {
       id: 5,
@@ -48,7 +51,7 @@ function QueueManagement() {
       car: "Tesla Model Y",
       code: "SW-2025-001",
       status: "đã xác nhận",
-      color: "#6B7280", // xám trung bình
+      color: "#6B7280",
     },
     {
       id: 6,
@@ -57,11 +60,24 @@ function QueueManagement() {
       car: "Honda e",
       code: "SW-2024-088",
       status: "staff.in-progress",
-      color: "#111827", // đen đậm
+      color: "#111827",
     },
-  ];
+  ]);
 
-  const loading = false; // giữ mẫu; sau này dùng state và API
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const loading = false;
+
+  // ✅ Khi modal xác nhận in hóa đơn
+  const handleConfirmSwap = (orderId) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: "đã xác nhận", color: "#6B7280" } // cập nhật trạng thái + màu
+          : o
+      )
+    );
+    setSelectedOrder(null); // đóng modal
+  };
 
   return (
     <div className={styles.queuePage}>
@@ -106,9 +122,12 @@ function QueueManagement() {
                     <span>{order.status}</span>
                   </div>
 
-                  {/* CHỈ HIỆN NÚT KHI status === "đang chờ" */}
                   {order.status === "đang chờ" && (
-                    <button className={styles.actionBtn} style={{ backgroundColor: "#111827" }}>
+                    <button
+                      className={styles.actionBtn}
+                      style={{ backgroundColor: "#111827" }}
+                      onClick={() => setSelectedOrder(order)}
+                    >
                       Bắt Đầu Thay Pin{" "}
                       <FontAwesomeIcon icon={faArrowRight} size="sm" />
                     </button>
@@ -119,6 +138,15 @@ function QueueManagement() {
           </div>
         )}
       </div>
+
+      {/* === Popup Modal === */}
+      {selectedOrder && (
+        <BatterySwapModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onConfirm={() => handleConfirmSwap(selectedOrder.id)} // ✅ truyền hàm này xuống modal
+        />
+      )}
     </div>
   );
 }
