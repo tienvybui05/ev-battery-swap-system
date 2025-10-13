@@ -51,6 +51,11 @@ const menu = {
         icon: <FontAwesomeIcon icon={faChargingStation} />,
       },
       {
+        title: "Pin",
+        href: "/dashboard/batteries",
+        icon: <FontAwesomeIcon icon={faBatteryFull} />,
+      },
+      {
         title: "Nhân viên",
         href: "/dashboard",
         icon: <FontAwesomeIcon icon={faUserTie} />,
