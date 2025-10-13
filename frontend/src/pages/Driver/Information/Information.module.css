@@ -125,3 +125,9 @@
     letter-spacing: var(--p-letter-spacing);
     font-weight: 300;
 }
+
+.iconbutton {
+    height: 16px;
+    width: 16px;
+    color: var(--black);
+}

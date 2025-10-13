@@ -1,0 +1,57 @@
+.wrapper {
+    --a: 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--a);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.contactsupport,
+.security {
+    display: flex;
+    flex-direction: column;
+    border: var(--border);
+    border-radius: 10px;
+    padding: var(--a);
+    gap: var(--a);
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.header h1 {
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+}
+
+.header p {
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+
+}
+
+.button {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+}
+
+Button {
+    text-align: left;
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    color: var(--black);
+}

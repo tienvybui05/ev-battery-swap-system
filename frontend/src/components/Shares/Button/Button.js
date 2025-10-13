@@ -1,5 +1,5 @@
 import styles from "./Button.module.css";
-function Button({ text = false, primary = false, blackoutline = false, order = false, small = false, white = false,change = false, children }) {
+function Button({ text = false, primary = false, blackoutline = false, order = false, small = false, white = false,change = false,icon= false, children }) {
   var classes = styles.wrapper;
   if (primary) {
     classes += ` ${styles.primary}`;
@@ -24,6 +24,9 @@ function Button({ text = false, primary = false, blackoutline = false, order = f
   }
   if (change) {
     classes += ` ${styles.change}`;
+  }
+  if (icon) {
+    classes += ` ${styles.icon}`;
   }
   return <button className={classes}>{children}</button>;
 }

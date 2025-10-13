@@ -3,6 +3,7 @@ import Button from "../../../components/Shares/Button/Button";
 import styles from "./Information.module.css";
 import LinkButton from "../../../components/Shares/LinkButton/LinkButton";
 import { faCarSide } from "@fortawesome/free-solid-svg-icons";
+import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 function Information() {
     return (
         <nav className={styles.wrapper}>
@@ -39,7 +40,7 @@ function Information() {
                             <p className={styles.vin}>VIN: APOOOT13456</p>
                         </div>
                     </div>
-                    <p>Sửa</p>
+                    <Button icon><FontAwesomeIcon icon={faPenToSquare} className={styles.iconbutton} /></Button>
                 </div>
                 <div className={styles.carname}>
                     <div className={styles.icon}>
@@ -49,7 +50,7 @@ function Information() {
                             <p className={styles.vin}>VIN: APOOOT13456</p>
                         </div>
                     </div>
-                    <p>Sửa</p>
+                    <Button icon><FontAwesomeIcon icon={faPenToSquare} className={styles.iconbutton} /></Button>
                 </div>
                 <div className={styles.carname}>
                     <div className={styles.icon}>
@@ -59,7 +60,7 @@ function Information() {
                             <p className={styles.vin}>VIN: APOOOT13456</p>
                         </div>
                     </div>
-                    <p>Sửa</p>
+                    <Button icon><FontAwesomeIcon icon={faPenToSquare} className={styles.iconbutton} /></Button>
                 </div>
                 <LinkButton to="./dashboard" oulineBlack>Thêm xe</LinkButton>
             </div>

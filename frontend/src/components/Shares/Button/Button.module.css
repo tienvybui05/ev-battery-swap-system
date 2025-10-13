@@ -77,3 +77,9 @@
     color: var(--black);
     background-color: var(--color-gray-400)
 }
+
+.icon {
+    display: inline;
+    padding: 0px;
+    background-color: var(--white);
+}
