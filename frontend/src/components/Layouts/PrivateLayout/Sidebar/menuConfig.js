@@ -42,7 +42,7 @@ const menu = {
     admin: [
       {
         title: "Tổng quan",
-        href: "/dashboard",
+        href: "/dashboard/overview",
         icon: <FontAwesomeIcon icon={faGlobe} />,
       },
       {

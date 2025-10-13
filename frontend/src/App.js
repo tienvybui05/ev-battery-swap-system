@@ -5,6 +5,7 @@ import Home from "./pages/Home/Home";
 import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Authentication/Login/Login";
+import Overview from "./pages/Admin/Overview/Overview";
 
 import {
   FindStation,
@@ -28,6 +29,7 @@ function App() {
             <Route path="changebattery" element={<ChangeBattery />} />
             <Route path="history" element={<History />} />
             <Route path="information" element={<Information />} />
+            <Route path="overview" element={<Overview />} />
           </Route>
         </Routes>
       </BrowserRouter>

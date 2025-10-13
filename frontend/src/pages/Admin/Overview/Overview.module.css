@@ -26,7 +26,16 @@
   border-radius: 12px;
   padding: 20px 24px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); /* 👈 mượt & tự nhiên */
 }
+
+.kpiCard:hover {
+  transform: translateY(-4px); /* 👈 nhún nhẹ lên trên */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12); /* 👈 đổ bóng mềm hơn */
+  background-color: #f9fafb; /* 👈 sáng nhẹ nền */
+}
+
 
 .kpiTitle {
   font-size: 14px;
@@ -90,7 +99,6 @@
 
 .legendItem {
   display: flex;
-  align-items: center;
   gap: 6px;
   font-size: 14px;
   color: #475569;
@@ -114,7 +122,16 @@
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); /* 👈 mượt và tự nhiên */
 }
+
+.bottomKpiCard:hover {
+  transform: translateY(-4px); /* 👈 nhún nhẹ */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12); /* 👈 đổ bóng nổi bật */
+  background-color: #f9fafb; /* 👈 sáng nhẹ nền */
+}
+
 
 .bottomValue {
   font-size: 20px;
