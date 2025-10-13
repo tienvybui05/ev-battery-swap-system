@@ -132,12 +132,12 @@ function Inventory() {
         prev.map((s) => {
           if (s.status === "đang sạc") {
             const newLevel = Math.min(1, +(s.level + Math.random() * 0.01).toFixed(3));
-            const newSoH = Math.max(0, Math.min(100, Math.round(s.soh + Math.random() * 0.2)));
+
             const newVoltage = Math.round(s.voltage + Math.random() * 1);
             return {
               ...s,
               level: newLevel,
-              soh: newSoH,
+          
               voltage: newVoltage,
               temp: s.temp + (Math.random() * 0.2 - 0.1),
             };
@@ -154,7 +154,7 @@ function Inventory() {
     setSlots((prev) =>
       prev.map((s) => {
         if (s.id !== slotId) return s;
-        const newSoH = Math.max(10, Math.min(100, Math.round(s.soh + (Math.random() * 3 - 1))));
+
         const newVoltage = s.voltage ? Math.round(s.voltage + (Math.random() * 6 - 3)) : s.voltage;
         const newTemp = Math.max(15, Math.round(s.temp + (Math.random() * 3 - 1)));
         const newLevel = Math.max(0, Math.min(1, +(s.level + (Math.random() * 0.03 - 0.01)).toFixed(3)));
@@ -162,12 +162,11 @@ function Inventory() {
         // update status automatically if not maintenance
         let newStatus = s.status;
         if (s.status !== "bảo trì") {
-          if (newLevel >= 0.8) newStatus = "đầy";
+          if (newLevel >= 0.85) newStatus = "đầy";
           else if (newLevel > 0) newStatus = "đang sạc";
         }
         return {
           ...s,
-          soh: newSoH,
           voltage: newVoltage,
           temp: newTemp,
           level: newLevel,
@@ -195,9 +194,9 @@ function Inventory() {
           const log = { t: new Date().toISOString(), msg: "Requested maintenance" };
           return { ...s, status: "bảo trì", logs: [log, ...s.logs].slice(0, 30) };
         }
-        // action === "ready": set to đầy nếu level>=0.8 else đang sạc
+        // action === "ready": set to đầy nếu level>=0.85 else đang sạc
         if (action === "ready") {
-          const newStatus = (s.level || 0) >= 0.8 ? "đầy" : "đang sạc";
+          const newStatus = (s.level || 0) >= 0.85 ? "đầy" : "đang sạc";
           const log = { t: new Date().toISOString(), msg: "Marked ready" };
           return { ...s, status: newStatus, logs: [log, ...s.logs].slice(0, 30) };
         }
@@ -225,7 +224,7 @@ function Inventory() {
       id: newId,
       title: `Slot ${newId}`,
       type: formData.model || "Unknown",
-      status: sohNum >= 80 ? "đầy" : "đang sạc",
+      status: sohNum >= 85 ? "đầy" : "đang sạc",
       soh: sohNum,
       voltage: Number(formData.voltage) || 380,
       cycles: Number(formData.cycles) || 0,
@@ -315,7 +314,7 @@ function Inventory() {
                   <span className={styles.batteryText}>{Math.round((s.level || 0) * 100)}% Pin</span>
                 </div>
                 <div className={styles.levelNote}>
-                  {s.status === "bảo trì" ? "Bảo trì" : s.level >= 0.8 ? "Đủ" : "Còn lại"}
+                  {s.status === "bảo trì" ? "Bảo trì" : s.level >= 0.85 ? "Đủ" : "Còn lại"}
                 </div>
               </div>
               <div className={styles.progressBar}>
@@ -399,12 +398,12 @@ function Inventory() {
 function colorForLevel(status, level) {
   // refined logic:
   // - nếu bảo trì -> đỏ
-  // - nếu level >= 0.8 -> xanh
-  // - nếu status === 'đang sạc' hoặc level < 0.8 -> vàng
+  // - nếu level >= 0.85 -> xanh
+  // - nếu status === 'đang sạc' hoặc level < 0.85 -> vàng
   // fallback dark
   if (status === "bảo trì") return "#EF4444"; // red
-  if ((level || 0) >= 0.8) return "#10B981"; // green
-  if (status === "đang sạc" || (level || 0) < 0.8) return "#F59E0B"; // amber
+  if ((level || 0) >= 0.85) return "#10B981"; // green
+  if (status === "đang sạc" || (level || 0) < 0.85) return "#F59E0B"; // amber
   return "#111827";
 }
 
@@ -426,7 +425,7 @@ function SettingsModal({ slot, onClose, onApply }) {
           <div className={styles.settingsActions}>
             <div className={styles.settingsCard}>
               <h4>Sẵn sàng</h4>
-              <p>Đánh dấu pin là sẵn sàng. Hệ thống sẽ tự chuyển thành <strong>Đầy</strong> nếu mức pin ≥ 80%, ngược lại là <strong>Đang sạc</strong>.</p>
+              <p>Đánh dấu pin là sẵn sàng. Hệ thống sẽ tự chuyển thành <strong>Đầy</strong> nếu mức pin ≥ 85%, ngược lại là <strong>Đang sạc</strong>.</p>
               <div className={styles.settingsRow}>
                 <button className={styles.primaryBtn} onClick={() => onApply("ready")}>Sẵn sàng</button>
               </div>
@@ -484,17 +483,32 @@ function LogsModal({ slot, onClose }) {
   );
 }
 
-/* Check modal (Kiểm tra và ghi nhận) - improved UI + validation */
+/* Check modal (Kiểm tra và ghi nhận) - improved UI + fake API + date picker */
 function CheckModal({ slot, onClose, onComplete }) {
+  const [loadingPins, setLoadingPins] = useState(true);
+  const [availablePins, setAvailablePins] = useState([]);
+
+  // fake API mô phỏng danh sách pin trả về
+  useEffect(() => {
+    setTimeout(() => {
+      setAvailablePins([
+        { id: "BAT-2024-001", customer: "Alex Chen" },
+        { id: "BAT-2024-002", customer: "Nguyễn Văn Huy" },
+        { id: "BAT-2024-003", customer: "Lê Hoàng" },
+      ]);
+      setLoadingPins(false);
+    }, 600);
+  }, []);
+
   const [form, setForm] = useState({
-    pinId: slot?.id || "BAT-2024-XXX",
-    customer: slot?.title || "Khách",
+    pinId: "",
+    customer: "",
     model: slot?.type || "",
     soh: "",
     voltage: "",
     cycles: "",
     temp: "",
-    lastChange: "",
+    date: new Date().toISOString().slice(0, 16),
     checklist: {
       physical: false,
       connection: false,
@@ -503,36 +517,44 @@ function CheckModal({ slot, onClose, onComplete }) {
       capacity: false,
     },
     report: "",
-    date: new Date().toISOString(),
   });
+
+  // khi chọn pin id => tự gán tên khách
+  function handlePinSelect(id) {
+    const found = availablePins.find((p) => p.id === id);
+    setForm((f) => ({
+      ...f,
+      pinId: id,
+      customer: found ? found.customer : "",
+    }));
+  }
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
   function toggleChecklist(key) {
-    setForm((f) => ({ ...f, checklist: { ...f.checklist, [key]: !f.checklist[key] } }));
+    setForm((f) => ({
+      ...f,
+      checklist: { ...f.checklist, [key]: !f.checklist[key] },
+    }));
   }
 
-  // validation rules
+  // validation logic (giữ nguyên)
   const sohNum = form.soh === "" ? null : Number(form.soh);
   const voltageNum = form.voltage === "" ? null : Number(form.voltage);
   const cyclesNum = form.cycles === "" ? null : Number(form.cycles);
   const tempNum = form.temp === "" ? null : Number(form.temp);
 
   const errors = [];
-  if (sohNum == null || Number.isNaN(sohNum) || sohNum < 0 || sohNum > 100) {
+  if (sohNum == null || Number.isNaN(sohNum) || sohNum < 0 || sohNum > 100)
     errors.push("SoH phải là số từ 0 đến 100");
-  }
-  if (voltageNum == null || Number.isNaN(voltageNum) || voltageNum < 0) {
+  if (voltageNum == null || Number.isNaN(voltageNum) || voltageNum < 0)
     errors.push("Điện áp phải là số dương");
-  }
-  if (cyclesNum == null || Number.isNaN(cyclesNum) || cyclesNum < 0) {
+  if (cyclesNum == null || Number.isNaN(cyclesNum) || cyclesNum < 0)
     errors.push("Số vòng phải là số >= 0");
-  }
-  if (tempNum == null || Number.isNaN(tempNum) || tempNum < -20 || tempNum > 120) {
+  if (tempNum == null || Number.isNaN(tempNum) || tempNum < -20 || tempNum > 120)
     errors.push("Nhiệt độ bất thường (phải hợp lý)");
-  }
 
   const canSubmit = errors.length === 0;
 
@@ -544,7 +566,7 @@ function CheckModal({ slot, onClose, onComplete }) {
       voltage: voltageNum,
       cycles: cyclesNum,
       temp: tempNum,
-      date: new Date().toISOString(),
+      date: new Date(form.date).toISOString(),
     });
   }
 
@@ -552,31 +574,116 @@ function CheckModal({ slot, onClose, onComplete }) {
     <div className={styles.modalBackdrop}>
       <div className={`${styles.modal} ${styles.large}`}>
         <div className={styles.modalHeader}>
-          <h3>Kiểm tra và ghi nhận</h3>
-          <button className={styles.iconBtn} onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>
+          <h3>Kiểm Tra & Ghi Nhận Pin Trả Về</h3>
+          <button className={styles.iconBtn} onClick={onClose}>
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
 
         <div className={styles.modalBody}>
-          {/* checklist on top */}
-          <h4>Danh sách kiểm tra</h4>
-          <div className={styles.checklistGrid}>
-            <label><input type="checkbox" checked={form.checklist.physical} onChange={() => toggleChecklist("physical")} /> Kiểm tra hư hỏng vật lý</label>
-            <label><input type="checkbox" checked={form.checklist.connection} onChange={() => toggleChecklist("connection")} /> Kiểm tra kết nối</label>
-            <label><input type="checkbox" checked={form.checklist.temp} onChange={() => toggleChecklist("temp")} /> Đọc nhiệt độ</label>
-            <label><input type="checkbox" checked={form.checklist.voltage} onChange={() => toggleChecklist("voltage")} /> Kiểm tra điện áp</label>
-            <label><input type="checkbox" checked={form.checklist.capacity} onChange={() => toggleChecklist("capacity")} /> Xác minh dung lượng</label>
+          <p style={{ color: "#6b7280", marginBottom: "10px" }}>
+            Kiểm tra pin trả về cho bất kỳ hư hỏng hoặc vấn đề nào trước khi lưu kho.
+          </p>
+
+          {/* Dropdown chọn pin */}
+          <div className={styles.formRow}>
+            <label>ID Pin Trả Về</label>
+            {loadingPins ? (
+              <p>Đang tải danh sách pin...</p>
+            ) : (
+              <select
+                value={form.pinId}
+                onChange={(e) => handlePinSelect(e.target.value)}
+              >
+                <option value="">-- Chọn ID Pin --</option>
+                {availablePins.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.id}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          {/* top summary */}
+          <div className={styles.formRow}>
+            <label>Khách Hàng</label>
+            <input type="text" value={form.customer} readOnly placeholder="Tự động hiển thị" />
+          </div>
+
+          <h4>Danh Sách Kiểm Tra</h4>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "8px 16px",
+              background: "#f9fafb",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              marginBottom: "16px",
+            }}
+          >
+            <label>
+              <input
+                type="checkbox"
+                checked={form.checklist.physical}
+                onChange={() => toggleChecklist("physical")}
+              />{" "}
+              Kiểm tra hư hỏng vật lý
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.checklist.connection}
+                onChange={() => toggleChecklist("connection")}
+              />{" "}
+              Kiểm tra kết nối
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.checklist.temp}
+                onChange={() => toggleChecklist("temp")}
+              />{" "}
+              Đọc nhiệt độ
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.checklist.voltage}
+                onChange={() => toggleChecklist("voltage")}
+              />{" "}
+              Kiểm tra điện áp
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.checklist.capacity}
+                onChange={() => toggleChecklist("capacity")}
+              />{" "}
+              Xác minh dung lượng
+            </label>
+          </div>
+
           <div className={styles.twoCols}>
             <div>
-              <p><strong>ID Pin:</strong> {form.pinId}</p>
-              <p><strong>Khách Hàng:</strong> {form.customer}</p>
-              <p><strong>Model:</strong> <input style={{ width: "140px" }} value={form.model} onChange={(e) => update("model", e.target.value)} /></p>
+              <p>
+                <strong>Model:</strong>{" "}
+                <input
+                  className={styles.modelInput}
+                  value={form.model}
+                  onChange={(e) => update("model", e.target.value)}
+                  placeholder="Nhập model..."
+                />
+              </p>
             </div>
             <div>
-              <p><strong>Thời gian:</strong> {new Date().toLocaleString()}</p>
-              <p><strong>Ghi chú ngắn:</strong> <input placeholder="Ví dụ: vỏ nứt, chân tiếp xúc" value={form.lastChange} onChange={(e) => update("lastChange", e.target.value)} /></p>
+              <label>Thời gian kiểm tra</label>
+              <input
+                type="datetime-local"
+                value={form.date}
+                onChange={(e) => update("date", e.target.value)}
+              />
             </div>
           </div>
 
@@ -584,38 +691,66 @@ function CheckModal({ slot, onClose, onComplete }) {
           <div className={styles.formGrid}>
             <div className={styles.formRow}>
               <label>Sức Khỏe (SoH %)</label>
-              <input type="number" value={form.soh} onChange={(e) => update("soh", e.target.value)} />
+              <input
+                type="number"
+                value={form.soh}
+                onChange={(e) => update("soh", e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label>Điện áp (V)</label>
-              <input type="number" value={form.voltage} onChange={(e) => update("voltage", e.target.value)} />
+              <input
+                type="number"
+                value={form.voltage}
+                onChange={(e) => update("voltage", e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label>Số vòng</label>
-              <input type="number" value={form.cycles} onChange={(e) => update("cycles", e.target.value)} />
+              <input
+                type="number"
+                value={form.cycles}
+                onChange={(e) => update("cycles", e.target.value)}
+              />
             </div>
             <div className={styles.formRow}>
               <label>Nhiệt độ (°C)</label>
-              <input type="number" value={form.temp} onChange={(e) => update("temp", e.target.value)} />
+              <input
+                type="number"
+                value={form.temp}
+                onChange={(e) => update("temp", e.target.value)}
+              />
             </div>
           </div>
 
           <h4>Ghi chú kiểm tra</h4>
-          <textarea placeholder="Bất kỳ vấn đề hoặc quan sát nào..." value={form.report} onChange={(e) => update("report", e.target.value)} />
+          <textarea
+            placeholder="Bất kỳ vấn đề hoặc quan sát nào..."
+            value={form.report}
+            onChange={(e) => update("report", e.target.value)}
+          />
 
           {errors.length > 0 && (
             <div className={styles.formErrors}>
               <strong>Lỗi:</strong>
               <ul>
-                {errors.map((err, i) => <li key={i}>{err}</li>)}
+                {errors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
               </ul>
             </div>
           )}
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.secondaryBtn} onClick={onClose}>Hủy</button>
-          <button className={styles.primaryBtn} onClick={handleSubmit} disabled={!canSubmit}>
+          <button className={styles.secondaryBtn} onClick={onClose}>
+            Hủy
+          </button>
+          <button
+            className={styles.primaryBtn}
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+          >
             <FontAwesomeIcon icon={faCheck} /> Hoàn thành & ghi nhận
           </button>
         </div>
@@ -623,6 +758,7 @@ function CheckModal({ slot, onClose, onComplete }) {
     </div>
   );
 }
+
 
 /* Filter modal - improved UI + validation */
 function FilterModal({ current, onClose, onApply }) {
@@ -663,7 +799,7 @@ function FilterModal({ current, onClose, onApply }) {
         <div className={styles.modalBody}>
           <h4>Trạng thái</h4>
           <div className={styles.checkboxRow}>
-            {["đầy", "đang sạc", "bảo trì"].map((s) => (
+            {["    Đầy     ", "    Đang sạc   ", "    Bảo trì    "].map((s) => (
               <label key={s}><input type="checkbox" checked={local.status.includes(s)} onChange={() => toggleStatus(s)} /> {s}</label>
             ))}
           </div>
