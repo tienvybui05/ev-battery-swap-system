@@ -15,27 +15,27 @@ const menu = {
     driver: [
       {
         title: "Tìm trạm",
-        href: "/dashboard",
+        href: "/dashboard/findstation",
         icon: <FontAwesomeIcon icon={faLocationDot} />,
       },
       {
         title: "Thay pin",
-        href: "/dashboard",
+        href: "/dashboard/changebattery",
         icon: <FontAwesomeIcon icon={faBatteryFull} />,
       },
       {
         title: "Lịch sử",
-        href: "/dashboard",
+        href: "/dashboard/history",
         icon: <FontAwesomeIcon icon={faClockRotateLeft} />,
       },
       {
         title: "Hồ sơ",
-        href: "/dashboard",
+        href: "/dashboard/information",
         icon: <FontAwesomeIcon icon={faCircleUser} />,
       },
       {
         title: "Hổ trợ",
-        href: "/dashboard",
+        href: "/dashboard/support",
         icon: <FontAwesomeIcon icon={faPhone} />,
       },
     ],
