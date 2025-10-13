@@ -57,7 +57,7 @@ const menu = {
       },
       {
         title: "Nhân viên",
-        href: "/dashboard",
+        href: "/dashboard/customers",
         icon: <FontAwesomeIcon icon={faUserTie} />,
       },
       {
