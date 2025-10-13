@@ -1,5 +1,20 @@
 import styles from "./Button.module.css";
-function Button({ text = false, primary = false, blackoutline = false, order = false, small = false, white = false,change = false,icon= false, children }) {
+function Button({
+  text = false,
+  primary = false,
+  blackoutline = false,
+  order = false,
+  small = false,
+  white = false,
+  change = false,
+  icon = false,
+  outline = false,
+  type = "button",
+  className = "",
+  onClick,
+  children,
+  ...rest
+}) {
   var classes = styles.wrapper;
   if (primary) {
     classes += ` ${styles.primary}`;
@@ -28,6 +43,16 @@ function Button({ text = false, primary = false, blackoutline = false, order = f
   if (icon) {
     classes += ` ${styles.icon}`;
   }
-  return <button className={classes}>{children}</button>;
+  if (outline) {
+    classes += ` ${styles.outline}`;
+  }
+  return <button
+    type={type}
+    className={classes}
+    onClick={onClick}
+    {...rest}
+  >
+    {children}
+  </button>;
 }
 export default Button;
