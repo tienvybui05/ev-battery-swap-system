@@ -64,7 +64,7 @@ const initialSlots = [
     cycles: 1650,
     temp: 24,
     lastChange: "1 hour ago",
-    level: 0.82,
+    level: 0.86,
     logs: [],
     checks: [],
   },
@@ -813,7 +813,7 @@ function FilterModal({ current, onClose, onApply }) {
 
             <div className={styles.formRow}>
               <label>Min SoH (%)</label>
-              <input type="number" value={local.minSoH ?? ""} onChange={(e) => updateMinSoH(e.target.value)} placeholder="Ví dụ: 80" />
+              <input type="number" value={local.minSoH ?? ""} onChange={(e) => updateMinSoH(e.target.value)} placeholder="Ví dụ: 70" />
               {!minSoHValid && <small className={styles.inputError}>Giá trị 0–100</small>}
             </div>
           </div>
