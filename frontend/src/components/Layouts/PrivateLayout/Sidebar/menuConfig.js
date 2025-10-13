@@ -47,7 +47,7 @@ const menu = {
       },
       {
         title: "Trạm",
-        href: "/dashboard",
+        href: "/dashboard/stations",
         icon: <FontAwesomeIcon icon={faChargingStation} />,
       },
       {

@@ -7,9 +7,47 @@ import {
   faEye,
   faEdit,
   faCog,
+  faDollarSign,
+  faBatteryFull,
+  faLocationDot,
+  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-regular-svg-icons";
 import styles from "./Stations.module.css";
 
+// Dữ liệu KPI đầu trang
+const topKpi = [
+  {
+    title: "Tổng Doanh Thu",
+    value: "$267.000",
+    sub: "+12.5%",
+    icon: faDollarSign,
+    color: "#16a34a",
+  },
+  {
+    title: "Tổng Lần Thay Pin",
+    value: "12.847",
+    sub: "+8.3%",
+    icon: faBatteryFull,
+    color: "#3b82f6",
+  },
+  {
+    title: "Trạm Hoạt Động",
+    value: "24",
+    sub: "Tất Cả Trực Tuyến",
+    icon: faLocationDot,
+    color: "#a855f7",
+  },
+  {
+    title: "Khách Hàng",
+    value: "8.547",
+    sub: "+156 mới",
+    icon: faUser,
+    color: "#f97316",
+  },
+];
+
+// Dữ liệu danh sách trạm
 const stations = [
   {
     name: "Downtown Hub",
@@ -44,6 +82,27 @@ const stations = [
 export default function Stations() {
   return (
     <div className={styles.wrapper}>
+      {/* KPI Tổng Quan */}
+      <div className={styles.kpiGrid}>
+        {topKpi.map((item, index) => (
+          <div key={index} className={styles.kpiCard}>
+            <div className={styles.kpiInfo}>
+              <p className={styles.kpiTitle}>{item.title}</p>
+              <h2 className={styles.kpiValue}>{item.value}</h2>
+              <p className={styles.kpiSub}>
+                <span className={styles.kpiArrow}>↑</span> {item.sub}
+              </p>
+            </div>
+            <div
+              className={styles.kpiIcon}
+              style={{ color: item.color, backgroundColor: item.color + "20" }}
+            >
+              <FontAwesomeIcon icon={item.icon} />
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Header */}
       <div className={styles.header}>
         <h2 className={styles.headerTitle}>Quản Lý Trạm</h2>
