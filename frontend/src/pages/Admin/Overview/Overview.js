@@ -16,6 +16,10 @@ import {
   faDollarSign,
   faBatteryFull,
   faLocationDot,
+   faClock,
+  faBolt,
+  faUsers,
+  faGaugeHigh,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { faArrowTrendUp } from "@fortawesome/free-solid-svg-icons";
@@ -78,25 +82,25 @@ function Overview() {
       value: "2.8min",
       label: "Thời Gian Thay Pin Trung Bình",
       color: "#3b82f6",
-      icon: "fa-clock",
+      icon: faClock,
     },
     {
       value: "99.9%",
       label: "Thời Gian Hoạt Động Hệ Thống",
       color: "#22c55e",
-      icon: "fa-bolt",
+      icon: faBolt,
     },
     {
       value: "4.8/5",
       label: "Đánh Giá Khách Hàng",
       color: "#a855f7",
-      icon: "fa-users",
+      icon: faUsers,
     },
     {
       value: "94.2%",
       label: "Hiệu Suất Pin",
       color: "#f97316",
-      icon: "fa-gauge-high",
+      icon: faGaugeHigh,
     },
   ];
 
@@ -195,13 +199,19 @@ function Overview() {
 
       {/* KPI nhỏ bên dưới */}
       <div className={styles.bottomKpiGrid}>
-        {bottomKpi.map((item, index) => (
-          <div key={index} className={styles.bottomKpiCard}>
-            <h2 className={styles.bottomValue}>{item.value}</h2>
-            <p className={styles.bottomLabel}>{item.label}</p>
-          </div>
-        ))}
-      </div>
+  {bottomKpi.map((item, index) => (
+    <div key={index} className={styles.bottomKpiCard}>
+      <FontAwesomeIcon
+        icon={item.icon}
+        className={styles.bottomIcon}
+        style={{ color: item.color }}
+      />
+      <h2 className={styles.bottomValue}>{item.value}</h2>
+      <p className={styles.bottomLabel}>{item.label}</p>
+    </div>
+  ))}
+</div>
+
     </div>
   );
 }

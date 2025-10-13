@@ -143,3 +143,21 @@
   font-size: 14px;
   color: #64748b;
 }
+.bottomKpiCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  background-color: #f9fafb;
+}
+
+.bottomKpiCard:hover:nth-child(1) {
+  background-color: #e0f2fe; /* xanh dương nhạt */
+}
+.bottomKpiCard:hover:nth-child(2) {
+  background-color: #dcfce7; /* xanh lá nhạt */
+}
+.bottomKpiCard:hover:nth-child(3) {
+  background-color: #f3e8ff; /* tím nhạt */
+}
+.bottomKpiCard:hover:nth-child(4) {
+  background-color: #fff7ed; /* cam nhạt */
+}
