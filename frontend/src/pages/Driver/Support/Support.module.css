@@ -45,7 +45,7 @@
     text-align: left;
 }
 
-Button {
+.button Button {
     text-align: left;
 }
 
@@ -54,4 +54,194 @@ Button {
     height: 16px;
     margin-right: 8px;
     color: var(--black);
+}
+
+/* popup */
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.modal {
+    background: var(--white);
+    width: min(680px, 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    padding: 20px 20px 16px;
+    animation: fadeIn .2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: .0;
+        transform: translateY(4px)
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
+}
+
+.modalHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.modalHead h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--black);
+}
+
+.modalHead p {
+    margin: 4px 0 0;
+    color: var(--color-gray-600);
+    font-size: var(--p-font-size);
+}
+
+.iconClose {
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px;
+    color: var(--color-gray-900);
+    border-radius: 8px;
+}
+
+.iconClose:hover {
+    background: #f3f3f5;
+}
+
+.metaGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 8px 0 12px;
+}
+
+.metaItem {
+    background: #f7f7f9;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.metaLabel {
+    display: block;
+    font-size: 12px;
+    color: var(--color-gray-600);
+    margin-bottom: 4px;
+}
+
+.metaValue {
+    font-weight: 600;
+    color: var(--black);
+}
+
+.metaSelect {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-weight: 600;
+    color: var(--black);
+}
+
+.formdetail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.formdetail label {
+    font-size: 0.875rem;
+    color: var(--black);
+}
+
+.formdetail input,
+.formdetail textarea {
+    width: 100%;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    background: #f3f3f5;
+    padding: 12px 14px;
+    font-size: 14px;
+}
+
+.checklistBlock {
+    margin-top: 10px;
+}
+
+.checklistTitle {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.checklistGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 14px;
+}
+
+.checkboxRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+
+.modal h1 {
+    display: flex;
+    color: var(--black);
+    font-size: var(--h4-font-size);
+    line-height: var(--h4-line-height);
+    letter-spacing: var(--p-letter-spacing);
+    font-weight: 500;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.modal .formchange {
+    margin-bottom: 14px;
+}
+
+.modal .formchange label {
+    color: var(--black);
+    font-size: var(--p-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+.modal .formchange input {
+    background-color: #F3F3F5;
+    border: var(--border);
+    border-radius: 10px;
+    width: 100%;
+    gap: 2px;
+    padding: 8px 16px;
+    font-size: var(--pn-font-size);
+    line-height: var(--p-line-height);
+    letter-spacing: var(--p-letter-spacing);
 }

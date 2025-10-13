@@ -56,6 +56,18 @@
     letter-spacing: var(--p-letter-spacing);
 }
 
+.orderplace .info .status.pending {
+    color: #B45309; 
+    background-color: #FEF9C3;
+    padding: 2px 8px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: var(--caption-line-height);
+    letter-spacing: var(--p-letter-spacing);
+}
+
+
 .orderplace .info h3 {
     color: var(--black);
     font-size: var(--h3-font-size);

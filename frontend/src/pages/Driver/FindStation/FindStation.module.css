@@ -175,6 +175,15 @@
     display: inline-block;
 }
 
+.station .local .open {
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+.station .local .maintenance {
+    background-color: var(--color-gray-100);
+    color: #000;
+}
 
 
 .station .information {
