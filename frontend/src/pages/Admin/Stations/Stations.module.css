@@ -1,0 +1,211 @@
+/* ========== Tổng layout ========== */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* ========== Header ========== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Nút “Lọc” */
+.filterBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.filterBtn:hover {
+  background: #f3f4f6;
+}
+
+/* Nút “Thêm trạm” */
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.addBtn:hover {
+  background: #1f2937;
+}
+
+/* ========== Danh sách card trạm ========== */
+.stationList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ========== Card từng trạm ========== */
+.stationCard {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f1f5f9;
+  transition: all 0.25s ease;
+}
+
+.stationCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ========== Phần thông tin chính ========== */
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.infoLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.iconWrapper {
+  text-align: center;
+}
+
+.icon {
+  font-size: 22px;
+  color: #3b82f6;
+}
+
+/* ========== Tên và chi tiết trạm ========== */
+.stationName {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.infoDetails {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 16px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.infoDetails span {
+  font-weight: 500;
+  color: #111827;
+}
+
+/* ========== Badge trạng thái ========== */
+.status {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: #fff;
+  text-transform: lowercase;
+  margin-top: 6px;
+}
+
+.status.active {
+  background: #111827;
+}
+
+.status.maintenance {
+  background: #dc2626;
+}
+
+.status.offline {
+  background: #9ca3af;
+}
+
+/* ========== Nút hành động bên phải ========== */
+.actionBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.iconBtn {
+  border: none;
+  background: #f9fafb;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.iconBtn:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+/* ========== Thanh tiến trình ========== */
+.progressWrapper {
+  margin-top: 16px;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.progressBar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #111827, #3b82f6);
+  transition: width 0.4s ease;
+}
+
+/* ========== Animation ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

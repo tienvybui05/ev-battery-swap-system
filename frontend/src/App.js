@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Authentication/Login/Login";
 import Overview from "./pages/Admin/Overview/Overview";
+import Stations from "./pages/Admin/Stations/Stations";
 
 import {
   FindStation,
@@ -30,6 +31,7 @@ function App() {
             <Route path="history" element={<History />} />
             <Route path="information" element={<Information />} />
             <Route path="overview" element={<Overview />} />
+            <Route path="stations" element={<Stations />} />
           </Route>
         </Routes>
       </BrowserRouter>
