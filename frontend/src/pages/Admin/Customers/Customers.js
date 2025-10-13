@@ -128,7 +128,59 @@ return (
         </div>
       </div>
 
-     
+      {/* Bảng khách hàng */}
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Khách Hàng</th>
+              <th>Gói Dịch Vụ</th>
+              <th>Lần Thay Pin</th>
+              <th>Doanh Thu</th>
+              <th>Trạng Thái</th>
+              <th>Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customerData.customers.map((c, i) => (
+              <tr key={i}>
+                <td>
+                  <div className={styles.customerInfo}>
+                    <span className={styles.customerName}>{c.name}</span>
+                    <p className={styles.customerEmail}>{c.email}</p>
+                  </div>
+                </td>
+                <td>
+                  <span className={styles.plan}>{c.plan}</span>
+                </td>
+                <td>{c.swaps}</td>
+                <td>{c.revenue}</td>
+                <td>
+                  <span
+                    className={`${styles.status} ${
+                      c.status === "active"
+                        ? styles.active
+                        : c.status === "suspended"
+                        ? styles.suspended
+                        : ""
+                    }`}
+                  >
+                    {c.status === "active" ? "active" : "suspended"}
+                  </span>
+                </td>
+                <td>
+                  <button className={styles.iconBtn}>
+                    <FontAwesomeIcon icon={faEye} />
+                  </button>
+                  <button className={styles.iconBtn}>
+                    <FontAwesomeIcon icon={faPen} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
