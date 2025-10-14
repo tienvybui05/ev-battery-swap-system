@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faRotateRight,
@@ -13,27 +17,18 @@ import {
 import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./Inventory.module.css";
 
-/**
- * Inventory page - single-file implementation with internal popups
- * - Updated per user's requests:
- *   1) Settings modal limited to "Sẵn sàng" (sets trạng thái theo level) and "Yêu cầu bảo dưỡng" (bảo trì)
- *   2) Progress bar + color logic improved; shows %Pin + icon
- *   3) Check modal reworked: nicer layout, checklist on top, validation/conditions
- *   4) Filter modal reworked: checklist on top, nicer layout, validation/conditions
- */
-
 const initialSlots = [
   {
     id: "A1",
     title: "Slot A1",
     type: "TM3-75kWh",
-    status: "đầy", // "đầy" | "đang sạc" | "bảo trì"
-    soh: 95, // %
-    voltage: 400, // V
+    status: "đầy",
+    soh: 95,
+    voltage: 400,
     cycles: 1250,
     temp: 25,
     lastChange: "10 min ago",
-    level: 0.95, // 0..1
+    level: 0.95,
     logs: [
       { t: "2024-06-01", msg: "Installed" },
       { t: "2024-06-12", msg: "Charging cycle" },
@@ -50,7 +45,7 @@ const initialSlots = [
     cycles: 1180,
     temp: 28,
     lastChange: "2 hours ago",
-    level: 0.88,
+    level: 0.56,
     logs: [{ t: "2024-06-10", msg: "Start charging" }],
     checks: [],
   },
@@ -112,114 +107,148 @@ const initialSlots = [
   },
 ];
 
+const EMPTY_FILTERS = {
+  status: [],
+  slotPrefix: "",
+  minSoH: null,
+};
+
 function Inventory() {
   const [slots, setSlots] = useState(initialSlots);
   const [selectedSlot, setSelectedSlot] = useState(null);
+
   const [showSettings, setShowSettings] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [showCheckModal, setShowCheckModal] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState({
-    status: [], // e.g. ["đang sạc", "đầy"]
-    slotPrefix: "", // e.g. "A"
-    minSoH: null,
-  });
 
-  // simulate real-time small updates on charging slots
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+
+  // realtime drift for charging slots
   useEffect(() => {
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       setSlots((prev) =>
         prev.map((s) => {
-          if (s.status === "đang sạc") {
-            const newLevel = Math.min(1, +(s.level + Math.random() * 0.01).toFixed(3));
+          if (s.status !== "đang sạc") return s;
 
-            const newVoltage = Math.round(s.voltage + Math.random() * 1);
-            return {
-              ...s,
-              level: newLevel,
-          
-              voltage: newVoltage,
-              temp: s.temp + (Math.random() * 0.2 - 0.1),
-            };
-          }
-          return s;
+          const level = Math.min(
+            1,
+            +(s.level + Math.random() * 0.01).toFixed(3)
+          );
+
+          const voltage = Math.round(s.voltage + Math.random() * 1);
+
+          return {
+            ...s,
+            level,
+            voltage,
+            temp: s.temp + (Math.random() * 0.2 - 0.1),
+          };
         })
       );
     }, 5000);
-    return () => clearInterval(interval);
+
+    return () => clearInterval(id);
   }, []);
 
-  // helper: refresh single slot (simulate fetching latest values)
   function refreshSlot(slotId) {
     setSlots((prev) =>
       prev.map((s) => {
         if (s.id !== slotId) return s;
 
-        const newVoltage = s.voltage ? Math.round(s.voltage + (Math.random() * 6 - 3)) : s.voltage;
-        const newTemp = Math.max(15, Math.round(s.temp + (Math.random() * 3 - 1)));
-        const newLevel = Math.max(0, Math.min(1, +(s.level + (Math.random() * 0.03 - 0.01)).toFixed(3)));
-        const newLog = { t: new Date().toISOString(), msg: "Refreshed readings" };
-        // update status automatically if not maintenance
-        let newStatus = s.status;
+        const voltage = s.voltage
+          ? Math.round(s.voltage + (Math.random() * 6 - 3))
+          : s.voltage;
+
+        const temp = Math.max(
+          15,
+          Math.round(s.temp + (Math.random() * 3 - 1))
+        );
+
+        const level = Math.max(
+          0,
+          Math.min(1, +(s.level + (Math.random() * 0.03 - 0.01)).toFixed(3))
+        );
+
+        const log = {
+          t: new Date().toISOString(),
+          msg: "Refreshed readings",
+        };
+
+        let status = s.status;
         if (s.status !== "bảo trì") {
-          if (newLevel >= 0.85) newStatus = "đầy";
-          else if (newLevel > 0) newStatus = "đang sạc";
+          status = level >= 0.85 ? "đầy" : "đang sạc";
         }
+
         return {
           ...s,
-          voltage: newVoltage,
-          temp: newTemp,
-          level: newLevel,
+          voltage,
+          temp,
+          level,
           lastChange: "just now",
-          status: newStatus,
-          logs: [newLog, ...s.logs].slice(0, 30),
+          status,
+          logs: [log, ...s.logs].slice(0, 30),
         };
       })
     );
   }
 
-  // settings modal: open
   function openSettings(slot) {
     setSelectedSlot(slot);
     setShowSettings(true);
   }
 
-  // apply status change from SettingsModal
-  function applyStatusChange(slotId, action) {
-    // action: "ready" | "maintenance"
-    setSlots((prev) =>
-      prev.map((s) => {
-        if (s.id !== slotId) return s;
-        if (action === "maintenance") {
-          const log = { t: new Date().toISOString(), msg: "Requested maintenance" };
-          return { ...s, status: "bảo trì", logs: [log, ...s.logs].slice(0, 30) };
-        }
-        // action === "ready": set to đầy nếu level>=0.85 else đang sạc
-        if (action === "ready") {
-          const newStatus = (s.level || 0) >= 0.85 ? "đầy" : "đang sạc";
-          const log = { t: new Date().toISOString(), msg: "Marked ready" };
-          return { ...s, status: newStatus, logs: [log, ...s.logs].slice(0, 30) };
-        }
-        return s;
-      })
-    );
-    setShowSettings(false);
-  }
-
-  // logs modal
   function openLogs(slot) {
     setSelectedSlot(slot);
     setShowLogs(true);
   }
 
-  // check-return modal (creates new pin record when finished)
   function openCheckModal(slot) {
     setSelectedSlot(slot);
     setShowCheckModal(true);
   }
+
+  function applyStatusChange(slotId, action) {
+    setSlots((prev) =>
+      prev.map((s) => {
+        if (s.id !== slotId) return s;
+
+        if (action === "maintenance") {
+          const log = {
+            t: new Date().toISOString(),
+            msg: "Requested maintenance",
+          };
+          return {
+            ...s,
+            status: "bảo trì",
+            logs: [log, ...s.logs].slice(0, 30),
+          };
+        }
+
+        if (action === "ready") {
+          const status = (s.level || 0) >= 0.85 ? "đầy" : "đang sạc";
+          const log = {
+            t: new Date().toISOString(),
+            msg: "Marked ready",
+          };
+          return {
+            ...s,
+            status,
+            logs: [log, ...s.logs].slice(0, 30),
+          };
+        }
+
+        return s;
+      })
+    );
+
+    setShowSettings(false);
+  }
+
   function completeCheckAndCreatePin(formData) {
     const newId = `C${Math.floor(Math.random() * 900 + 100)}`;
     const sohNum = Number(formData.soh) || 50;
+
     const newSlot = {
       id: newId,
       title: `Slot ${newId}`,
@@ -231,24 +260,60 @@ function Inventory() {
       temp: Number(formData.temp) || 25,
       lastChange: "just checked",
       level: (sohNum || 50) / 100,
-      logs: [{ t: new Date().toISOString(), msg: "Created from check" }],
+      logs: [
+        { t: new Date().toISOString(), msg: "Created from check" },
+      ],
       checks: [formData],
     };
+
     setSlots((prev) => [newSlot, ...prev]);
     setShowCheckModal(false);
   }
 
-  // Filter handlers
-  function applyFilter(newFilters) {
-    setFilters(newFilters);
+  // ========== FILTERS ==========
+  function applyFilter(nf) {
+    const normalized = {
+      status: Array.isArray(nf?.status) ? nf.status : [],
+      slotPrefix:
+        typeof nf?.slotPrefix === "string"
+          ? nf.slotPrefix.trim().toUpperCase()
+          : "",
+      minSoH:
+        nf?.minSoH === "" || nf?.minSoH == null
+          ? null
+          : Number.isNaN(Number(nf.minSoH))
+          ? null
+          : Number(nf.minSoH),
+    };
+
+    setFilters(normalized);
     setShowFilter(false);
   }
 
   const visibleSlots = useMemo(() => {
     return slots.filter((s) => {
-      if (filters.status.length && !filters.status.includes(s.status)) return false;
-      if (filters.slotPrefix && !s.id.startsWith(filters.slotPrefix)) return false;
-      if (filters.minSoH != null && s.soh < filters.minSoH) return false;
+      const statuses = Array.isArray(filters.status)
+        ? filters.status
+        : [];
+
+      if (statuses.length && !statuses.includes(s.status)) {
+        return false;
+      }
+
+      const prefix = (filters.slotPrefix || "").toUpperCase();
+      if (prefix && !String(s.id).toUpperCase().startsWith(prefix)) {
+        return false;
+      }
+
+      const min = filters.minSoH;
+      if (
+        min != null &&
+        Number.isFinite(min) &&
+        s.soh < Number(min)
+      ) {
+        return false;
+      }
+
       return true;
     });
   }, [slots, filters]);
@@ -259,12 +324,24 @@ function Inventory() {
 
       <div className={styles.headerRow}>
         <h2>Kho Pin</h2>
+
         <div className={styles.headerButtons}>
-          <button className={styles.filterBtn} onClick={() => setShowFilter(true)}>
-            <FontAwesomeIcon icon={faFilter} /> Lọc
+          <button
+            className={styles.filterBtn}
+            onClick={() => setShowFilter(true)}
+          >
+            <FontAwesomeIcon icon={faFilter} />
+            {" "}
+            Lọc
           </button>
-          <button className={styles.primaryBtn} onClick={() => openCheckModal(null)}>
-            <FontAwesomeIcon icon={faPlus} /> Kiểm tra
+
+          <button
+            className={styles.primaryBtn}
+            onClick={() => openCheckModal(null)}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            {" "}
+            Kiểm tra
           </button>
         </div>
       </div>
@@ -277,8 +354,14 @@ function Inventory() {
                 <div className={styles.title}>{s.title}</div>
                 <div className={styles.type}>{s.type}</div>
               </div>
+
               <div className={styles.statusBadge}>
-                <span className={styles.statusDot} style={{ background: colorForLevel(s.status, s.level) }} />
+                <span
+                  className={styles.statusDot}
+                  style={{
+                    background: colorForLevel(s.status, s.level),
+                  }}
+                />
                 <span className={styles.statusText}>{s.status}</span>
               </div>
             </div>
@@ -288,35 +371,53 @@ function Inventory() {
                 <div className={styles.metricLabel}>Sức Khỏe:</div>
                 <div className={styles.metricValue}>{s.soh}%</div>
               </div>
+
               <div>
                 <div className={styles.metricLabel}>Điện áp:</div>
                 <div className={styles.metricValue}>{s.voltage}V</div>
               </div>
+
               <div>
                 <div className={styles.metricLabel}>Số vòng:</div>
-                <div className={styles.metricValue}>{s.cycles.toLocaleString()}</div>
+                <div className={styles.metricValue}>
+                  {s.cycles.toLocaleString()}
+                </div>
               </div>
+
               <div>
                 <div className={styles.metricLabel}>Nhiệt độ:</div>
-                <div className={styles.metricValue}>{Math.round(s.temp)}°C</div>
+                <div className={styles.metricValue}>
+                  {Math.round(s.temp)}°C
+                </div>
               </div>
+
               <div>
                 <div className={styles.metricLabel}>Thay Pin Cuối:</div>
                 <div className={styles.metricValue}>{s.lastChange}</div>
               </div>
             </div>
 
-            {/* progress bar with percent + icon */}
             <div className={styles.progressWrap}>
               <div className={styles.progressTopRow}>
                 <div className={styles.batteryLabel}>
-                  <FontAwesomeIcon icon={faBatteryHalf} className={styles.batteryIcon} />
-                  <span className={styles.batteryText}>{Math.round((s.level || 0) * 100)}% Pin</span>
+                  <FontAwesomeIcon
+                    icon={faBatteryHalf}
+                    className={styles.batteryIcon}
+                  />
+                  <span className={styles.batteryText}>
+                    {Math.round((s.level || 0) * 100)}% Pin
+                  </span>
                 </div>
+
                 <div className={styles.levelNote}>
-                  {s.status === "bảo trì" ? "Bảo trì" : s.level >= 0.85 ? "Đủ" : "Còn lại"}
+                  {s.status === "bảo trì"
+                    ? "Cần bảo dưỡng"
+                    : s.level >= 0.85
+                    ? "Đủ"
+                    : "Cần nạp thêm"}
                 </div>
               </div>
+
               <div className={styles.progressBar}>
                 <div
                   className={styles.progressFill}
@@ -334,7 +435,8 @@ function Inventory() {
                 onClick={() => refreshSlot(s.id)}
                 title="Làm mới"
               >
-                <FontAwesomeIcon icon={faRotateRight} /> <span className={styles.actionText}>Làm mới</span>
+                <FontAwesomeIcon icon={faRotateRight} />
+                <span className={styles.actionText}>Làm mới</span>
               </button>
 
               <button
@@ -342,7 +444,8 @@ function Inventory() {
                 onClick={() => openSettings(s)}
                 title="Cài đặt"
               >
-                <FontAwesomeIcon icon={faWrench} /> <span className={styles.actionText}>Cài đặt</span>
+                <FontAwesomeIcon icon={faWrench} />
+                <span className={styles.actionText}>Cài đặt</span>
               </button>
 
               <button
@@ -350,28 +453,36 @@ function Inventory() {
                 onClick={() => openLogs(s)}
                 title="Chi tiết / logs"
               >
-                <FontAwesomeIcon icon={faFileLines} /> <span className={styles.actionText}>Chi tiết / logs</span>
+                <FontAwesomeIcon icon={faFileLines} />
+                <span className={styles.actionText}>Chi tiết / logs</span>
               </button>
             </div>
           </div>
         ))}
 
         {visibleSlots.length === 0 && (
-          <div className={styles.emptyState}>Không có slot nào phù hợp với bộ lọc.</div>
+          <div className={styles.emptyState}>
+            Không có slot nào phù hợp với bộ lọc.
+          </div>
         )}
       </div>
 
-      {/* modals */}
+      {/* MODALS */}
       {showSettings && selectedSlot && (
         <SettingsModal
           slot={selectedSlot}
           onClose={() => setShowSettings(false)}
-          onApply={(action) => applyStatusChange(selectedSlot.id, action)}
+          onApply={(action) =>
+            applyStatusChange(selectedSlot.id, action)
+          }
         />
       )}
 
       {showLogs && selectedSlot && (
-        <LogsModal slot={selectedSlot} onClose={() => setShowLogs(false)} />
+        <LogsModal
+          slot={selectedSlot}
+          onClose={() => setShowLogs(false)}
+        />
       )}
 
       {showCheckModal && (
@@ -393,28 +504,26 @@ function Inventory() {
   );
 }
 
-/* ---------- Helper components (inside file) ---------- */
-
 function colorForLevel(status, level) {
-  // refined logic:
-  // - nếu bảo trì -> đỏ
-  // - nếu level >= 0.85 -> xanh
-  // - nếu status === 'đang sạc' hoặc level < 0.85 -> vàng
-  // fallback dark
-  if (status === "bảo trì") return "#EF4444"; // red
-  if ((level || 0) >= 0.85) return "#10B981"; // green
-  if (status === "đang sạc" || (level || 0) < 0.85) return "#F59E0B"; // amber
+  if (status === "bảo trì") return "#EF4444";
+  if ((level || 0) >= 0.85) return "#10B981";
+  if (status === "đang sạc" || (level || 0) < 0.85) return "#F59E0B";
   return "#111827";
 }
 
-/* Settings modal: simplified actions per request */
+/* ---------- Settings Modal ---------- */
 function SettingsModal({ slot, onClose, onApply }) {
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h3>Cài Đặt Slot: {slot.title}</h3>
-          <button className={styles.iconBtn} onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>
+          <button
+            className={styles.iconBtn}
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
 
         <div className={styles.modalBody}>
@@ -425,79 +534,134 @@ function SettingsModal({ slot, onClose, onApply }) {
           <div className={styles.settingsActions}>
             <div className={styles.settingsCard}>
               <h4>Sẵn sàng</h4>
-              <p>Đánh dấu pin là sẵn sàng. Hệ thống sẽ tự chuyển thành <strong>Đầy</strong> nếu mức pin ≥ 85%, ngược lại là <strong>Đang sạc</strong>.</p>
+              <p>
+                Đánh dấu pin là sẵn sàng. Hệ thống sẽ tự chuyển thành
+                <strong> Đầy </strong>
+                nếu mức pin ≥ 85%, ngược lại là
+                <strong> Đang sạc</strong>.
+              </p>
+
               <div className={styles.settingsRow}>
-                <button className={styles.primaryBtn} onClick={() => onApply("ready")}>Sẵn sàng</button>
+                <button
+                  className={styles.primaryBtn}
+                  onClick={() => onApply("ready")}
+                >
+                  Sẵn sàng
+                </button>
               </div>
             </div>
 
             <div className={styles.settingsCard}>
               <h4>Yêu cầu bảo dưỡng</h4>
-              <p>Gửi yêu cầu bảo dưỡng — pin sẽ được đặt trạng thái <strong>Bảo trì</strong>.</p>
+              <p>
+                Gửi yêu cầu bảo dưỡng — pin sẽ được đặt trạng thái
+                <strong> Bảo trì</strong>.
+              </p>
+
               <div className={styles.settingsRow}>
-                <button className={styles.secondaryBtn} onClick={() => onApply("maintenance")}>Yêu cầu bảo dưỡng</button>
+                <button
+                  className={styles.secondaryBtn}
+                  onClick={() => onApply("maintenance")}
+                >
+                  Yêu cầu bảo dưỡng
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.secondaryBtn} onClick={onClose}>Hủy</button>
+          <button
+            className={styles.secondaryBtn}
+            onClick={onClose}
+          >
+            Hủy
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-/* Logs modal (kept mostly same but uses nicer headings) */
+/* ---------- Logs Modal ---------- */
 function LogsModal({ slot, onClose }) {
   return (
     <div className={styles.modalBackdrop}>
       <div className={`${styles.modal} ${styles.large}`}>
         <div className={styles.modalHeader}>
-          <h3>Chi tiết / Logs - {slot.title}</h3>
-          <button className={styles.iconBtn} onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>
+          <h3>
+            Chi tiết / Logs - {slot.title}
+          </h3>
+
+          <button
+            className={styles.iconBtn}
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
+
         <div className={styles.modalBody}>
           <h4>Lịch sử</h4>
+
           <ul className={styles.logList}>
-            {slot.logs.length ? slot.logs.map((l, idx) => <li key={idx}><strong>{l.t}</strong> — {l.msg}</li>) : <li>Không có lịch sử</li>}
+            {slot.logs.length
+              ? slot.logs.map((l, i) => (
+                  <li key={i}>
+                    <strong>{l.t}</strong>
+                    {" — "}
+                    {l.msg}
+                  </li>
+                ))
+              : <li>Không có lịch sử</li>
+            }
           </ul>
 
           <h4>Nhật ký lỗi</h4>
           <p>Không có lỗi ghi nhận (demo)</p>
 
-          <h4>Chi tiết chỉ số (mô phỏng)</h4>
-          <p>SoH / Điện áp / Số vòng được lưu trong logs. Khi có backend, sẽ hiện biểu đồ thời gian.</p>
-
           <h4>Lịch sử kiểm tra</h4>
           <ul>
-            {slot.checks && slot.checks.length ? slot.checks.map((c, i) => <li key={i}>{c.date || "—"}: {c.report || "Kiểm tra"}</li>) : <li>Chưa có kiểm tra</li>}
+            {slot.checks?.length
+              ? slot.checks.map((c, i) => (
+                  <li key={i}>
+                    {c.date || "—"}: {c.report || "Kiểm tra"}
+                  </li>
+                ))
+              : <li>Chưa có kiểm tra</li>
+            }
           </ul>
         </div>
+
         <div className={styles.modalFooter}>
-          <button className={styles.secondaryBtn} onClick={onClose}>Đóng</button>
+          <button
+            className={styles.secondaryBtn}
+            onClick={onClose}
+          >
+            Đóng
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-/* Check modal (Kiểm tra và ghi nhận) - improved UI + fake API + date picker */
+/* ---------- Check Modal (ID pin & Khách hàng cùng hàng; thời gian chuẩn; lỗi đỏ) ---------- */
 function CheckModal({ slot, onClose, onComplete }) {
   const [loadingPins, setLoadingPins] = useState(true);
   const [availablePins, setAvailablePins] = useState([]);
 
-  // fake API mô phỏng danh sách pin trả về
   useEffect(() => {
-    setTimeout(() => {
+    const t = setTimeout(() => {
       setAvailablePins([
         { id: "BAT-2024-001", customer: "Alex Chen" },
         { id: "BAT-2024-002", customer: "Nguyễn Văn Huy" },
         { id: "BAT-2024-003", customer: "Lê Hoàng" },
       ]);
       setLoadingPins(false);
-    }, 600);
+    }, 400);
+
+    return () => clearTimeout(t);
   }, []);
 
   const [form, setForm] = useState({
@@ -519,47 +683,51 @@ function CheckModal({ slot, onClose, onComplete }) {
     report: "",
   });
 
-  // khi chọn pin id => tự gán tên khách
   function handlePinSelect(id) {
-    const found = availablePins.find((p) => p.id === id);
-    setForm((f) => ({
-      ...f,
+    const f = availablePins.find((p) => p.id === id);
+    setForm((x) => ({
+      ...x,
       pinId: id,
-      customer: found ? found.customer : "",
+      customer: f ? f.customer : "",
     }));
   }
 
   function update(field, value) {
-    setForm((f) => ({ ...f, [field]: value }));
+    setForm((x) => ({ ...x, [field]: value }));
   }
 
   function toggleChecklist(key) {
-    setForm((f) => ({
-      ...f,
-      checklist: { ...f.checklist, [key]: !f.checklist[key] },
+    setForm((x) => ({
+      ...x,
+      checklist: { ...x.checklist, [key]: !x.checklist[key] },
     }));
   }
 
-  // validation logic (giữ nguyên)
+  // validation + error box
   const sohNum = form.soh === "" ? null : Number(form.soh);
   const voltageNum = form.voltage === "" ? null : Number(form.voltage);
   const cyclesNum = form.cycles === "" ? null : Number(form.cycles);
   const tempNum = form.temp === "" ? null : Number(form.temp);
 
   const errors = [];
-  if (sohNum == null || Number.isNaN(sohNum) || sohNum < 0 || sohNum > 100)
+  if (sohNum == null || Number.isNaN(sohNum) || sohNum < 0 || sohNum > 100) {
     errors.push("SoH phải là số từ 0 đến 100");
-  if (voltageNum == null || Number.isNaN(voltageNum) || voltageNum < 0)
+  }
+  if (voltageNum == null || Number.isNaN(voltageNum) || voltageNum < 0) {
     errors.push("Điện áp phải là số dương");
-  if (cyclesNum == null || Number.isNaN(cyclesNum) || cyclesNum < 0)
-    errors.push("Số vòng phải là số >= 0");
-  if (tempNum == null || Number.isNaN(tempNum) || tempNum < -20 || tempNum > 120)
+  }
+  if (cyclesNum == null || Number.isNaN(cyclesNum) || cyclesNum < 0) {
+    errors.push("Số vòng phải là số ≥ 0");
+  }
+  if (tempNum == null || Number.isNaN(tempNum) || tempNum < -20 || tempNum > 120) {
     errors.push("Nhiệt độ bất thường (phải hợp lý)");
+  }
 
   const canSubmit = errors.length === 0;
 
   function handleSubmit() {
     if (!canSubmit) return;
+
     onComplete({
       ...form,
       soh: sohNum,
@@ -575,119 +743,135 @@ function CheckModal({ slot, onClose, onComplete }) {
       <div className={`${styles.modal} ${styles.large}`}>
         <div className={styles.modalHeader}>
           <h3>Kiểm Tra & Ghi Nhận Pin Trả Về</h3>
-          <button className={styles.iconBtn} onClick={onClose}>
+
+          <button
+            className={styles.iconBtn}
+            onClick={onClose}
+          >
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
 
         <div className={styles.modalBody}>
-          <p style={{ color: "#6b7280", marginBottom: "10px" }}>
+          <p className={styles.subtleLead}>
             Kiểm tra pin trả về cho bất kỳ hư hỏng hoặc vấn đề nào trước khi lưu kho.
           </p>
 
-          {/* Dropdown chọn pin */}
-          <div className={styles.formRow}>
-            <label>ID Pin Trả Về</label>
-            {loadingPins ? (
-              <p>Đang tải danh sách pin...</p>
-            ) : (
-              <select
-                value={form.pinId}
-                onChange={(e) => handlePinSelect(e.target.value)}
-              >
-                <option value="">-- Chọn ID Pin --</option>
-                {availablePins.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.id}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+          {/* Hàng 1: ID Pin + Khách hàng */}
+          <div className={styles.twoColsRow}>
+            <div className={styles.formRow}>
+              <label>ID Pin Trả Về</label>
 
-          <div className={styles.formRow}>
-            <label>Khách Hàng</label>
-            <input type="text" value={form.customer} readOnly placeholder="Tự động hiển thị" />
+              {loadingPins ? (
+                <p>Đang tải danh sách pin...</p>
+              ) : (
+                <select
+                  value={form.pinId}
+                  onChange={(e) => handlePinSelect(e.target.value)}
+                >
+                  <option value="">-- Chọn ID Pin --</option>
+                  {availablePins.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.id}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div className={styles.formRow}>
+              <label>Khách Hàng</label>
+
+              <input
+                type="text"
+                value={form.customer}
+                readOnly
+                placeholder="Tự động hiển thị"
+              />
+            </div>
           </div>
 
           <h4>Danh Sách Kiểm Tra</h4>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "8px 16px",
-              background: "#f9fafb",
-              padding: "10px",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb",
-              marginBottom: "16px",
-            }}
-          >
+
+          <div className={styles.checklistGrid}>
             <label>
               <input
                 type="checkbox"
                 checked={form.checklist.physical}
                 onChange={() => toggleChecklist("physical")}
-              />{" "}
+              />
+              {" "}
               Kiểm tra hư hỏng vật lý
             </label>
+
             <label>
               <input
                 type="checkbox"
                 checked={form.checklist.connection}
                 onChange={() => toggleChecklist("connection")}
-              />{" "}
+              />
+              {" "}
               Kiểm tra kết nối
             </label>
+
             <label>
               <input
                 type="checkbox"
                 checked={form.checklist.temp}
                 onChange={() => toggleChecklist("temp")}
-              />{" "}
+              />
+              {" "}
               Đọc nhiệt độ
             </label>
+
             <label>
               <input
                 type="checkbox"
                 checked={form.checklist.voltage}
                 onChange={() => toggleChecklist("voltage")}
-              />{" "}
+              />
+              {" "}
               Kiểm tra điện áp
             </label>
+
             <label>
               <input
                 type="checkbox"
                 checked={form.checklist.capacity}
                 onChange={() => toggleChecklist("capacity")}
-              />{" "}
+              />
+              {" "}
               Xác minh dung lượng
             </label>
           </div>
 
-          <div className={styles.twoCols}>
-            <div>
-              <p>
-                <strong>Model:</strong>{" "}
-                <input
-                  className={styles.modelInput}
-                  value={form.model}
-                  onChange={(e) => update("model", e.target.value)}
-                  placeholder="Nhập model..."
-                />
-              </p>
+          {/* Hàng 2: Model + Thời gian kiểm tra */}
+          <div className={styles.twoColsRow}>
+            <div className={styles.formRow}>
+              <label>Model</label>
+
+              <input
+                className={styles.modelInput}
+                value={form.model}
+                onChange={(e) => update("model", e.target.value)}
+                placeholder="Nhập model..."
+              />
             </div>
-            <div>
+
+            <div className={styles.formRow}>
               <label>Thời gian kiểm tra</label>
+
               <input
                 type="datetime-local"
                 value={form.date}
                 onChange={(e) => update("date", e.target.value)}
+                className={styles.datetimeInput}
               />
             </div>
           </div>
 
           <h4>Thông số kiểm tra (bắt buộc)</h4>
+
           <div className={styles.formGrid}>
             <div className={styles.formRow}>
               <label>Sức Khỏe (SoH %)</label>
@@ -697,6 +881,7 @@ function CheckModal({ slot, onClose, onComplete }) {
                 onChange={(e) => update("soh", e.target.value)}
               />
             </div>
+
             <div className={styles.formRow}>
               <label>Điện áp (V)</label>
               <input
@@ -705,6 +890,7 @@ function CheckModal({ slot, onClose, onComplete }) {
                 onChange={(e) => update("voltage", e.target.value)}
               />
             </div>
+
             <div className={styles.formRow}>
               <label>Số vòng</label>
               <input
@@ -713,6 +899,7 @@ function CheckModal({ slot, onClose, onComplete }) {
                 onChange={(e) => update("cycles", e.target.value)}
               />
             </div>
+
             <div className={styles.formRow}>
               <label>Nhiệt độ (°C)</label>
               <input
@@ -724,6 +911,7 @@ function CheckModal({ slot, onClose, onComplete }) {
           </div>
 
           <h4>Ghi chú kiểm tra</h4>
+
           <textarea
             placeholder="Bất kỳ vấn đề hoặc quan sát nào..."
             value={form.report}
@@ -734,8 +922,8 @@ function CheckModal({ slot, onClose, onComplete }) {
             <div className={styles.formErrors}>
               <strong>Lỗi:</strong>
               <ul>
-                {errors.map((err, i) => (
-                  <li key={i}>{err}</li>
+                {errors.map((er, i) => (
+                  <li key={i}>{er}</li>
                 ))}
               </ul>
             </div>
@@ -743,15 +931,21 @@ function CheckModal({ slot, onClose, onComplete }) {
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.secondaryBtn} onClick={onClose}>
+          <button
+            className={styles.secondaryBtn}
+            onClick={onClose}
+          >
             Hủy
           </button>
+
           <button
             className={styles.primaryBtn}
             onClick={handleSubmit}
             disabled={!canSubmit}
           >
-            <FontAwesomeIcon icon={faCheck} /> Hoàn thành & ghi nhận
+            <FontAwesomeIcon icon={faCheck} />
+            {" "}
+            Hoàn thành & ghi nhận
           </button>
         </div>
       </div>
@@ -759,32 +953,42 @@ function CheckModal({ slot, onClose, onComplete }) {
   );
 }
 
-
-/* Filter modal - improved UI + validation */
+/* ---------- Filter Modal (có nút Xóa lọc) ---------- */
 function FilterModal({ current, onClose, onApply }) {
+  const STATUS_OPTIONS = ["đầy", "đang sạc", "bảo trì"];
+
   const [local, setLocal] = useState(current);
 
   useEffect(() => setLocal(current), [current]);
 
   function toggleStatus(s) {
-    setLocal((l) => {
-      const next = l.status.includes(s) ? l.status.filter((x) => x !== s) : [...l.status, s];
-      return { ...l, status: next };
-    });
+    setLocal((l) => ({
+      ...l,
+      status: l.status.includes(s)
+        ? l.status.filter((x) => x !== s)
+        : [...l.status, s],
+    }));
   }
 
-  function updatePrefix(val) {
-    const v = (val || "").toUpperCase().trim();
-    setLocal((l) => ({ ...l, slotPrefix: v }));
+  function updatePrefix(v) {
+    setLocal((l) => ({
+      ...l,
+      slotPrefix: (v || "").toUpperCase().trim(),
+    }));
   }
 
   function updateMinSoH(v) {
-    const n = v === "" ? null : Number(v);
-    setLocal((l) => ({ ...l, minSoH: n }));
+    setLocal((l) => ({
+      ...l,
+      minSoH: v === "" ? null : Number(v),
+    }));
   }
 
-  const prefixValid = local.slotPrefix === "" || /^[A-Z]$/.test(local.slotPrefix);
-  const minSoHValid = local.minSoH == null || (local.minSoH >= 0 && local.minSoH <= 100);
+  const prefixValid =
+    local.slotPrefix === "" || /^[A-Z]$/.test(local.slotPrefix);
+
+  const minSoHValid =
+    local.minSoH == null || (local.minSoH >= 0 && local.minSoH <= 100);
 
   const canApply = prefixValid && minSoHValid;
 
@@ -793,35 +997,90 @@ function FilterModal({ current, onClose, onApply }) {
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h3>Lọc Kho Pin</h3>
-          <button className={styles.iconBtn} onClick={onClose}><FontAwesomeIcon icon={faXmark} /></button>
+
+          <button
+            className={styles.iconBtn}
+            onClick={onClose}
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
 
         <div className={styles.modalBody}>
           <h4>Trạng thái</h4>
+
           <div className={styles.checkboxRow}>
-            {["    Đầy     ", "    Đang sạc   ", "    Bảo trì    "].map((s) => (
-              <label key={s}><input type="checkbox" checked={local.status.includes(s)} onChange={() => toggleStatus(s)} /> {s}</label>
+            {STATUS_OPTIONS.map((val) => (
+              <label key={val}>
+                <input
+                  type="checkbox"
+                  checked={local.status.includes(val)}
+                  onChange={() => toggleStatus(val)}
+                />
+                {" "}
+                {val.charAt(0).toUpperCase() + val.slice(1)}
+              </label>
             ))}
           </div>
 
           <div className={styles.filterRow}>
             <div className={styles.formRow}>
               <label>Vị trí Slot bắt đầu (ví dụ: A)</label>
-              <input value={local.slotPrefix} onChange={(e) => updatePrefix(e.target.value)} placeholder="A" />
-              {!prefixValid && <small className={styles.inputError}>Chỉ 1 chữ cái (A-Z)</small>}
+
+              <input
+                value={local.slotPrefix}
+                onChange={(e) => updatePrefix(e.target.value)}
+                placeholder="A"
+              />
+
+              {!prefixValid && (
+                <small className={styles.inputError}>
+                  Chỉ 1 chữ cái (A–Z)
+                </small>
+              )}
             </div>
 
             <div className={styles.formRow}>
               <label>Min SoH (%)</label>
-              <input type="number" value={local.minSoH ?? ""} onChange={(e) => updateMinSoH(e.target.value)} placeholder="Ví dụ: 70" />
-              {!minSoHValid && <small className={styles.inputError}>Giá trị 0–100</small>}
+
+              <input
+                type="number"
+                value={local.minSoH ?? ""}
+                onChange={(e) => updateMinSoH(e.target.value)}
+                placeholder="Ví dụ: 85"
+              />
+
+              {!minSoHValid && (
+                <small className={styles.inputError}>
+                  Giá trị 0–100
+                </small>
+              )}
             </div>
           </div>
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.secondaryBtn} onClick={onClose}>Hủy</button>
-          <button className={styles.primaryBtn} onClick={() => canApply && onApply(local)} disabled={!canApply}>Áp dụng</button>
+          <button
+            className={styles.ghostBtn}
+            onClick={() => onApply(EMPTY_FILTERS)}
+          >
+            Xóa lọc
+          </button>
+
+          <button
+            className={styles.secondaryBtn}
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+
+          <button
+            className={styles.primaryBtn}
+            onClick={() => canApply && onApply(local)}
+            disabled={!canApply}
+          >
+            Áp dụng
+          </button>
         </div>
       </div>
     </div>
