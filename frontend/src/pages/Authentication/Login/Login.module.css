@@ -117,3 +117,13 @@
   border-top-left-radius: 15px;
   border-bottom-left-radius: 15px;
 }
+.submitBtn{
+   padding: 8px 10px;
+  background-color: var(--primary);
+  border-radius: 8px;
+  color: var(--white);
+  font-size: var(--p-font-size);
+  line-height: var(--p-line-height);
+  letter-spacing: var(--p-letter-spacing);
+  font-weight: 500;
+}

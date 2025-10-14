@@ -14,8 +14,7 @@ function Features() {
         <div className={styles.header}>
           <span>Tính năng mạnh mẽ</span>
           <p>
-            CryptoFlow gives you the edge with advanced tools designed for both
-            beginners and professional traders.
+           VinNhot mang đến cho bạn lợi thế với các công cụ tiên tiến được thiết kế dành cho cả người mới bắt đầu và nhà giao dịch chuyên nghiệp.
           </p>
         </div>
         <div className={styles.content}>

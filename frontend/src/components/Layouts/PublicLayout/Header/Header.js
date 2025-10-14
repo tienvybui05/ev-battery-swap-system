@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Link as ScrollLink } from "react-scroll";
 import styles from "./Header.module.css";
 import logo from "../../../../assets/logo/logo.svg";
 import LinkButton from "../../../Shares/LinkButton/LinkButton";
@@ -14,10 +15,35 @@ function Header() {
         </Link>
       </div>
       <nav className={styles.navbar}>
-        <Link to="/">Trang chủ</Link>
-        <Link to="/">Bảng giá</Link>
-        <Link to="/">Trạm</Link>
-        <Link to="/">Liên hệ</Link>
+        <ScrollLink
+          to="about-section"
+          smooth={true}
+          duration={600}
+          offset={-80}
+          spy={true}
+        >
+          Giới thiệu
+        </ScrollLink>
+
+        <ScrollLink
+          to="price-section"
+          smooth={true}
+          duration={600}
+          offset={-80}
+          spy={true}
+        >
+          Bảng giá
+        </ScrollLink>
+
+        <ScrollLink
+          to="feedback-section"
+          smooth={true}
+          duration={600}
+          offset={-80}
+          spy={true}
+        >
+          Đánh giá
+        </ScrollLink>
       </nav>
       <div className={styles.actions}>
         <LinkButton to="/login" text>
