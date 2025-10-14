@@ -9,6 +9,7 @@ import Overview from "./pages/Admin/Overview/Overview";
 import Stations from "./pages/Admin/Stations/Stations";
 import Batteries from "./pages/Admin/Batteries/Batteries";
 import Customers from "./pages/Admin/Customers/Customers";
+import Staff from "./pages/Admin/Staff/Staff";
 
 import {
   FindStation,
@@ -36,6 +37,7 @@ function App() {
             <Route path="stations" element={<Stations />} />
             <Route path="batteries" element={<Batteries />} />
             <Route path="customers" element={<Customers />} />
+            <Route path="staff" element={<Staff />} />
           </Route>
         </Routes>
       </BrowserRouter>

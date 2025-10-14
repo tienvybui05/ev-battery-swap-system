@@ -62,7 +62,7 @@ const menu = {
       },
       {
         title: "Khách hàng",
-        href: "/dashboard",
+        href: "/dashboard/staff",
         icon: <FontAwesomeIcon icon={faUsers} />,
       },
       {
