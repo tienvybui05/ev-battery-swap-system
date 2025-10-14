@@ -25,7 +25,7 @@ function Login() {
         </div>
         <div className={styles.transferRegistration}>
            <div class={styles.divider}><span>------------- Hoặc -------------</span></div>
-        <span>Không có tài khoản? <Link to="/">Đăng ký tại đây</Link></span>
+        <span>Không có tài khoản? <Link to="/register">Đăng ký tại đây</Link></span>
       </div>
       </div>
       <div className={styles.imagesLogin}>

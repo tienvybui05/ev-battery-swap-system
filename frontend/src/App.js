@@ -5,6 +5,7 @@ import Home from "./pages/Home/Home";
 import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Authentication/Login/Login";
+import Register from "./pages/Authentication/Register/Register";
 
 import {
   FindStation,
@@ -23,6 +24,7 @@ function App() {
           <Route path="/" element={<PublicLayout />}>
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register/>} />
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="/dashboard" element={<PrivateLayout />}>
