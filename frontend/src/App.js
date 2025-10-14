@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound/NotFound";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Authentication/Login/Login";
 import Register from "./pages/Authentication/Register/Register";
+import AIInsights from "./pages/Admin/AIInsights/AIInsights";
 
 import {
   FindStation,
@@ -45,6 +46,7 @@ function App() {
             <Route path="batteries" element={<Batteries />} />
             <Route path="customers" element={<Customers />} />
             <Route path="staff" element={<Staff />} />
+            <Route path="aiinsights" element={<AIInsights />} />
           </Route>
         </Routes>
       </BrowserRouter>

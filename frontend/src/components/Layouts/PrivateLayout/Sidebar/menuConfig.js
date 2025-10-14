@@ -10,7 +10,9 @@ import {
   faUsers,
   faUserTie,
   faComment,
+  faBrain,
 } from "@fortawesome/free-solid-svg-icons";
+import { href } from "react-router";
 const menu = {
     driver: [
       {
@@ -64,6 +66,11 @@ const menu = {
         title: "Khách hàng",
         href: "/dashboard/staff",
         icon: <FontAwesomeIcon icon={faUsers} />,
+      },
+      {
+        title: "Thông tin AI",  
+        href: "/dashboard/aiinsights",
+        icon: <FontAwesomeIcon icon={faBrain} />,
       },
       {
         title: "Cảnh báo",
