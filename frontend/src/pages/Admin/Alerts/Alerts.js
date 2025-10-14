@@ -83,7 +83,71 @@ function Alerts() {
     },
   ];
 
-  
+  return (
+    <div className={styles.wrapper}>
+      {/* 🔹 KPI Header */}
+      <div className={styles.kpiGrid}>
+        {kpiData.map((item, i) => (
+          <div key={i} className={styles.kpiCard}>
+            <div className={styles.kpiInfo}>
+              <p className={styles.kpiTitle}>{item.title}</p>
+              <h2 className={styles.kpiValue}>{item.value}</h2>
+              <p className={styles.kpiSub}>{item.sub}</p>
+            </div>
+            <div
+              className={styles.kpiIcon}
+              style={{ color: item.color, backgroundColor: item.color + "20" }}
+            >
+              <FontAwesomeIcon icon={item.icon} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 🔹 Header */}
+      <div className={styles.header}>
+        <h2 className={styles.title}>Cảnh Báo & Thông Báo Hệ Thống</h2>
+        <div className={styles.actions}>
+          <button className={styles.markAll}>Đánh dấu tất cả đã đọc</button>
+          <button className={styles.settings}>
+            <FontAwesomeIcon icon={faGear} /> Cài đặt cảnh báo
+          </button>
+        </div>
+      </div>
+
+      {/* 🔹 Danh sách cảnh báo */}
+      <div className={styles.alertList}>
+        {alerts.map((alert) => (
+          <div
+            key={alert.id}
+            className={`${styles.alertCard} ${styles[alert.type]}`}
+          >
+            <div className={styles.alertMain}>
+              <FontAwesomeIcon
+                icon={alert.icon}
+                className={`${styles.alertIcon} ${styles[alert.type + "Icon"]}`}
+              />
+              <div className={styles.alertInfo}>
+                <p className={styles.alertTitle}>{alert.title}</p>
+                <span className={styles.alertMeta}>
+                  {alert.time} • {alert.source}
+                </span>
+              </div>
+            </div>
+            <div className={styles.alertActions}>
+              <button className={styles.viewBtn}>Xem chi tiết</button>
+              <button
+                className={styles.dismissBtn}
+                onClick={() => handleDismiss(alert.id)}
+              >
+                Ẩn thông báo
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default Alerts;
