@@ -75,22 +75,22 @@ const menu = {
     staff: [
       {
         title: "Quản lý hàng chờ",
-        href: "/dashboard",
+        href: "/dashboard/queueManagement",
         icon: <FontAwesomeIcon icon={faGlobe} />,
       },
       {
         title: "Kho hàng",
-        href: "/dashboard",
+        href: "/dashboard/inventory",
         icon: <FontAwesomeIcon icon={faChargingStation} />,
       },
       {
         title: "Giao dịch",
-        href: "/dashboard",
+        href: "/dashboard/transaction",
         icon: <FontAwesomeIcon icon={faUserTie} />,
       },
       {
         title: "Báo cáo",
-        href: "/dashboard",
+        href: "/dashboard/report",
         icon: <FontAwesomeIcon icon={faUsers} />,
       },
     ],
