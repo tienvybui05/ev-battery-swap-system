@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Authentication/Login/Login";
 import Register from "./pages/Authentication/Register/Register";
 import AIInsights from "./pages/Admin/AIInsights/AIInsights";
+import Alerts from "./pages/Admin/Alerts/Alerts";
 
 import {
   FindStation,
@@ -47,6 +48,7 @@ function App() {
             <Route path="customers" element={<Customers />} />
             <Route path="staff" element={<Staff />} />
             <Route path="aiinsights" element={<AIInsights />} />
+            <Route path="alerts" element={<Alerts />} />
           </Route>
         </Routes>
       </BrowserRouter>

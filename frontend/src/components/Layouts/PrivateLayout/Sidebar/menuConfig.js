@@ -74,7 +74,7 @@ const menu = {
       },
       {
         title: "Cảnh báo",
-        href: "/dashboard",
+        href: "/dashboard/alerts",
         icon: <FontAwesomeIcon icon={faComment} />,
       },
     ],
