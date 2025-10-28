@@ -2,6 +2,8 @@ package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.CustomUserDetailsService;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.JwtUtil;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.LoginRequest;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.LoginResponse;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
@@ -133,112 +135,20 @@ public class AuthController {
      */
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            System.out.println("🎯 === BẮT ĐẦU LOGIN ===");
+            NguoiDung user = nguoiDungService.timTheoSoDienThoai(request.getSoDienThoai())
+                    .orElseThrow(() -> new RuntimeException("Sai số điện thoại hoặc mật khẩu"));
 
-            String soDienThoai = body.get("soDienThoai");
-            String matKhau = body.get("matKhau");
-
-            System.out.println("📱 Số điện thoại: " + soDienThoai);
-            System.out.println("🔐 Mật khẩu: " + matKhau);
-
-            // Tìm user
-            System.out.println("🔍 Tìm user với SĐT: " + soDienThoai);
-            Optional<NguoiDung> userOpt = nguoiDungService.timTheoSoDienThoai(soDienThoai);
-
-            if (!userOpt.isPresent()) {
-                System.out.println("❌ KHÔNG TÌM THẤY USER");
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Số điện thoại không tồn tại");
-                return ResponseEntity.badRequest().body(error);
+            if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhau())) {
+                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu");
             }
 
-            NguoiDung user = userOpt.get(); // 🎯 QUAN TRỌNG: Lấy user từ Optional
-            System.out.println("✅ TÌM THẤY USER:");
-            System.out.println("   - ID: " + user.getMaNguoiDung());
-            System.out.println("   - Tên: " + user.getHoTen());
-            System.out.println("   - Vai trò: " + user.getVaiTro());
-            System.out.println("   - Mật khẩu DB: " + user.getMatKhau());
-
-            // 🔥 DEBUG CHI TIẾT SO SÁNH MẬT KHẨU
-            System.out.println("🔑 === DEBUG PASSWORD MATCHING ===");
-            System.out.println("   - Input password: '" + matKhau + "'");
-            System.out.println("   - DB password: '" + user.getMatKhau() + "'");
-            System.out.println("   - DB password length: " + user.getMatKhau().length());
-            System.out.println("   - Is BCrypt: " + user.getMatKhau().startsWith("$2a$"));
-
-            // Test nhiều cách
-            boolean match1 = passwordEncoder.matches(matKhau, user.getMatKhau());
-            System.out.println("   - passwordEncoder.matches(): " + match1);
-
-            // Test với khoảng trắng
-            boolean match2 = passwordEncoder.matches(matKhau.trim(), user.getMatKhau());
-            System.out.println("   - With trim(): " + match2);
-
-            // Test manual BCrypt
-            try {
-                boolean match3 = BCrypt.checkpw(matKhau, user.getMatKhau());
-                System.out.println("   - BCrypt.checkpw(): " + match3);
-            } catch (Exception e) {
-                System.out.println("   - BCrypt.checkpw() error: " + e.getMessage());
-            }
-
-            if (!match1) {
-                System.out.println("❌ TẤT CẢ SO SÁNH MẬT KHẨU ĐỀU FAIL!");
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Số điện thoại hoặc mật khẩu không đúng");
-                error.put("debug", "Password mismatch - check input");
-                return ResponseEntity.badRequest().body(error);
-            }
-
-            System.out.println("✅ MẬT KHẨU KHỚP!");
-
-            // Tiếp tục xử lý login thành công...
-            UserDetails userDetails = customUserDetailsService.loadUserByUsername(soDienThoai);
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            System.out.println("🎫 Tạo token...");
-            // Tạo token với số điện thoại
             String token = jwtUtil.generateToken(user.getSoDienThoai(), user.getVaiTro());
-            System.out.println("✅ Token created successfully");
-
-            // Test token ngay
-            try {
-                String testExtract = jwtUtil.extractSoDienThoai(token);
-                String testRole = jwtUtil.extractRole(token);
-                boolean testValid = jwtUtil.isTokenValid(token, user.getSoDienThoai());
-
-                System.out.println("🧪 Token test:");
-                System.out.println("   - Extract SĐT: " + testExtract);
-                System.out.println("   - Extract Role: " + testRole);
-                System.out.println("   - Is Valid: " + testValid);
-            } catch (Exception e) {
-                System.out.println("❌ Token test failed: " + e.getMessage());
-                throw e;
-            }
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("role", user.getVaiTro());
-            response.put("email", user.getEmail());
-            response.put("soDienThoai", user.getSoDienThoai());
-            response.put("userId", user.getMaNguoiDung());
-            response.put("hoTen", user.getHoTen());
-
-            System.out.println("🎉 LOGIN THÀNH CÔNG!");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(new LoginResponse(token, user));
 
         } catch (Exception e) {
-            System.out.println("💥 LỖI LOGIN: " + e.getClass().getSimpleName());
-            System.out.println("💥 Message: " + e.getMessage());
-            e.printStackTrace();
-
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Đăng nhập thất bại: " + e.getMessage());
-            return ResponseEntity.status(500).body(error);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 

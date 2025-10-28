@@ -50,20 +50,32 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
     @Autowired  // THÊM DÒNG NÀY
     private CustomUserDetailsService customUserDetailsService;
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http.csrf(csrf -> csrf.disable())
+//                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/user-service/auth/**").permitAll() // Cho phép tất cả các endpoint auth
+////                        .requestMatchers("/api/user-service/public/**").permitAll()
+//                        .anyRequest().authenticated()
+//                )
+//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf.disable()) // QUAN TRỌNG: Tắt CSRF
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user-service/**").permitAll() // Cho phép tất cả các endpoint auth
-//                        .requestMatchers("/api/user-service/public/**").permitAll()
+                        .requestMatchers("/api/user-service/auth/**").permitAll()
+                        .requestMatchers("/api/user-service/taixe").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

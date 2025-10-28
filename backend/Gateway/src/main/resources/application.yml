@@ -1,9 +1,7 @@
 server:
-  port:8080
-spring:
-  application:
-    name: api-gateway
+  port: 8080
 
+spring:
   cloud:
     gateway:
       routes:

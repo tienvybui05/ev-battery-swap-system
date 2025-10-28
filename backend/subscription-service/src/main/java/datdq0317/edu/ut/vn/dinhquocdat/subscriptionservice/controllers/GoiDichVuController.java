@@ -15,6 +15,10 @@ public class GoiDichVuController {
     @Autowired
     private IGoiDichVuService goiDichVuService;
 
+    @GetMapping("/public")
+    public ResponseEntity<String> publicTest() {
+        return ResponseEntity.ok("Public OK");
+    }
     @PostMapping
     public ResponseEntity<GoiDichVu> themGoi(@RequestBody GoiDichVu goi) {
         try {
