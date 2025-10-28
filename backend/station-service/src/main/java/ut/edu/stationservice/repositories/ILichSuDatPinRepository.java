@@ -1,7 +1,8 @@
 package ut.edu.stationservice.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import ut.edu.stationservice.models.LichSuDatPin;
 import ut.edu.stationservice.models.Tram;
 
-public interface ILichSuDatPinRepository extends JpaRepository<Tram,Long> {
+public interface ILichSuDatPinRepository extends JpaRepository<LichSuDatPin,Long> {
 }
