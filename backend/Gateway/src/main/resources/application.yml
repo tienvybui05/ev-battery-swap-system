@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      routes:
+        - id: driver-service
+          uri: http://driver-service:8081
+          predicates:
+            - Path=/drivers/**
+        - id: station-service
+          uri: http://station-service:8082
+          predicates:
+            - Path=/stations/**
