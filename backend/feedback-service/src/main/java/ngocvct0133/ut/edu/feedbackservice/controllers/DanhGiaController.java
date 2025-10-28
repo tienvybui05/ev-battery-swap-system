@@ -47,6 +47,6 @@ public class DanhGiaController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.noContent().build(); // HTTP 204
+        return ResponseEntity.noContent().build();
     }
 }

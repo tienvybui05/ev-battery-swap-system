@@ -8,6 +8,7 @@ import java.util.List;
 
 @Service
 public class GiaoDichDoiPinService implements IGiaoDichDoiPinService {
+
     private final IGiaoDichDoiPinRepository giaoDichDoiPinRepository;
 
     public GiaoDichDoiPinService(IGiaoDichDoiPinRepository giaoDichDoiPinRepository) {
@@ -16,31 +17,39 @@ public class GiaoDichDoiPinService implements IGiaoDichDoiPinService {
 
     @Override
     public GiaoDichDoiPin themGiaoDichDoiPin(GiaoDichDoiPin doiPin) {
-        return this.giaoDichDoiPinRepository.save(doiPin);
+        return giaoDichDoiPinRepository.save(doiPin);
     }
 
     @Override
     public List<GiaoDichDoiPin> danhSachGiaoDichDoiPin() {
-        return this.giaoDichDoiPinRepository.findAll();
+        return giaoDichDoiPinRepository.findAll();
     }
 
     @Override
-    public GiaoDichDoiPin layGiaoDichDoiPinTheoId(long id) {
-        return this.giaoDichDoiPinRepository.findById(id).orElse(null);
+    public GiaoDichDoiPin layGiaoDichDoiPinTheoId(Long id) {
+        return giaoDichDoiPinRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("GiaoDichDoiPin not found with id: " + id));
     }
 
     @Override
-    public boolean xoaGiaoDichDoiPinTheoId(long id) {
-        if (giaoDichDoiPinRepository.existsById(id)) {
-            giaoDichDoiPinRepository.deleteById(id);
-            return true;
+    public boolean xoaGiaoDichDoiPinTheoId(Long id) {
+        if (!giaoDichDoiPinRepository.existsById(id)) {
+            return false;
         }
-        return false;
+        giaoDichDoiPinRepository.deleteById(id);
+        return true;
     }
 
-
     @Override
-    public GiaoDichDoiPin suaGiaoDichDoiPinTheoId(long id) {
-        return null;
+    public GiaoDichDoiPin suaGiaoDichDoiPinTheoId(Long id, GiaoDichDoiPin giaoDichDoiPin) {
+        GiaoDichDoiPin suaGiaoDich = giaoDichDoiPinRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("GiaoDichDoiPin not found with id: " + id));
+
+        suaGiaoDich.setTrangThaiGiaoDich(giaoDichDoiPin.getTrangThaiGiaoDich());
+        suaGiaoDich.setPhuongThucThanhToan(giaoDichDoiPin.getPhuongThucThanhToan());
+        suaGiaoDich.setThanhtien(giaoDichDoiPin.getThanhtien()); // ✅ fix
+
+        return giaoDichDoiPinRepository.save(suaGiaoDich);
     }
 }
+

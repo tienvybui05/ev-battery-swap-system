@@ -7,7 +7,7 @@ import java.util.List;
 public interface IGiaoDichDoiPinService {
     GiaoDichDoiPin themGiaoDichDoiPin(GiaoDichDoiPin doiPin);
     List<GiaoDichDoiPin> danhSachGiaoDichDoiPin();
-    GiaoDichDoiPin layGiaoDichDoiPinTheoId(long id);
-    boolean xoaGiaoDichDoiPinTheoId(long id);
-    GiaoDichDoiPin suaGiaoDichDoiPinTheoId(long id);
+    GiaoDichDoiPin layGiaoDichDoiPinTheoId(Long id);
+    boolean xoaGiaoDichDoiPinTheoId(Long id);
+    GiaoDichDoiPin suaGiaoDichDoiPinTheoId(Long id, GiaoDichDoiPin giaoDichDoiPin);
 }

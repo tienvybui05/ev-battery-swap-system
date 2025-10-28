@@ -2,35 +2,56 @@ package ngocvct0133.ut.edu.transactionservice.controllers;
 
 import ngocvct0133.ut.edu.transactionservice.modules.GiaoDichDoiPin;
 import ngocvct0133.ut.edu.transactionservice.services.GiaoDichDoiPinService;
+import ngocvct0133.ut.edu.transactionservice.services.IGiaoDichDoiPinService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/giaodichdoipin")
+@RequestMapping("/api/transaction-service/giaodichdoipin")
 public class GiaoDichDoiPinController {
-    private final GiaoDichDoiPinService giaoDichDoiPinService;
 
-    public GiaoDichDoiPinController(GiaoDichDoiPinService giaoDichDoiPinService) {
+    private final IGiaoDichDoiPinService giaoDichDoiPinService;
+
+    public GiaoDichDoiPinController(IGiaoDichDoiPinService giaoDichDoiPinService) {
         this.giaoDichDoiPinService = giaoDichDoiPinService;
     }
 
+    // Lấy tất cả giao dịch
     @GetMapping
-    public List<GiaoDichDoiPin> laydanhSachGiaoDichDoiPin() {
-        return giaoDichDoiPinService.danhSachGiaoDichDoiPin();
+    public ResponseEntity<List<GiaoDichDoiPin>> layDanhSachGiaoDich() {
+        return ResponseEntity.ok(giaoDichDoiPinService.danhSachGiaoDichDoiPin());
     }
 
+    // Lấy giao dịch theo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<GiaoDichDoiPin> layGiaoDichTheoId(@PathVariable Long id) {
+        return ResponseEntity.ok(giaoDichDoiPinService.layGiaoDichDoiPinTheoId(id));
+    }
+
+    // Thêm giao dịch
     @PostMapping
-    public GiaoDichDoiPin themGiaoDichDoiPin(@RequestBody GiaoDichDoiPin doiPin) {
-        return giaoDichDoiPinService.themGiaoDichDoiPin(doiPin);
+    public ResponseEntity<GiaoDichDoiPin> themGiaoDich(@RequestBody GiaoDichDoiPin doiPin) {
+        GiaoDichDoiPin saved = giaoDichDoiPinService.themGiaoDichDoiPin(doiPin);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    // Sửa giao dịch
+    @PutMapping("/{id}")
+    public ResponseEntity<GiaoDichDoiPin> suaGiaoDich(@PathVariable Long id, @RequestBody GiaoDichDoiPin giaoDich) {
+        return ResponseEntity.ok(giaoDichDoiPinService.suaGiaoDichDoiPinTheoId(id, giaoDich));
+    }
+
+    // Xóa giao dịch
     @DeleteMapping("/{id}")
-    public boolean xoaGiaoDichDoiPin(@PathVariable long id){
+    public ResponseEntity<Void> xoaGiaoDich(@PathVariable Long id) {
         boolean deleted = giaoDichDoiPinService.xoaGiaoDichDoiPinTheoId(id);
-        if(deleted){
-            return true;
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
         }
-        return false;
+        return ResponseEntity.noContent().build();
     }
 }
+
