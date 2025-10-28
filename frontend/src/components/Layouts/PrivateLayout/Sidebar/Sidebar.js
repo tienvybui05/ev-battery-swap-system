@@ -1,11 +1,28 @@
 import { Link } from "react-router";
+import { useEffect, useState } from "react"; // THÊM
 
 import styles from "./Sidebar.module.css";
 import logo from "../../../../assets/logo/logo.svg";
 import menu from "./menuConfig";
+
 function Sidebar() {
-  var role = "staff";
-  const currentMenu = menu[role] || [];
+  const [currentMenu, setCurrentMenu] = useState([]);
+
+  // THÊM: Lấy role từ localStorage và map với menu
+  useEffect(() => {
+    const userRole = localStorage.getItem("userRole");
+    
+    // Map role từ backend sang key trong menuConfig
+    let roleKey = "staff"; // mặc định
+    
+    if (userRole === "TAIXE") roleKey = "driver";
+    else if (userRole === "ADMIN") roleKey = "admin"; 
+    else if (userRole === "NHANVIEN") roleKey = "staff";
+    
+    console.log("User Role:", userRole, "Menu Key:", roleKey); // Debug
+    
+    setCurrentMenu(menu[roleKey] || []);
+  }, []);
 
   return (
     <nav className={styles.wrapper}>
@@ -18,14 +35,15 @@ function Sidebar() {
         </Link>
       </div>
       <div className={styles.content}>
-        {currentMenu.map((ojb, index) => (
-          <Link key={index} to={ojb.href} className={styles.active}>
-            {ojb.icon}
-            {ojb.title}
+        {currentMenu.map((obj, index) => (
+          <Link key={index} to={obj.href} className={styles.active}>
+            {obj.icon}
+            {obj.title}
           </Link>
         ))}
       </div>
     </nav>
   );
 }
+
 export default Sidebar;

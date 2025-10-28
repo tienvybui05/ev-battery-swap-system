@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router"; // THÊM Navigate
 import { PublicLayout, PrivateLayout } from "./components/Layouts";
 import Home from "./pages/Home/Home";
 import NotFound from "./pages/NotFound/NotFound";
@@ -17,6 +17,12 @@ import { Batteries, Customers, Overview, Staff, Stations } from "./pages/Admin";
 import { Report, Inventory, QueueManagement, Transaction } from "./pages/Staff";
 import ProtectedRoute from "./components/Shares/ProtectedRoute/ProtectedRoute.js";
 
+// THÊM: Component bảo vệ toàn bộ dashboard
+const ProtectedLayout = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/login" replace />;
+};
+
 function App() {
   return (
     <>
@@ -29,7 +35,15 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Route>
 
-          <Route path="/dashboard" element={<PrivateLayout />}>
+          {/* BỌC PrivateLayout VỚI ProtectedLayout */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedLayout>
+                <PrivateLayout />
+              </ProtectedLayout>
+            }
+          >
             <Route index element={<Dashboard />} />
 
             {/* Driver - chỉ TAIXE được truy cập */}
