@@ -1,4 +1,4 @@
-package datdq0317.edu.ut.vn.dinhquocdat.userservice.modules;
+package datdq0317.edu.ut.vn.dinhquocdat.userservice.models;
 
 import jakarta.persistence.*;
 

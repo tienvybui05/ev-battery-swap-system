@@ -1,11 +1,12 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.services;
 
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.modules.NguoiDung;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.modules.TaiXe;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.IQuanLyRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.ITaiXeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -15,8 +16,13 @@ import java.util.List;
 public class TaiXeService implements ITaiXeService{
     @Autowired
     private ITaiXeRepository taiXeRepository;
+
     @Autowired
     private IQuanLyRepository nguoiDungRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // Thêm PasswordEncoder
+
     @Override
     public TaiXe themTaiXe(TaiXeDTO dto) {
         // Kiểm tra email trùng
@@ -34,7 +40,11 @@ public class TaiXeService implements ITaiXeService{
         nd.setEmail(dto.getEmail());
         nd.setSoDienThoai(dto.getSoDienThoai());
         nd.setGioiTinh(dto.getGioiTinh());
-        nd.setMatKhau(dto.getMatKhau());
+
+        // ENCODE MẬT KHẨU TRƯỚC KHI LƯU
+        String encodedPassword = passwordEncoder.encode(dto.getMatKhau());
+        nd.setMatKhau(encodedPassword);
+
         nd.setNgaySinh(dto.getNgaySinh());
         nd.setNgayTao(LocalDate.now());
         nd.setVaiTro("TAIXE");
@@ -72,7 +82,6 @@ public class TaiXeService implements ITaiXeService{
             tx.setBangLaiXe(dto.getBangLaiXe());
             NguoiDung nd = tx.getNguoiDung();
 
-
             if (!nd.getEmail().equals(dto.getEmail())) {
                 nguoiDungRepository.findByEmail(dto.getEmail()).ifPresent(existing -> {
                     if (!existing.getMaNguoiDung().equals(nd.getMaNguoiDung())) {
@@ -81,7 +90,6 @@ public class TaiXeService implements ITaiXeService{
                 });
                 nd.setEmail(dto.getEmail());
             }
-
 
             if (!nd.getSoDienThoai().equals(dto.getSoDienThoai())) {
                 nguoiDungRepository.findBySoDienThoai(dto.getSoDienThoai()).ifPresent(existing -> {
@@ -95,7 +103,13 @@ public class TaiXeService implements ITaiXeService{
             // Cập nhật các field khác
             nd.setHoTen(dto.getHoTen());
             nd.setGioiTinh(dto.getGioiTinh());
-            nd.setMatKhau(dto.getMatKhau());
+
+            // ENCODE MẬT KHẨU KHI SỬA (nếu có thay đổi mật khẩu)
+            if (dto.getMatKhau() != null && !dto.getMatKhau().isEmpty()) {
+                String encodedPassword = passwordEncoder.encode(dto.getMatKhau());
+                nd.setMatKhau(encodedPassword);
+            }
+
             nd.setNgaySinh(dto.getNgaySinh());
             nguoiDungRepository.save(nd);
 

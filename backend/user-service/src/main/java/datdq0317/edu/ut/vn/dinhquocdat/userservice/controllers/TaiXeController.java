@@ -1,7 +1,7 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.modules.TaiXe;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.ITaiXeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

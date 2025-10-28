@@ -1,7 +1,7 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.services;
 
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.NhanVienDTO;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.modules.NhanVien;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NhanVien;
 
 import java.util.List;
 

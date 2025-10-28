@@ -1,6 +1,6 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.modules.NguoiDung;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.IQuanLyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

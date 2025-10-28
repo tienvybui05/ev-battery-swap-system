@@ -1,5 +1,6 @@
-package datdq0317.edu.ut.vn.dinhquocdat.userservice.modules;
+package datdq0317.edu.ut.vn.dinhquocdat.userservice.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -22,11 +23,19 @@ public class NguoiDung {
     private LocalDate ngaySinh;
     private LocalDate ngayTao;
     private String vaiTro;
+    @OneToOne(mappedBy = "nguoiDung")
+    @JsonIgnore
+    private TaiXe taiXe;
 
-    public NguoiDung() {
+    public TaiXe getTaiXe() {
+        return taiXe;
     }
 
-    public NguoiDung(Long maNguoiDung, String hoTen, String email, String soDienThoai, String gioiTinh, String matKhau, LocalDate ngaySinh, LocalDate ngayTao, String vaiTro) {
+    public void setTaiXe(TaiXe taiXe) {
+        this.taiXe = taiXe;
+    }
+
+    public NguoiDung(Long maNguoiDung, String hoTen, String email, String soDienThoai, String gioiTinh, String matKhau, LocalDate ngaySinh, LocalDate ngayTao, String vaiTro, TaiXe taiXe) {
         this.maNguoiDung = maNguoiDung;
         this.hoTen = hoTen;
         this.email = email;
@@ -36,7 +45,12 @@ public class NguoiDung {
         this.ngaySinh = ngaySinh;
         this.ngayTao = ngayTao;
         this.vaiTro = vaiTro;
+        this.taiXe = taiXe;
     }
+
+    public NguoiDung() {
+    }
+
 
     public Long getMaNguoiDung() {
         return maNguoiDung;

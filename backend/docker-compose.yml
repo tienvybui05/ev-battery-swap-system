@@ -33,6 +33,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: user_service
+    ports:
+      - "3308:3306" 
     networks:
       - evnet
 
@@ -51,6 +53,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: subscription_service
+    ports:
+      - "3309:3306" 
     networks:
       - evnet
 
@@ -69,6 +73,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: battery_service
+    ports:
+      - "3310:3306" 
     networks:
       - evnet
 
@@ -87,6 +93,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: station_service
+    ports:
+      - "3311:3306"  
     networks:
       - evnet
 
@@ -105,6 +113,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: transaction_service
+    ports:
+      - "3312:3306"  
     networks:
       - evnet
 
@@ -123,6 +133,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: feedback_service
+    ports:
+      - "3313:3306"  
     networks:
       - evnet
 
@@ -141,6 +153,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: vehicle_service
+    ports:
+      - "3314:3306" 
     networks:
       - evnet
 
@@ -148,3 +162,5 @@ services:
 networks:
   evnet:
     driver: bridge
+
+# docker compose up mysql_user mysql_subscription mysql_battery mysql_station mysql_transaction mysql_feedback mysql_vehicle
