@@ -17,45 +17,58 @@ public class NhanVienController {
     private INhanVienService nhanVienService;
 
     @PostMapping
-    public ResponseEntity<NhanVien> themNhanVien(@RequestBody NhanVienDTO dto) {
+    public ResponseEntity<?> themNhanVien(@RequestBody NhanVienDTO dto) {
         try {
             NhanVien nv = nhanVienService.themNhanVien(dto);
             return ResponseEntity.ok(nv);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
     }
 
     @GetMapping
     public ResponseEntity<List<NhanVien>> danhSachNhanVien() {
-        return ResponseEntity.ok(nhanVienService.danhSachNhanVien());
+        try {
+            List<NhanVien> nhanViens = nhanVienService.danhSachNhanVien();
+            return ResponseEntity.ok(nhanViens);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<NhanVien> layNhanVienTheoId(@PathVariable Long id) {
-        NhanVien nv = nhanVienService.layNhanVienTheoId(id);
-        if (nv == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(nv);
+        try {
+            NhanVien nv = nhanVienService.layNhanVienTheoId(id);
+            if (nv == null) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(nv);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    // ✅ API cập nhật nhân viên
     @PutMapping("/{id}")
-    public ResponseEntity<NhanVien> suaNhanVien(@PathVariable Long id, @RequestBody NhanVienDTO dto) {
+    public ResponseEntity<?> suaNhanVien(@PathVariable Long id, @RequestBody NhanVienDTO dto) {
         try {
             NhanVien updated = nhanVienService.suaNhanVien(id, dto);
-            if (updated == null) {
-                return ResponseEntity.notFound().build();
-            }
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> xoaNhanVien(@PathVariable Long id) {
-        boolean deleted = nhanVienService.xoaNhanVien(id);
-        if (deleted) return ResponseEntity.noContent().build();
-        return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> xoaNhanVien(@PathVariable Long id) {
+        try {
+            boolean deleted = nhanVienService.xoaNhanVien(id);
+            if (deleted) return ResponseEntity.ok().body("Xóa nhân viên thành công");
+            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
+        }
     }
 }

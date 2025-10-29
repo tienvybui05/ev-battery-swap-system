@@ -11,4 +11,5 @@ public interface INguoiDungRepository  extends JpaRepository<NguoiDung, Long> {
     Optional<NguoiDung> findBySoDienThoai(String soDienThoai);
     Boolean existsByEmail(String email);
     Boolean existsBySoDienThoai(String soDienThoai);
+    List<NguoiDung> findByVaiTro(String vaiTro);
 }
