@@ -1,4 +1,5 @@
 import styles from "./Button.module.css";
+
 function Button({
   text = false,
   primary = false,
@@ -15,22 +16,23 @@ function Button({
   children,
   ...rest
 }) {
-  var classes = styles.wrapper;
+  let classes = styles.wrapper;
+  
+  // SỬA: Dùng if-else hoặc switch để tránh xung đột classes
   if (primary) {
     classes += ` ${styles.primary}`;
-  }
-  if (text) {
+  } else if (text) {
     classes += ` ${styles.text}`;
-  }
-
-  if (blackoutline) {
+  } else if (blackoutline) {
     classes += ` ${styles.blackoutline}`;
+  } else if (outline) {
+    classes += ` ${styles.outline}`;
   }
 
+  // Các class bổ sung có thể dùng cùng nhau
   if (small) {
     classes += ` ${styles.small}`;
   }
-
   if (order) {
     classes += ` ${styles.order}`;
   }
@@ -43,16 +45,22 @@ function Button({
   if (icon) {
     classes += ` ${styles.icon}`;
   }
-  if (outline) {
-    classes += ` ${styles.outline}`;
+
+  // Thêm className từ bên ngoài
+  if (className) {
+    classes += ` ${className}`;
   }
-  return <button
-    type={type}
-    className={classes}
-    onClick={onClick}
-    {...rest}
-  >
-    {children}
-  </button>;
+
+  return (
+    <button
+      type={type}
+      className={classes}
+      onClick={onClick}
+      {...rest}
+    >
+      {children}
+    </button>
+  );
 }
+
 export default Button;

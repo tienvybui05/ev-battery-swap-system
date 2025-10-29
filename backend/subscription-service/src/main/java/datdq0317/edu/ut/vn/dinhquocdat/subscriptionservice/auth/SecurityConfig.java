@@ -23,7 +23,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/subscription-service/public/**").permitAll()
+                        .requestMatchers("/api/subscription-service/**").permitAll()
                         .anyRequest().authenticated() // Tất cả API khác cần token
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

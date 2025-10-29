@@ -25,9 +25,8 @@ public class QuanLyService implements IQuanLyService {
 
     @Override
     public List<NguoiDung> danhSachQuanLy() {
-        return quanLyRepository.findAll();
+        return quanLyRepository.findByVaiTro("ADMIN");
     }
-
     @Override
     public boolean xoaQuanLy(Long id) {
         try{

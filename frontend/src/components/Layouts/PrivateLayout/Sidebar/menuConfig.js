@@ -58,12 +58,12 @@ const menu = {
         icon: <FontAwesomeIcon icon={faBatteryFull} />,
       },
       {
-        title: "Nhân viên",
+        title: "Khách hàng",
         href: "/dashboard/customers",
         icon: <FontAwesomeIcon icon={faUserTie} />,
       },
       {
-        title: "Khách hàng",
+        title: "Nhân viên",
         href: "/dashboard/staff",
         icon: <FontAwesomeIcon icon={faUsers} />,
       },
