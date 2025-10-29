@@ -175,3 +175,6 @@
     border-radius: 9999px;
     transition: width 0.3s ease;
 }
+.packageItem{
+    margin-top: 10px;
+}

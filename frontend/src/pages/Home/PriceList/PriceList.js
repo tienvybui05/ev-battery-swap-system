@@ -18,12 +18,13 @@ function PriceList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchGoiDichVu = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch("/api/subscription-service/goidichvu");
-        if (!res.ok) throw new Error("Không thể tải danh sách gói dịch vụ");
-        const data = await res.json();
-        setGoiDichVu(data);
+        // Chỉ lấy danh sách gói dịch vụ
+        const resGoi = await fetch("/api/subscription-service/goidichvu");
+        if (!resGoi.ok) throw new Error("Không thể tải danh sách gói dịch vụ");
+        const dataGoi = await resGoi.json();
+        setGoiDichVu(dataGoi);
         
         setTimeout(() => {
           setSwiperKey(prev => prev + 1);
@@ -36,10 +37,36 @@ function PriceList() {
       }
     };
 
-    fetchGoiDichVu();
+    fetchData();
   }, []);
 
-  const handleDangKy = (goi) => {
+  // HÀM KIỂM TRA TRỰC TIẾP TRONG DATABASE
+  const kiemTraGoiConHan = async () => {
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
+    
+    if (!token || !userId) return false;
+
+    try {
+      // KIỂM TRA TRỰC TIẾP TRONG DATABASE
+      const resCheck = await fetch(`/api/subscription-service/lichsudangkygoi/taixe/${userId}/kiemtra`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (resCheck.ok) {
+        const { coGoiConHan } = await resCheck.json();
+        return coGoiConHan;
+      }
+    } catch (error) {
+      console.error("Lỗi kiểm tra:", error);
+    }
+    
+    return false;
+  };
+
+  const handleDangKy = async (goi) => {
     const token = localStorage.getItem("token");
     const userRole = localStorage.getItem("userRole");
     
@@ -54,66 +81,61 @@ function PriceList() {
       return;
     }
 
+    // KIỂM TRA TRỰC TIẾP TRONG DATABASE - LUÔN MỚI NHẤT
+    const coGoiConHan = await kiemTraGoiConHan();
+    if (coGoiConHan) {
+      alert("Bạn đang có gói dịch vụ còn hạn. Vui lòng đợi hết hạn để đăng ký gói mới!");
+      return;
+    }
+
+    // NẾU KHÔNG CÓ GÓI CÒN HẠN, HIỆN MODAL
     setSelectedGoi(goi);
     setShowModal(true);
   };
 
   const handleXacNhanDangKy = async () => {
-  setLoading(true);
-  
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-  const userRole = localStorage.getItem("userRole");
+    setLoading(true);
+    
+    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
 
-  try {
-    // Gọi API lưu lịch sử đăng ký
-    const res = await fetch("/api/subscription-service/lichsudangkygoi", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        maTaiXe: parseInt(userId),  // ID tài xế
-        maGoi: selectedGoi.maGoi,   // ID gói được chọn
-        trangThai: "DANG_SU_DUNG"   // Trạng thái mặc định
-      }),
-    });
+    try {
+      // Gọi API lưu lịch sử đăng ký
+      const res = await fetch("/api/subscription-service/lichsudangkygoi", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          maTaiXe: parseInt(userId),
+          maGoi: selectedGoi.maGoi,
+          trangThai: "DANG_SU_DUNG"
+        }),
+      });
 
-    if (!res.ok) {
-      throw new Error("Đăng ký thất bại");
+      if (!res.ok) {
+        throw new Error("Đăng ký thất bại");
+      }
+
+      const data = await res.json();
+      console.log("Đăng ký thành công:", data);
+      
+      alert("Đăng ký gói dịch vụ thành công!");
+      setShowModal(false);
+      setSelectedGoi(null);
+
+    } catch (error) {
+      console.error("Lỗi đăng ký:", error);
+      alert("❌ " + error.message);
+    } finally {
+      setLoading(false);
     }
-
-    const data = await res.json();
-    console.log("Đăng ký thành công:", data);
-    
-    // Hiện thông báo thành công
-    alert(" Đăng ký gói dịch vụ thành công!");
-    
-    // Đóng modal
-    setShowModal(false);
-    setSelectedGoi(null);
-
-  } catch (error) {
-    console.error("Lỗi đăng ký:", error);
-    alert(" Đăng ký thất bại: " + error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleHuyDangKy = () => {
     setShowModal(false);
     setSelectedGoi(null);
-  };
-
-  // HÀM ĐỊNH DẠNG THỜI GIAN THEO NGÀY
-  const formatThoiGian = (soNgay) => {
-    if (soNgay >= 30) {
-      const soThang = Math.floor(soNgay / 30);
-      return `${soThang} tháng`; // Hoặc giữ nguyên "30 ngày" nếu muốn
-    }
-    return `${soNgay} ngày`;
   };
 
   if (loading) return <div className={styles.loading}>Đang tải...</div>;
@@ -153,11 +175,11 @@ function PriceList() {
                 <span className={styles.numberOfChanges}>
                   Số lần đổi: {item.soLanDoi}
                 </span>
-                {/* SỬA THÀNH NGÀY */}
                 <span className={styles.numberOfChanges}>
-                  Thời gian: {formatThoiGian(item.thoiGianDung)}
+                  Thời gian: {item.thoiGianDung} ngày
                 </span>
                 
+                {/* NÚT VẪN HIỆN BÌNH THƯỜNG */}
                 <Button 
                   primary 
                   onClick={() => handleDangKy(item)}
@@ -192,8 +214,7 @@ function PriceList() {
                   {selectedGoi.gia?.toLocaleString('vi-VN')} VNĐ
                 </div>
                 <div className={styles.modalDetails}>
-                  {/* SỬA THÀNH NGÀY */}
-                  <span>Thời gian: {formatThoiGian(selectedGoi.thoiGianDung)}</span>
+                  <span>Thời gian: {selectedGoi.thoiGianDung} ngày</span>
                   <span>Số lần đổi: {selectedGoi.soLanDoi}</span>
                   <span>{selectedGoi.moTa}</span>
                 </div>
@@ -204,14 +225,16 @@ function PriceList() {
               <Button 
                 outline 
                 onClick={handleHuyDangKy}
+                disabled={loading}
               >
                 Hủy
               </Button>
               <Button 
                 primary 
                 onClick={handleXacNhanDangKy}
+                disabled={loading}
               >
-                Xác nhận đăng ký
+                {loading ? "Đang xử lý..." : "Xác nhận đăng ký"}
               </Button>
             </div>
           </div>

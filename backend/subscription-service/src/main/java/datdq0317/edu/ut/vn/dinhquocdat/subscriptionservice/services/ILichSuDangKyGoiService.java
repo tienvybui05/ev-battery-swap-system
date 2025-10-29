@@ -11,4 +11,6 @@ public interface ILichSuDangKyGoiService {
     boolean xoaDangKyGoi(Long id);
     List<LichSuDangKyGoi> danhSachDangKyGoi();
     LichSuDangKyGoi layDangKyGoiTheoId(Long id);
+    boolean kiemTraTaiXeCoGoiConHan(Long maTaiXe);
+    List<LichSuDangKyGoi> layLichSuTheoTaiXe(Long maTaiXe);
 }

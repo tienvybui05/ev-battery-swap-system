@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/subscription-service/lichsudangkygoi")
@@ -51,5 +52,16 @@ public class LichSuDangKyGoiController {
     public ResponseEntity<Void> xoa(@PathVariable Long id) {
         boolean deleted = lichSuDangKyGoiService.xoaDangKyGoi(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.badRequest().build();
+    }
+    @GetMapping("/taixe/{maTaiXe}/kiemtra")
+    public ResponseEntity<Map<String, Boolean>> kiemTraGoiConHan(@PathVariable Long maTaiXe) {
+        boolean coGoiConHan = lichSuDangKyGoiService.kiemTraTaiXeCoGoiConHan(maTaiXe);
+        return ResponseEntity.ok(Map.of("coGoiConHan", coGoiConHan));
+    }
+
+    @GetMapping("/taixe/{maTaiXe}")
+    public ResponseEntity<List<LichSuDangKyGoi>> layLichSuTheoTaiXe(@PathVariable Long maTaiXe) {
+        List<LichSuDangKyGoi> lichSu = lichSuDangKyGoiService.layLichSuTheoTaiXe(maTaiXe);
+        return ResponseEntity.ok(lichSu);
     }
 }

@@ -105,13 +105,48 @@ public class LichSuDangKyGoiService implements ILichSuDangKyGoiService {
     }
 
     /**
+     * Kiểm tra tài xế có gói dịch vụ còn hạn không
+     */
+    @Override
+    public boolean kiemTraTaiXeCoGoiConHan(Long maTaiXe) {
+        List<LichSuDangKyGoi> lichSu = lichSuDangKyGoiRepository.findByMaTaiXe(maTaiXe);
+        LocalDate now = LocalDate.now();
+
+        return lichSu.stream().anyMatch(ls ->
+                ls.getNgayKetThuc() != null &&
+                        ls.getNgayKetThuc().isAfter(now) &&
+                        ls.getSoLanConLai() != null &&
+                        ls.getSoLanConLai() > 0
+        );
+    }
+
+    /**
+     * Lấy lịch sử đăng ký theo mã tài xế
+     */
+    @Override
+    public List<LichSuDangKyGoi> layLichSuTheoTaiXe(Long maTaiXe) {
+        List<LichSuDangKyGoi> list = lichSuDangKyGoiRepository.findByMaTaiXe(maTaiXe);
+        // Cập nhật trạng thái tự động khi lấy danh sách
+        list.forEach(ls -> {
+            String trangThaiMoi = xacDinhTrangThai(ls.getNgayKetThuc(), ls.getSoLanConLai());
+            if (!trangThaiMoi.equals(ls.getTrangThai())) {
+                ls.setTrangThai(trangThaiMoi);
+                lichSuDangKyGoiRepository.save(ls);
+            }
+        });
+        return list;
+    }
+
+    /**
      * Hàm xác định trạng thái dựa vào hạn và số lần còn lại
      */
     private String xacDinhTrangThai(LocalDate ngayKetThuc, Integer soLanConLai) {
         if (ngayKetThuc == null || soLanConLai == null)
             return "KHONG_XAC_DINH";
 
-        if (LocalDate.now().isAfter(ngayKetThuc) || soLanConLai <= 0)
+        LocalDate now = LocalDate.now();
+
+        if (now.isAfter(ngayKetThuc) || soLanConLai <= 0)
             return "HET_HAN";
 
         return "CON_HAN";
