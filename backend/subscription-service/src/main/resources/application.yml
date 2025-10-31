@@ -2,7 +2,7 @@ spring:
   application:
     name: subscription-service
   datasource:
-    url: jdbc:mysql://localhost:3309/subscription_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://mysql_subscription:3306/subscription_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root
   jpa:

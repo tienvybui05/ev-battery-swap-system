@@ -131,7 +131,7 @@ function ChangeBattery() {
                     </div>
                 ) : (
                     <div className={styles.noPackage}>
-                        <p>📭 Không có gói nào</p>
+                        <p>Không có gói nào</p>
                     </div>
                 )}
             </div>
