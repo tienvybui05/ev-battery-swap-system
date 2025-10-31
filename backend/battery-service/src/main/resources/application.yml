@@ -2,7 +2,7 @@ spring:
   application:
     name: battery-service
   datasource:
-    url: jdbc:mysql://localhost:3306/battery_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://mysql_battery:3306/battery_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root
   jpa:

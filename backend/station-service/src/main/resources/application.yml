@@ -2,7 +2,7 @@ spring:
   application:
     name: station-service
   datasource:
-    url: jdbc:mysql://localhost:3306/station_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://mysql_station:3306/station_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
     password: root
   jpa:
