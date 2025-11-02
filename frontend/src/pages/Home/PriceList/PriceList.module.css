@@ -23,6 +23,7 @@
   align-items: center;
   flex-direction: column;
   gap: 20px;
+  text-align: center;
 }
 .header span {
   color: var(--color-gray-900);
@@ -35,11 +36,13 @@
   font-size: var(--p-font-size);
   line-height: var(--p-line-height);
   letter-spacing: var(--p-letter-spacing);
+  max-width: 600px;
 }
 /* ---- Swiper ---- */
 .swiperWrapper {
   margin-top: 40px;
   position: relative;
+  width: 100%;
 }
 
 /* Quan trọng: giữ layout gốc của Swiper */
@@ -51,33 +54,34 @@
   display: flex;
   justify-content: center;
   align-items: stretch;
+  height: auto; /* Quan trọng: để card có chiều cao tự động */
 }
 
 /* ---- Card ---- */
-.swiperWrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 .myswiper {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px 0 50px 0;
+  width: 100%;
 }
 .card {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Thay đổi từ center thành flex-start */
   align-items: center;
   flex-direction: column;
   gap: 24px;
-  padding: 20px;
+  padding: 32px 24px; /* Tăng padding để card đẹp hơn */
   border-radius: 8px;
   box-shadow: 2px 4px 6px rgb(236, 236, 236),
     1px 2px 3px -1px rgb(227, 227, 227);
   transition: transform 0.5s ease;
   background-color: var(--white);
+  height: 100%; /* Quan trọng: card chiếm full height của slide */
+  width: 100%;
+  max-width: 380px; /* Giới hạn chiều rộng tối đa */
+  margin: 0 auto; /* Canh giữa card */
+  box-sizing: border-box;
 }
 .card:hover {
   transform: scale(1.05);
@@ -87,7 +91,8 @@
   font-size: var(--h4-font-size);
   line-height: var(--h4-line-height);
   letter-spacing: var(--h4-letter-spacing);
-  font-weight: 400;
+  font-weight: 600; /* Tăng độ đậm */
+  text-align: center;
 }
 .price {
   color: var(--color-gray-900);
@@ -95,6 +100,7 @@
   line-height: var(--h1-line-height);
   letter-spacing: var(--h1-letter-spacing);
   font-weight: 300;
+  text-align: center;
 }
 .price span {
   color: var(--color-gray-600);
@@ -112,6 +118,7 @@
   word-wrap: break-word;  
   overflow-wrap: break-word;
   white-space: normal;     
+  text-align: center;
 }
 .numberOfChanges {
   color: var(--color-gray-600);
@@ -119,6 +126,7 @@
   line-height: var(--p-line-height);
   letter-spacing: var(--p-letter-spacing);
   font-weight: 300;
+  text-align: center;
 }
 .loading, .error {
   text-align: center;
@@ -281,9 +289,22 @@
   padding: 20px 24px;
   border-top: 1px solid #e5e5e5;
 }
+
 /* === Responsive === */
 
-/* Tablet nhỏ trở xuống */
+/* Desktop lớn - Đảm bảo card không bị co */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1400px;
+  }
+  
+  .card {
+    max-width: 420px;
+    padding: 40px 32px;
+  }
+}
+
+/* Tablet */
 @media (max-width: 1024px) {
   .container {
     width: 90%;
@@ -291,8 +312,8 @@
   }
 
   .card {
-    padding: 16px;
-    gap: 16px;
+    padding: 24px 20px;
+    gap: 20px;
   }
 
   .price {
@@ -314,7 +335,7 @@
   .header p {
     font-size: 1rem;
     text-align: center;
-    max-width: 80%;
+    max-width: 90%;
   }
 
   .myswiper {
@@ -323,8 +344,9 @@
 
   .card {
     width: 90%;
+    max-width: 320px;
     padding: 20px;
-    gap: 12px;
+    gap: 16px;
   }
 
   .price {
@@ -345,11 +367,13 @@
 
   .header p {
     font-size: 0.95rem;
+    max-width: 95%;
   }
 
   .card {
-    padding: 16px;
+    padding: 20px 16px;
     border-radius: 6px;
+    max-width: 280px;
   }
 
   .price {
@@ -362,6 +386,15 @@
     text-align: center;
   }
 }
+
+/* Quan trọng: Điều chỉnh Swiper slides */
+:global(.swiper-slide) {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 10px !important; /* Thêm padding cho slide */
+}
+
 :global(.swiper-pagination) {
   bottom: 0 !important;
 }
@@ -372,4 +405,3 @@
 :global(.swiper-pagination-bullet-active) {
   background-color: var(--color-gray-900);
 }
-

@@ -151,19 +151,36 @@ function PriceList() {
         
         <div className={styles.swiperWrapper}>
           <Swiper
-            key={swiperKey}
-            modules={[Pagination]}
-            spaceBetween={24}
-            slidesPerView={3}
-            pagination={{ clickable: true }}
-            loop={goiDichVu.length > 1}
-            breakpoints={{
-              0: { slidesPerView: 1 },
-              768: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            className={styles.myswiper}
-          >
+  key={swiperKey}
+  modules={[Pagination]}
+  spaceBetween={24}
+  slidesPerView={3}
+  pagination={{ clickable: true }}
+  loop={goiDichVu.length > 1}
+  breakpoints={{
+    0: { 
+      slidesPerView: 1,
+      spaceBetween: 16
+    },
+    640: { 
+      slidesPerView: 1,
+      spaceBetween: 20
+    },
+    768: { 
+      slidesPerView: 2,
+      spaceBetween: 20
+    },
+    1024: { 
+      slidesPerView: 3,
+      spaceBetween: 24
+    },
+    1280: { 
+      slidesPerView: 3,
+      spaceBetween: 32 // Tăng khoảng cách trên màn hình lớn
+    }
+  }}
+  className={styles.myswiper}
+>
             {goiDichVu.map((item) => (
               <SwiperSlide key={item.maGoi} className={styles.card}>
                 <span className={styles.name}>{item.tenGoi}</span>

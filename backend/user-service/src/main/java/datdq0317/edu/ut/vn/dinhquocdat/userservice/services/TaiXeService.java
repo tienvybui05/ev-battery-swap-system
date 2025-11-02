@@ -3,6 +3,7 @@ package datdq0317.edu.ut.vn.dinhquocdat.userservice.services;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INguoiDungRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.IQuanLyRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.ITaiXeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,7 @@ public class TaiXeService implements ITaiXeService{
     private ITaiXeRepository taiXeRepository;
 
     @Autowired
-    private IQuanLyRepository nguoiDungRepository;
+    private INguoiDungRepository nguoiDungRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder; // Thêm PasswordEncoder
