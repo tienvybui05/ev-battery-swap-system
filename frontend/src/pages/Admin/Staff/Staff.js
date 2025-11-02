@@ -7,20 +7,22 @@ import {
   faUsers,
   faFilter,
   faPlus,
-  faGear,
-  faTimes,
+  faRefresh,
   faEdit,
   faTrash,
-  faRefresh,
-  faEnvelope,
   faPhone
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Staff.module.css";
+import AddStaffModal from "./AddStaffModal";
+import EditStaffModal from "./EditStaffModal"; // Import component mới
 
 function Staff() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [staffData, setStaffData] = useState({
     topKpi: [
       {
@@ -55,17 +57,6 @@ function Staff() {
     staffList: [],
   });
 
-  const [newStaff, setNewStaff] = useState({
-    hoTen: "",
-    email: "",
-    soDienThoai: "",
-    gioiTinh: "",
-    matKhau: "",
-    ngaySinh: "",
-    bangCap: "",
-    kinhNghiem: ""
-  });
-
   // Lấy token từ localStorage
   const getAuthToken = () => {
     return localStorage.getItem("token");
@@ -86,18 +77,18 @@ function Staff() {
         return;
       }
 
-      console.log("🔄 Đang tải danh sách nhân viên...");
+      console.log("Đang tải danh sách nhân viên...");
       const response = await fetch('/api/user-service/nhanvien', {
         headers: {
           "Authorization": `Bearer ${token}`
         }
       });
       
-      console.log("📊 Response status:", response.status);
+      console.log("Response status:", response.status);
       
       if (response.ok) {
         const nhanVienList = await response.json();
-        console.log("✅ Dữ liệu nhân viên từ API:", nhanVienList);
+        console.log("Dữ liệu nhân viên từ API:", nhanVienList);
         
         // Transform data từ API sang format hiển thị
         const transformedList = nhanVienList.map(nv => ({
@@ -105,8 +96,6 @@ function Staff() {
           name: nv.nguoiDung?.hoTen || "Chưa có tên",
           role: getRoleFromData(nv),
           station: getStationFromData(nv),
-          performance: calculatePerformance(nv),
-          status: getStatusFromData(nv),
           initials: getInitials(nv.nguoiDung?.hoTen || "NV"),
           email: nv.nguoiDung?.email || "Chưa có email",
           soDienThoai: nv.nguoiDung?.soDienThoai || "Chưa có SĐT",
@@ -124,9 +113,9 @@ function Staff() {
           staffList: transformedList
         }));
         
-        console.log(`✅ Đã tải ${transformedList.length} nhân viên`);
+        console.log(`Đã tải ${transformedList.length} nhân viên`);
       } else {
-        console.error("❌ Lỗi khi tải danh sách nhân viên:", response.status);
+        console.error("Lỗi khi tải danh sách nhân viên:", response.status);
         if (response.status === 403) {
           alert("Bạn không có quyền truy cập danh sách nhân viên!");
         } else if (response.status === 401) {
@@ -134,7 +123,7 @@ function Staff() {
         }
       }
     } catch (error) {
-      console.error("❌ Lỗi kết nối:", error);
+      console.error("Lỗi kết nối:", error);
       alert("Lỗi kết nối server! Vui lòng kiểm tra kết nối.");
     } finally {
       setListLoading(false);
@@ -144,10 +133,7 @@ function Staff() {
   // Cập nhật KPI dựa trên dữ liệu thực
   const updateKpiData = (staffList) => {
     const totalStaff = staffList.length;
-    const activeStaff = staffList.filter(staff => staff.status === "active").length;
-    const avgPerformance = staffList.length > 0 
-      ? Math.round(staffList.reduce((sum, staff) => sum + staff.performance, 0) / staffList.length)
-      : 0;
+    const activeStaff = staffList.length;
 
     setStaffData(prev => ({
       ...prev,
@@ -164,28 +150,20 @@ function Staff() {
         },
         {
           ...prev.topKpi[2],
-          value: "24", // Giữ nguyên trạm
+          value: "24",
           sub: "Tất Cả Trực Tuyến"
         },
         {
           ...prev.topKpi[3],
-          value: `${avgPerformance}%`,
-          sub: `Hiệu suất trung bình`
+          value: `${totalStaff > 0 ? Math.round(activeStaff/totalStaff * 100) : 0}%`,
+          sub: `Tỷ lệ hoạt động`
         },
       ]
     }));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewStaff(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Hàm xử lý thêm nhân viên mới
+  const handleAddStaff = async (newStaffData) => {
     setLoading(true);
     
     try {
@@ -195,87 +173,166 @@ function Staff() {
         return;
       }
 
-      console.log("🔄 Đang gửi request thêm nhân viên...");
+      console.log("Dữ liệu gửi đi:", newStaffData);
+
+      const requestData = {
+        hoTen: newStaffData.hoTen,
+        email: newStaffData.email,
+        soDienThoai: newStaffData.soDienThoai,
+        gioiTinh: newStaffData.gioiTinh || "NAM",
+        matKhau: newStaffData.matKhau,
+        ngaySinh: newStaffData.ngaySinh || null,
+        bangCap: newStaffData.bangCap || "",
+        kinhNghiem: newStaffData.kinhNghiem || ""
+      };
+
+      console.log("Đang gửi request thêm nhân viên...");
       const response = await fetch('/api/user-service/nhanvien', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(newStaff)
+        body: JSON.stringify(requestData)
       });
 
-      console.log("📊 Response status:", response.status);
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         const addedStaff = await response.json();
-        console.log("✅ Nhân viên mới:", addedStaff);
+        console.log("Nhân viên mới:", addedStaff);
         
-        // Thêm nhân viên mới vào danh sách
         const newStaffItem = {
           id: addedStaff.maNhanVien,
-          name: addedStaff.nguoiDung.hoTen,
+          name: addedStaff.nguoiDung?.hoTen || addedStaff.hoTen,
           role: "Nhân viên",
           station: "Chưa phân công",
-          performance: 85, // Mặc định cho nhân viên mới
-          status: "active",
-          initials: getInitials(addedStaff.nguoiDung.hoTen),
-          email: addedStaff.nguoiDung.email,
-          soDienThoai: addedStaff.nguoiDung.soDienThoai,
+          initials: getInitials(addedStaff.nguoiDung?.hoTen || addedStaff.hoTen),
+          email: addedStaff.nguoiDung?.email || addedStaff.email,
+          soDienThoai: addedStaff.nguoiDung?.soDienThoai || addedStaff.soDienThoai,
           bangCap: addedStaff.bangCap,
           kinhNghiem: addedStaff.kinhNghiem,
-          ngaySinh: addedStaff.nguoiDung.ngaySinh,
-          gioiTinh: addedStaff.nguoiDung.gioiTinh
+          ngaySinh: addedStaff.nguoiDung?.ngaySinh || addedStaff.ngaySinh,
+          gioiTinh: addedStaff.nguoiDung?.gioiTinh || addedStaff.gioiTinh
         };
 
-        setStaffData(prev => ({
-          ...prev,
-          staffList: [...prev.staffList, newStaffItem]
-        }));
-
-        // Cập nhật lại KPI
-        updateKpiData([...staffData.staffList, newStaffItem]);
-
-        // Đóng modal và reset form
-        setShowAddModal(false);
-        setNewStaff({
-          hoTen: "",
-          email: "",
-          soDienThoai: "",
-          gioiTinh: "",
-          matKhau: "",
-          ngaySinh: "",
-          bangCap: "",
-          kinhNghiem: ""
+        setStaffData(prev => {
+          const updatedList = [...prev.staffList, newStaffItem];
+          updateKpiData(updatedList);
+          return {
+            ...prev,
+            staffList: updatedList
+          };
         });
 
-        alert("✅ Thêm nhân viên thành công!");
+        setShowAddModal(false);
+        alert("Thêm nhân viên thành công!");
       } else {
         const errorText = await response.text();
+        console.error("Chi tiết lỗi từ server:", errorText);
+        
         let errorMessage = "Lỗi khi thêm nhân viên";
         
         try {
           const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.message || errorMessage;
+          errorMessage = errorJson.message || errorJson.error || errorMessage;
         } catch {
           errorMessage = errorText || errorMessage;
         }
         
-        console.error("❌ Lỗi response:", errorMessage);
-        
-        if (response.status === 403) {
-          errorMessage = "Bạn không có quyền thêm nhân viên!";
-        } else if (response.status === 400) {
-          errorMessage = "Dữ liệu không hợp lệ: " + errorMessage;
-        }
-        
-        alert("❌ Lỗi: " + errorMessage);
+        alert("Lỗi: " + errorMessage);
       }
     } catch (error) {
-      console.error("❌ Lỗi khi thêm nhân viên:", error);
-      alert("❌ Lỗi kết nối server! Vui lòng thử lại.");
+      console.error("Lỗi khi thêm nhân viên:", error);
+      alert("Lỗi kết nối server! Vui lòng thử lại.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Hàm xử lý sửa nhân viên
+  const handleEditStaff = async (id, staffData) => {
+    setEditLoading(true);
+    
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        return;
+      }
+
+      console.log("Dữ liệu cập nhật:", staffData);
+
+      const requestData = {
+        hoTen: staffData.hoTen,
+        email: staffData.email,
+        soDienThoai: staffData.soDienThoai,
+        gioiTinh: staffData.gioiTinh,
+        ngaySinh: staffData.ngaySinh || null,
+        bangCap: staffData.bangCap || "",
+        kinhNghiem: staffData.kinhNghiem || ""
+      };
+
+      console.log("Đang gửi request cập nhật nhân viên...");
+      const response = await fetch(`/api/user-service/nhanvien/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      console.log("Response status:", response.status);
+
+      if (response.ok) {
+        const updatedStaff = await response.json();
+        console.log("Nhân viên đã cập nhật:", updatedStaff);
+        
+        // Cập nhật danh sách
+        setStaffData(prev => {
+          const updatedList = prev.staffList.map(staff => 
+            staff.id === id ? {
+              ...staff,
+              name: updatedStaff.nguoiDung?.hoTen || updatedStaff.hoTen,
+              email: updatedStaff.nguoiDung?.email || updatedStaff.email,
+              soDienThoai: updatedStaff.nguoiDung?.soDienThoai || updatedStaff.soDienThoai,
+              bangCap: updatedStaff.bangCap,
+              kinhNghiem: updatedStaff.kinhNghiem,
+              ngaySinh: updatedStaff.nguoiDung?.ngaySinh || updatedStaff.ngaySinh,
+              gioiTinh: updatedStaff.nguoiDung?.gioiTinh || updatedStaff.gioiTinh,
+              initials: getInitials(updatedStaff.nguoiDung?.hoTen || updatedStaff.hoTen)
+            } : staff
+          );
+          return {
+            ...prev,
+            staffList: updatedList
+          };
+        });
+
+        setShowEditModal(false);
+        setSelectedStaff(null);
+        alert("Cập nhật thông tin nhân viên thành công!");
+      } else {
+        const errorText = await response.text();
+        console.error("Chi tiết lỗi từ server:", errorText);
+        
+        let errorMessage = "Lỗi khi cập nhật nhân viên";
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        alert("Lỗi: " + errorMessage);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật nhân viên:", error);
+      alert("Lỗi kết nối server! Vui lòng thử lại.");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -296,26 +353,29 @@ function Staff() {
         });
 
         if (response.ok) {
-          // Xóa khỏi danh sách hiển thị
           const updatedList = staffData.staffList.filter(staff => staff.id !== id);
           setStaffData(prev => ({
             ...prev,
             staffList: updatedList
           }));
 
-          // Cập nhật lại KPI
           updateKpiData(updatedList);
-
-          alert("✅ Xóa nhân viên thành công!");
+          alert("Xóa nhân viên thành công!");
         } else {
           const errorText = await response.text();
-          alert("❌ Lỗi khi xóa nhân viên: " + errorText);
+          alert("Lỗi khi xóa nhân viên: " + errorText);
         }
       } catch (error) {
-        console.error("❌ Lỗi khi xóa nhân viên:", error);
-        alert("❌ Lỗi kết nối server!");
+        console.error("Lỗi khi xóa nhân viên:", error);
+        alert("Lỗi kết nối server!");
       }
     }
+  };
+
+  // Hàm mở modal sửa
+  const handleOpenEditModal = (staff) => {
+    setSelectedStaff(staff);
+    setShowEditModal(true);
   };
 
   // Hàm helper để xác định các giá trị từ dữ liệu API
@@ -330,20 +390,7 @@ function Staff() {
   };
 
   const getStationFromData = (nv) => {
-    // Nếu có dữ liệu trạm từ API, sử dụng ở đây
     return nv.tram || "Chưa phân công";
-  };
-
-  const calculatePerformance = (nv) => {
-    // Tính hiệu suất dựa trên dữ liệu thực tế
-    // Hiện tại random 70-99%, có thể thay bằng logic thực tế
-    return Math.floor(Math.random() * 30) + 70;
-  };
-
-  const getStatusFromData = (nv) => {
-    // Dựa vào trạng thái từ API để xác định status
-    // Mặc định là active, có thể mở rộng dựa trên dữ liệu thực
-    return "active";
   };
 
   const getInitials = (name) => {
@@ -353,15 +400,6 @@ function Staff() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Chưa có";
-    try {
-      return new Date(dateString).toLocaleDateString('vi-VN');
-    } catch {
-      return "Invalid date";
-    }
   };
 
   const refreshStaffList = () => {
@@ -422,13 +460,7 @@ function Staff() {
           </div>
         ) : staffData.staffList.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>📭 Chưa có nhân viên nào trong hệ thống</p>
-            <button 
-              className={styles.addBtn}
-              onClick={() => setShowAddModal(true)}
-            >
-              <FontAwesomeIcon icon={faPlus} /> Thêm nhân viên đầu tiên
-            </button>
+            {/* Empty state */}
           </div>
         ) : (
           staffData.staffList.map((staff) => (
@@ -437,52 +469,22 @@ function Staff() {
                 <div className={styles.avatar}>{staff.initials}</div>
                 <div className={styles.staffInfo}>
                   <h4>{staff.name}</h4>
-                  <p className={styles.role}>{staff.role}</p>
                   <p className={styles.station}>{staff.station}</p>
                   <div className={styles.contactInfo}>
-                    <div className={styles.contactItem}>
-                      <FontAwesomeIcon icon={faEnvelope} className={styles.contactIcon} />
-                      <span>{staff.email}</span>
-                    </div>
                     <div className={styles.contactItem}>
                       <FontAwesomeIcon icon={faPhone} className={styles.contactIcon} />
                       <span>{staff.soDienThoai}</span>
                     </div>
-                    {staff.ngaySinh && (
-                      <div className={styles.contactItem}>
-                        <span>🎂 {formatDate(staff.ngaySinh)}</span>
-                      </div>
-                    )}
                   </div>
-                  {(staff.bangCap || staff.kinhNghiem) && (
-                    <div className={styles.qualifications}>
-                      {staff.bangCap && <span className={styles.badge}>{staff.bangCap}</span>}
-                      {staff.kinhNghiem && <span className={styles.badge}>{staff.kinhNghiem}</span>}
-                    </div>
-                  )}
                 </div>
               </div>
 
               <div className={styles.staffRight}>
-                <div className={styles.performance}>
-                  <span className={staff.performance >= 80 ? styles.high : styles.medium}>
-                    {staff.performance}%
-                  </span>
-                  <p>Hiệu suất</p>
-                </div>
-                <div className={`${styles.status} ${
-                  staff.status === "active" ? styles.active : 
-                  staff.status === "inactive" ? styles.inactive : 
-                  styles.onLeave
-                }`}>
-                  {staff.status === "active" ? "Đang làm" : 
-                   staff.status === "inactive" ? "Không hoạt động" : 
-                   "Nghỉ phép"}
-                </div>
                 <div className={styles.actionButtons}>
                   <button 
                     className={styles.iconBtn}
                     title="Chỉnh sửa thông tin"
+                    onClick={() => handleOpenEditModal(staff)}
                   >
                     <FontAwesomeIcon icon={faEdit} />
                   </button>
@@ -500,148 +502,25 @@ function Staff() {
         )}
       </div>
 
-      {/* Modal Thêm Nhân Viên - Giữ nguyên */}
-      {showAddModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h3>Thêm Nhân Viên Mới</h3>
-              <button 
-                className={styles.closeBtn}
-                onClick={() => setShowAddModal(false)}
-                disabled={loading}
-              >
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
+      {/* Modal Thêm Nhân Viên */}
+      <AddStaffModal 
+        show={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAddStaff={handleAddStaff}
+        loading={loading}
+      />
 
-            <form onSubmit={handleSubmit} className={styles.modalForm}>
-              {/* Form inputs - Giữ nguyên từ code trước */}
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Họ và Tên *</label>
-                  <input
-                    type="text"
-                    name="hoTen"
-                    value={newStaff.hoTen}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Email *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={newStaff.email}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Số Điện Thoại *</label>
-                  <input
-                    type="tel"
-                    name="soDienThoai"
-                    value={newStaff.soDienThoai}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Giới Tính</label>
-                  <select 
-                    name="gioiTinh" 
-                    value={newStaff.gioiTinh}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  >
-                    <option value="">Chọn giới tính</option>
-                    <option value="NAM">Nam</option>
-                    <option value="NU">Nữ</option>
-                    <option value="KHAC">Khác</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Mật Khẩu *</label>
-                  <input
-                    type="password"
-                    name="matKhau"
-                    value={newStaff.matKhau}
-                    onChange={handleInputChange}
-                    required
-                    disabled={loading}
-                    minLength="6"
-                    placeholder="Ít nhất 6 ký tự"
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Ngày Sinh</label>
-                  <input
-                    type="date"
-                    name="ngaySinh"
-                    value={newStaff.ngaySinh}
-                    onChange={handleInputChange}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Bằng Cấp</label>
-                  <input
-                    type="text"
-                    name="bangCap"
-                    value={newStaff.bangCap}
-                    onChange={handleInputChange}
-                    placeholder="VD: Đại học, Cao đẳng..."
-                    disabled={loading}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Kinh Nghiệm</label>
-                  <input
-                    type="text"
-                    name="kinhNghiem"
-                    value={newStaff.kinhNghiem}
-                    onChange={handleInputChange}
-                    placeholder="VD: 2 năm kinh nghiệm..."
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.modalActions}>
-                <button 
-                  type="button" 
-                  className={styles.cancelBtn}
-                  onClick={() => setShowAddModal(false)}
-                  disabled={loading}
-                >
-                  Hủy
-                </button>
-                <button 
-                  type="submit" 
-                  className={styles.saveBtn}
-                  disabled={loading}
-                >
-                  {loading ? "Đang thêm..." : "Thêm Nhân Viên"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Modal Sửa Nhân Viên */}
+      <EditStaffModal 
+        show={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedStaff(null);
+        }}
+        onUpdateStaff={handleEditStaff}
+        loading={editLoading}
+        staff={selectedStaff}
+      />
     </div>
   );
 }

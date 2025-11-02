@@ -1,17 +1,17 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.services;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INguoiDungRepository;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.IQuanLyRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.ITaiXeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 public class TaiXeService implements ITaiXeService{
@@ -67,15 +67,39 @@ public class TaiXeService implements ITaiXeService{
         return taiXeRepository.findById(id).orElse(null);
     }
 
-    @Override
+   @Override
+    @Transactional
     public boolean xoaTaiXe(Long id) {
-        try {
-            taiXeRepository.deleteById(id);
-            return true;
-        } catch (Exception e) {
+    try {
+        // Tìm tài xế trước
+        TaiXe tx = taiXeRepository.findById(id).orElse(null);
+        if (tx == null) {
+            System.out.println("❌ Không tìm thấy tài xế với ID: " + id);
             return false;
         }
+        
+        // Lấy thông tin người dùng trước khi xóa
+        NguoiDung nd = tx.getNguoiDung();
+        
+        System.out.println("✅ Tìm thấy tài xế: " + nd.getHoTen());
+        System.out.println("✅ Mã người dùng: " + nd.getMaNguoiDung());
+        
+        // QUAN TRỌNG: Xóa quan hệ trước
+        tx.setNguoiDung(null);  // Ngắt quan hệ
+        taiXeRepository.save(tx); // Lưu thay đổi
+        taiXeRepository.delete(tx);
+        nguoiDungRepository.delete(nd);
+        
+       
+        
+        System.out.println("🎉 Xóa thành công!");
+        return true;
+    } catch (Exception e) {
+        System.out.println("💥 Lỗi khi xóa: " + e.getMessage());
+        e.printStackTrace();
+        return false;
     }
+}
 
     @Override
     public TaiXe suaTaiXe(Long id, TaiXeDTO dto) {
