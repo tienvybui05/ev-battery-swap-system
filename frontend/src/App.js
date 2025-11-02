@@ -12,6 +12,7 @@ import {
   History,
   Information,
   ChangeBattery,
+  Support
 } from "./pages/Driver";
 import { Batteries, Customers, Overview, Staff, Stations } from "./pages/Admin";
 import { Report, Inventory, QueueManagement, Transaction } from "./pages/Staff";
@@ -36,8 +37,8 @@ function App() {
           </Route>
 
           {/* BỌC PrivateLayout VỚI ProtectedLayout */}
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedLayout>
                 <PrivateLayout />
@@ -76,6 +77,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["TAIXE"]}>
                   <Information />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="support"
+              element={
+                <ProtectedRoute allowedRoles={["TAIXE"]}>
+                  <Support />
                 </ProtectedRoute>
               }
             />
