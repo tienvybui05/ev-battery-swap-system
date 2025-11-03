@@ -69,6 +69,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user-service/auth/**").permitAll()
+                                            // ✅ AI ĐƯỢC TRUY CẬP API TÀI XẾ
+                    // .requestMatchers("/api/user-service/taixe/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -6,12 +6,14 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
+
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeResponse;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INguoiDungRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.ITaiXeRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class TaiXeService implements ITaiXeService{
@@ -141,4 +143,23 @@ public class TaiXeService implements ITaiXeService{
             return taiXeRepository.save(tx);
         }).orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế!"));
     }
+    @Override
+public TaiXeResponse layThongTinTaiXe(Long id) {
+    TaiXe tx = taiXeRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy tài xế"));
+
+    NguoiDung nd = tx.getNguoiDung(); // ✅ Lấy thông tin người dùng
+
+    TaiXeResponse res = new TaiXeResponse();
+    res.setId(tx.getMaTaiXe());
+    res.setHoTen(nd.getHoTen());
+    res.setEmail(nd.getEmail());
+    res.setSoDienThoai(nd.getSoDienThoai());
+    res.setGioiTinh(nd.getGioiTinh());
+    res.setNgaySinh(nd.getNgaySinh());
+    res.setBangLaiXe(tx.getBangLaiXe()); // thông tin riêng của tài xế
+
+    return res;
+}
+
 }

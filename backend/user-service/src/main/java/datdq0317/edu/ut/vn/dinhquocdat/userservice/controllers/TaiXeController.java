@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeResponse;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.ITaiXeService;
 
@@ -65,4 +66,10 @@ public ResponseEntity<?> xoaTaiXe(@PathVariable Long id) {
         return ResponseEntity.badRequest().body("Lỗi khi xóa tài xế: " + e.getMessage());
     }
 }
+@GetMapping("/info/{id}")
+public ResponseEntity<TaiXeResponse> layThongTinTaiXe(@PathVariable Long id) {
+    TaiXeResponse response = taiXeService.layThongTinTaiXe(id);
+    return ResponseEntity.ok(response);
+}
+
 }
