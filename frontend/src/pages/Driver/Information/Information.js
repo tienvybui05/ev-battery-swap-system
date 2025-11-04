@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Button from "../../../components/Shares/Button/Button";
 import styles from "./Information.module.css";
@@ -6,35 +6,93 @@ import { faCarSide } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
 function Information() {
-    const [isOpenAdd, setIsOpenAdd] = useState(false);        // popup thêm mới
-    const [isOpenEdit, setIsOpenEdit] = useState(false);      // popup chỉnh sửa
-    const [newCar, setNewCar] = useState({ name: "", vin: "", style: "" });
-    const [selectedCar, setSelectedCar] = useState(null);      // xe đang sửa
+    // ==== PHẦN THÔNG TIN NGƯỜI DÙNG ====
+    const [userInfo, setUserInfo] = useState(null);
+    const [editUserInfo, setEditUserInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const userInfo = {
-        fullName: "Nguyễn Văn A",
-        email: "nguyenvana@example.com",
-        phone: "0912345678",
+    useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    if (!token || !userId) {
+        window.location.href = "/login";
+        return;
+    }
+    fetch(`/api/user-service/taixe/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+        setUserInfo(data);
+        // Map dữ liệu từ backend vào state cho form
+        setEditUserInfo({
+            ...data,
+            hoTen: data.nguoiDung?.hoTen || "",
+            email: data.nguoiDung?.email || "",
+            soDienThoai: data.nguoiDung?.soDienThoai || "",
+            gioiTinh: data.nguoiDung?.gioiTinh || "",
+            ngaySinh: data.nguoiDung?.ngaySinh || "",
+            bangLaiXe: data.bangLaiXe || ""
+        });
+        setLoading(false);
+    });
+}, []);
+
+
+    // Hàm Lưu thay đổi (PUT lên API)
+const handleSaveUser = () => {
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    // Tạo object đúng cấu trúc backend cần
+    const payload = {
+        maTaiXe: userInfo.maTaiXe,
+        bangLaiXe: editUserInfo.bangLaiXe,
+        nguoiDung: {
+            ...userInfo.nguoiDung,
+            hoTen: editUserInfo.hoTen,
+            email: editUserInfo.email,
+            soDienThoai: editUserInfo.soDienThoai,
+            gioiTinh: editUserInfo.gioiTinh,
+            ngaySinh: editUserInfo.ngaySinh,
+        }
     };
+    fetch(`/api/user-service/taixe/${userId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("Cập nhật thành công!");
+            setUserInfo(payload); // Có thể gọi lại API get nếu muốn dữ liệu mới nhất
+        } else {
+            alert("Cập nhật thất bại!");
+        }
+    });
+};
 
-    // Đưa carList vào state để có thể cập nhật sau khi thêm/sửa
+
+    // ==== PHẦN XE (giữ nguyên) ====
+    const [isOpenAdd, setIsOpenAdd] = useState(false);
+    const [isOpenEdit, setIsOpenEdit] = useState(false);
+    const [newCar, setNewCar] = useState({ name: "", vin: "", style: "" });
+    const [selectedCar, setSelectedCar] = useState(null);
     const [carList, setCarList] = useState([
         { id: 1, name: "VinFast VF5", vin: "VNFAST0012345", style: "Pin 37.23 kWh" },
         { id: 2, name: "Honda City EV", vin: "HDCITYEV9087", style: "Pin 50 kWh" },
         { id: 3, name: "Tesla Model 3", vin: "TESLAEV4321", style: "Pin 57.5 kWh" },
     ]);
-
-    // Mở popup thêm
     const openAdd = () => {
         setNewCar({ name: "", vin: "", style: "" });
         setIsOpenAdd(true);
     };
-
-    // Lưu xe mới
     const handleSaveNew = () => {
         if (!newCar.name.trim() || !newCar.vin.trim()) return;
         const next = {
-            id: Date.now(), // id tạm
+            id: Date.now(),
             name: newCar.name.trim(),
             vin: newCar.vin.trim(),
             style: newCar.style.trim(),
@@ -42,14 +100,10 @@ function Information() {
         setCarList((prev) => [next, ...prev]);
         setIsOpenAdd(false);
     };
-
-    // Mở popup edit với dữ liệu sẵn
     const openEdit = (car) => {
-        setSelectedCar({ ...car }); // copy để chỉnh sửa local
+        setSelectedCar({ ...car });
         setIsOpenEdit(true);
     };
-
-    // Lưu xe đã chỉnh sửa
     const handleSaveEdit = () => {
         if (!selectedCar || !selectedCar.name.trim() || !selectedCar.vin.trim()) return;
         setCarList((prev) =>
@@ -60,33 +114,83 @@ function Information() {
 
     return (
         <nav className={styles.wrapper}>
+            {/* ====== Thông tin hồ sơ tài xế ====== */}
             <div className={styles.userdatail}>
                 <div className={styles.header}>
                     <h1>Thông Tin Hồ Sơ</h1>
                 </div>
-                <form className={styles.form}>
-                    <div className={styles.formdetail}>
-                        <label htmlFor="name">Tên Đầy Đủ</label>
-                        <input id="name" type="text" defaultValue={userInfo.fullName} />
-                    </div>
-                    <div className={styles.formdetail}>
-                        <label htmlFor="email">Email</label>
-                        <input id="email" type="text" defaultValue={userInfo.email} />
-                    </div>
-                    <div className={styles.formdetail}>
-                        <label htmlFor="phone">Số Điện Thoại</label>
-                        <input id="phone" type="text" defaultValue={userInfo.phone} />
-                    </div>
-                    <Button change type="button">Lưu Thay Đổi</Button>
-                </form>
+                {loading ? (
+                    <div>Đang tải dữ liệu...</div>
+                ) : (
+                    <form className={styles.form}>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="hoTen">Tên Đầy Đủ</label>
+                            <input
+                                id="hoTen"
+                                type="text"
+                                value={editUserInfo?.hoTen || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, hoTen: e.target.value })}
+                            />
+                        </div>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="email">Email</label>
+                            <input
+                                id="email"
+                                type="text"
+                                value={editUserInfo?.email || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, email: e.target.value })}
+                            />
+                        </div>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="soDienThoai">Số Điện Thoại</label>
+                            <input
+                                id="soDienThoai"
+                                type="text"
+                                value={editUserInfo?.soDienThoai || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, soDienThoai: e.target.value })}
+                            />
+                        </div>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="gioiTinh">Giới tính</label>
+                            <select
+                                id="gioiTinh"
+                                value={editUserInfo?.gioiTinh || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, gioiTinh: e.target.value })}
+                            >
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="">Khác</option>
+                            </select>
+                        </div>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="ngaySinh">Ngày sinh</label>
+                            <input
+                                id="ngaySinh"
+                                type="date"
+                                value={editUserInfo?.ngaySinh || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, ngaySinh: e.target.value })}
+                            />
+                        </div>
+                        <div className={styles.formdetail}>
+                            <label htmlFor="bangLaiXe">Bằng lái xe</label>
+                            <input
+                                id="bangLaiXe"
+                                type="text"
+                                value={editUserInfo?.bangLaiXe || ""}
+                                onChange={e => setEditUserInfo({ ...editUserInfo, bangLaiXe: e.target.value })}
+                            />
+                        </div>
+                        <Button change type="button" onClick={handleSaveUser}>Lưu Thay Đổi</Button>
+                    </form>
+                )}
             </div>
 
+            {/* ====== Phần xe (giữ nguyên) ====== */}
             <div className={styles.cardetail}>
                 <div className={styles.header}>
                     <h1>Xe Của Tôi</h1>
                     <p>Quản lý xe đã đăng ký</p>
                 </div>
-
                 {carList.map((car) => (
                     <div key={car.id} className={styles.carname}>
                         <div className={styles.icon}>
@@ -107,7 +211,6 @@ function Information() {
                         </Button>
                     </div>
                 ))}
-
                 <Button white outline type="button" onClick={openAdd}>
                     Thêm xe
                 </Button>
