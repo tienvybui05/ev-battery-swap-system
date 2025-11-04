@@ -466,7 +466,7 @@ function Staff() {
           staffData.staffList.map((staff) => (
             <div key={staff.id} className={styles.staffCard}>
               <div className={styles.staffLeft}>
-                <div className={styles.avatar}>{staff.initials}</div>
+                {/* <div className={styles.avatar}>{staff.initials}</div> */}
                 <div className={styles.staffInfo}>
                   <h4>{staff.name}</h4>
                   <p className={styles.station}>{staff.station}</p>

@@ -188,6 +188,7 @@
 .staffInfo {
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
 
 .staffInfo h4 {

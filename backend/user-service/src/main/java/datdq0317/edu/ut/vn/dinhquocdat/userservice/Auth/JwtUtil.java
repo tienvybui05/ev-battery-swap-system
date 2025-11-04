@@ -1,11 +1,11 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.Claims;
+import java.util.Date;
+
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JwtUtil {
@@ -30,6 +30,15 @@ public class JwtUtil {
                 .getSubject();
     }
 
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
     public boolean isTokenValid(String token, String soDienThoai) {
         return soDienThoai.equals(extractSoDienThoai(token)) && !isTokenExpired(token);
     }
@@ -43,4 +52,6 @@ public class JwtUtil {
                 .getExpiration()
                 .before(new Date());
     }
+    
+    // XOÁ METHOD isTokenCompletelyValid - XỬ LÝ TRONG JwtFilter THAY VÌ Ở ĐÂY
 }

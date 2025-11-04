@@ -7,6 +7,8 @@
   flex: 1;
   align-items: center;
   flex-direction: column;
+  height: 100vh;
+  
 }
 
 /* Sidebar */
@@ -61,4 +63,5 @@
 }
 .main {
   width: 100%;
+  overflow-y: auto;
 }

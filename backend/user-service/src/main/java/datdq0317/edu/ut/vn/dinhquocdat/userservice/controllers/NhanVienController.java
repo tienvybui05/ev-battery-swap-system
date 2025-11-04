@@ -1,13 +1,21 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.NhanVienDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NhanVien;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.INhanVienService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/user-service/nhanvien")
@@ -66,7 +74,7 @@ public class NhanVienController {
         try {
             boolean deleted = nhanVienService.xoaNhanVien(id);
             if (deleted) return ResponseEntity.ok().body("Xóa nhân viên thành công");
-            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa");
+            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa nha13");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }

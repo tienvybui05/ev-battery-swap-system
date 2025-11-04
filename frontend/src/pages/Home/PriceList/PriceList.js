@@ -7,7 +7,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import styles from "./PriceList.module.css";
 import Button from "../../../components/Shares/Button/Button.js";
-
+import { verifyUserRole } from "../../../utils/verifyUserRole.js";
 function PriceList() {
   const [goiDichVu, setGoiDichVu] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,17 +66,30 @@ function PriceList() {
     return false;
   };
 
-  const handleDangKy = async (goi) => {
-    const token = localStorage.getItem("token");
-    const userRole = localStorage.getItem("userRole");
+const handleDangKy = async (goi) => {
+  const token = localStorage.getItem("token");
+  
+  // Kiểm tra token đầu tiên
+  if (!token) {
+    alert("Vui lòng đăng nhập để đăng ký gói dịch vụ!");
+    navigate("/login");
+    return;
+  }
+
+  try {
+    // VERIFY ROLE THỰC từ backend - CHỈ GỌI 1 LẦN
+    const result = await verifyUserRole();
     
-    if (!token) {
-      alert("Vui lòng đăng nhập để đăng ký gói dịch vụ!");
+    if (!result.success) {
+      alert("Phiên đăng nhập không hợp lệ!");
       navigate("/login");
       return;
     }
+
+    const realRole = result.user.role;
     
-    if (userRole !== "TAIXE") {
+    // Kiểm tra role thực từ backend
+    if (realRole !== "TAIXE") {
       alert("Chỉ tài xế mới có thể đăng ký gói dịch vụ!");
       return;
     }
@@ -91,7 +104,12 @@ function PriceList() {
     // NẾU KHÔNG CÓ GÓI CÒN HẠN, HIỆN MODAL
     setSelectedGoi(goi);
     setShowModal(true);
-  };
+
+  } catch (error) {
+    console.error("Lỗi trong quá trình đăng ký:", error);
+    alert("Có lỗi xảy ra, vui lòng thử lại!");
+  }
+};
 
   const handleXacNhanDangKy = async () => {
     setLoading(true);

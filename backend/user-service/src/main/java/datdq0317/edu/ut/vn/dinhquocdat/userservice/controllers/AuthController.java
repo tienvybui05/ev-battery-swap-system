@@ -1,5 +1,6 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.CustomUserDetails;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.CustomUserDetailsService;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.JwtUtil;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.LoginRequest;
@@ -100,9 +101,22 @@ public class AuthController {
 //                "email", taiXe.getNguoiDung().getEmail()
 //        );
 //    }
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyToken(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("soDienThoai", userDetails.getUsername());
+        response.put("role", userDetails.getVaiTro());
+        response.put("hoTen", userDetails.getHoTen());
+        response.put("userId", userDetails.getMaNguoiDung());
+        
+        return ResponseEntity.ok(response);
+    }
     /**
      * API đăng ký người dùng
      */
+
     @PostMapping("/register-admin")
     public ResponseEntity<?> register(@RequestBody NguoiDung nguoiDung) {
         try {

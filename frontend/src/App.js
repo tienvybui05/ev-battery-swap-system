@@ -17,6 +17,7 @@ import {
 import { Batteries, Customers, Overview, Staff, Stations } from "./pages/Admin";
 import { Report, Inventory, QueueManagement, Transaction } from "./pages/Staff";
 import ProtectedRoute from "./components/Shares/ProtectedRoute/ProtectedRoute.js";
+import Unauthorized from "./utils/Unauthorized/Unauthorized.js";
 
 // THÊM: Component bảo vệ toàn bộ dashboard
 const ProtectedLayout = ({ children }) => {
@@ -33,6 +34,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
+            <Route path="unauthorized" element={<Unauthorized />} /> {/* QUAN TRỌNG */}
             <Route path="*" element={<NotFound />} />
           </Route>
 
