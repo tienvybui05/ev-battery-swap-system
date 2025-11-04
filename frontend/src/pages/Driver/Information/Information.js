@@ -5,6 +5,21 @@ import styles from "./Information.module.css";
 import { faCarSide } from "@fortawesome/free-solid-svg-icons";
 import { faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 
+// Hàm chuẩn hóa ngày sinh về yyyy-MM-dd
+const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    if (dateStr.includes('/')) {
+        const [day, month, year] = dateStr.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    if (dateStr.includes('-')) {
+        const [first, second, third] = dateStr.split('-');
+        if (first.length === 4) return dateStr;
+        return `${third}-${second.padStart(2, '0')}-${first.padStart(2, '0')}`;
+    }
+    return dateStr;
+};
+
 function Information() {
     // ==== PHẦN THÔNG TIN NGƯỜI DÙNG ====
     const [userInfo, setUserInfo] = useState(null);
@@ -12,68 +27,62 @@ function Information() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    if (!token || !userId) {
-        window.location.href = "/login";
-        return;
-    }
-    fetch(`/api/user-service/taixe/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-        setUserInfo(data);
-        // Map dữ liệu từ backend vào state cho form
-        setEditUserInfo({
-            ...data,
-            hoTen: data.nguoiDung?.hoTen || "",
-            email: data.nguoiDung?.email || "",
-            soDienThoai: data.nguoiDung?.soDienThoai || "",
-            gioiTinh: data.nguoiDung?.gioiTinh || "",
-            ngaySinh: data.nguoiDung?.ngaySinh || "",
-            bangLaiXe: data.bangLaiXe || ""
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        if (!token || !userId) {
+            window.location.href = "/login";
+            return;
+        }
+        fetch(`/api/user-service/taixe/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            setUserInfo(data);
+            setEditUserInfo({
+                hoTen: data.hoTen || data.nguoiDung?.hoTen || "",
+                email: data.email || data.nguoiDung?.email || "",
+                soDienThoai: data.soDienThoai || data.nguoiDung?.soDienThoai || "",
+                gioiTinh: data.gioiTinh || data.nguoiDung?.gioiTinh || "",
+                ngaySinh: (data.ngaySinh || data.nguoiDung?.ngaySinh || "").substring(0, 10),
+                bangLaiXe: data.bangLaiXe || "",
+                matKhau: data.matKhau || "",
+            });
+            setLoading(false);
         });
-        setLoading(false);
-    });
-}, []);
-
+    }, []);
 
     // Hàm Lưu thay đổi (PUT lên API)
-const handleSaveUser = () => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    // Tạo object đúng cấu trúc backend cần
-    const payload = {
-        maTaiXe: userInfo.maTaiXe,
-        bangLaiXe: editUserInfo.bangLaiXe,
-        nguoiDung: {
-            ...userInfo.nguoiDung,
+    const handleSaveUser = () => {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const payload = {
             hoTen: editUserInfo.hoTen,
             email: editUserInfo.email,
             soDienThoai: editUserInfo.soDienThoai,
             gioiTinh: editUserInfo.gioiTinh,
-            ngaySinh: editUserInfo.ngaySinh,
-        }
+            matKhau: editUserInfo.matKhau || userInfo?.matKhau || "123456",
+            ngaySinh: formatDate(editUserInfo.ngaySinh),
+            bangLaiXe: editUserInfo.bangLaiXe
+        };
+        fetch(`/api/user-service/taixe/${userId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(async res => {
+            const msg = await res.text();
+            if (res.ok) {
+                alert("Cập nhật thành công!");
+                setUserInfo(prev => ({ ...prev, ...payload }));
+            } else {
+                alert("Cập nhật thất bại!\n" + msg);
+            }
+        });
     };
-    fetch(`/api/user-service/taixe/${userId}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(res => {
-        if (res.ok) {
-            alert("Cập nhật thành công!");
-            setUserInfo(payload); // Có thể gọi lại API get nếu muốn dữ liệu mới nhất
-        } else {
-            alert("Cập nhật thất bại!");
-        }
-    });
-};
-
 
     // ==== PHẦN XE (giữ nguyên) ====
     const [isOpenAdd, setIsOpenAdd] = useState(false);
@@ -122,7 +131,7 @@ const handleSaveUser = () => {
                 {loading ? (
                     <div>Đang tải dữ liệu...</div>
                 ) : (
-                    <form className={styles.form}>
+                    <form className={styles.form} onSubmit={e => e.preventDefault()}>
                         <div className={styles.formdetail}>
                             <label htmlFor="hoTen">Tên Đầy Đủ</label>
                             <input
@@ -156,10 +165,12 @@ const handleSaveUser = () => {
                                 id="gioiTinh"
                                 value={editUserInfo?.gioiTinh || ""}
                                 onChange={e => setEditUserInfo({ ...editUserInfo, gioiTinh: e.target.value })}
+                                className={styles.input} // dùng class input để CSS đồng bộ
                             >
+                                <option value="">Chọn giới tính</option>
                                 <option value="Nam">Nam</option>
                                 <option value="Nữ">Nữ</option>
-                                <option value="">Khác</option>
+                                <option value="Khác">Khác</option>
                             </select>
                         </div>
                         <div className={styles.formdetail}>
