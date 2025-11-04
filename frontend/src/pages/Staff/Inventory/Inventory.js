@@ -12,55 +12,68 @@ import styles from "./Inventory.module.css";
 
 /* ========= ÁNH XẠ MÀU CHO TRẠNG THÁI ========= */
 const STATUS_COLORS = {
-    "sẵn sàng": "#10B981", // xanh lá
-    "đang sạc": "#F59E0B", // vàng
-    "đang được sử dụng": "#3B82F6", // xanh dương
-    "bảo trì": "#EF4444", // đỏ
+    "sẵn sàng": "#10B981",
+    "đang sạc": "#F59E0B",
+    "đang được sử dụng": "#3B82F6",
+    "bảo trì": "#EF4444",
 };
 
-/* ========= COMPONENT CHÍNH ========= */
 function Inventory() {
     const [pins, setPins] = useState([]);
     const [listLoading, setListLoading] = useState(true);
 
-    /* -------------------- LẤY TOKEN -------------------- */
     const getAuthToken = () => localStorage.getItem("token");
 
-    /* -------------------- FETCH DATA -------------------- */
     const fetchPinList = async () => {
         try {
             setListLoading(true);
             const token = getAuthToken();
 
-            // ✅ Gọi song song 2 API: danh sách pin + lịch sử pin trạm
-            const [pinsRes, historyRes] = await Promise.all([
+            const [pinsRes, historyRes, tramRes] = await Promise.all([
                 fetch("/api/battery-service/pins", {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 }),
                 fetch("/api/battery-service/lichsu-pin-tram", {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 }),
+                fetch("/api/station-service/tram", {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }),
             ]);
 
-            if (pinsRes.ok && historyRes.ok) {
+            if (pinsRes.ok && historyRes.ok && tramRes.ok) {
                 const pinsData = await pinsRes.json();
                 const historyData = await historyRes.json();
+                const tramData = await tramRes.json();
 
-                console.log("📦 Danh sách pin:", pinsData);
-                console.log("📜 Lịch sử pin - trạm:", historyData);
+                console.log("📦 pins:", pinsData);
+                console.log("📜 lịch sử:", historyData);
+                console.log("🏭 trạm:", tramData);
 
-                // ✅ Ghép dữ liệu từ 2 API dựa trên maPin
                 const mapped = pinsData.map((p, i) => {
-                    const pinId = p.maPin ?? p.ma_pin ?? i + 1;
+                    const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
+
                     const record = historyData.find(
-                        (h) =>
-                            h.maPin === pinId ||
-                            h.ma_pin === pinId
+                        (h) => Number(h.maPin ?? h.ma_pin) === pinId
                     );
 
-                    const tramName = record
-                        ? `Trạm ${record.maTram ?? record.ma_tram}`
-                        : "Chưa có lịch sử";
+                    let tramName = "Chưa có lịch sử";
+
+                    if (record) {
+                        const tram = tramData.find(
+                            (t) =>
+                                Number(t.maTram ?? t.ma_tram) ===
+                                Number(record.maTram ?? record.ma_tram)
+                        );
+
+                        tramName = tram
+                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
+                            : `Trạm ${record.maTram}`;
+
+                        console.log(`✅ Pin ${pinId} → ${tramName}`);
+                    } else {
+                        console.warn(`⚠️ Pin ${pinId} chưa có lịch sử`);
+                    }
 
                     return {
                         id: pinId,
@@ -77,11 +90,16 @@ function Inventory() {
 
                 setPins(mapped);
             } else {
-                console.error("❌ Lỗi tải dữ liệu:", pinsRes.status, historyRes.status);
+                console.error(
+                    "❌ Lỗi tải dữ liệu:",
+                    pinsRes.status,
+                    historyRes.status,
+                    tramRes.status
+                );
                 setPins([]);
             }
         } catch (err) {
-            console.error("⚠️ Lỗi kết nối API battery-service:", err);
+            console.error("⚠️ Lỗi kết nối:", err);
             setPins([]);
         } finally {
             setListLoading(false);
@@ -92,7 +110,6 @@ function Inventory() {
         fetchPinList();
     }, []);
 
-    /* -------------------- LOADING -------------------- */
     if (listLoading) {
         return (
             <div style={{ textAlign: "center", padding: "40px" }}>
@@ -101,12 +118,10 @@ function Inventory() {
         );
     }
 
-    /* -------------------- UI CHÍNH -------------------- */
     return (
         <div className={styles.inventoryPage}>
             <StatsHeader />
 
-            {/* HEADER */}
             <div className={styles.headerRow}>
                 <h2>Kho Pin</h2>
                 <div className={styles.headerButtons}>
@@ -138,13 +153,11 @@ function Inventory() {
                 </div>
             </div>
 
-            {/* GRID */}
             <div className={styles.grid}>
                 {pins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
                     return (
                         <div key={pin.id} className={styles.card}>
-                            {/* --- HEADER --- */}
                             <div className={styles.cardHeader}>
                                 <div>
                                     <div className={styles.title}>{pin.title}</div>
@@ -161,7 +174,6 @@ function Inventory() {
                                 </div>
                             </div>
 
-                            {/* --- METRICS --- */}
                             <div className={styles.metrics}>
                                 <div>
                                     <div className={styles.metricLabel}>Sức khỏe:</div>
@@ -175,7 +187,6 @@ function Inventory() {
                                 </div>
                             </div>
 
-                            {/* --- DATES --- */}
                             <div className={styles.datesRow}>
                                 <div>
                                     <div className={styles.metricLabel}>Ngày nhập kho:</div>
@@ -191,7 +202,6 @@ function Inventory() {
                                 </div>
                             </div>
 
-                            {/* --- PROGRESS BAR --- */}
                             <div className={styles.progressBar}>
                                 <div
                                     className={styles.progressFill}
@@ -202,7 +212,6 @@ function Inventory() {
                                 />
                             </div>
 
-                            {/* --- ACTIONS --- */}
                             <div className={styles.cardActions}>
                                 <button
                                     className={styles.action}
