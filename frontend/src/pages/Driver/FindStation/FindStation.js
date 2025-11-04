@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import axios from "axios";
 import MapLeaflet from "../../../components/Map/MapLeaflet";
 import { useState } from "react";
@@ -14,6 +15,8 @@ function FindStation() {
     // 🔹 Bước 1: Khai báo state để lưu vị trí người dùng
     const [location, setLocation] = useState({ lat: null, lng: null });
     const [error, setError] = useState(null);
+    const [stations, setStations] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const getDistances = async (userLat, userLng, stationList) => {
         const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0="; // 👈 dán key bạn copy ở đây
@@ -87,64 +90,34 @@ function FindStation() {
         );
     };
 
-    // const stations = [
-    //     {
-    //         id: 1,
-    //         name: "Trạm Giao Thông Vận Tải",
-    //         address: "70 Tô Ký, Quận 12, TP.HCM",
-    //         battery: "12/20",
-    //         time: "5 min",
-    //         distance: "0.8 km",
-    //         rating: 4,
-    //         price: "150.000VNĐ/Đổi",
-    //         status: "mở",
-    //     },
-    //     {
-    //         id: 2,
-    //         name: "Trạm EV Quận 1",
-    //         address: "15 Nguyễn Huệ, Quận 1, TP.HCM",
-    //         battery: "9/20",
-    //         time: "8 min",
-    //         distance: "1.2 km",
-    //         rating: 5,
-    //         price: "155.000VNĐ/Đổi",
-    //         status: "mở",
-    //     },
-    //     {
-    //         id: 3,
-    //         name: "Trạm EV Quận 7",
-    //         address: "65 Nguyễn Văn Linh, Quận 7, TP.HCM",
-    //         battery: "14/20",
-    //         time: "12 min",
-    //         distance: "3.1 km",
-    //         rating: 4,
-    //         price: "160.000VNĐ/Đổi",
-    //         status: "đang bảo trì",
-    //     },
-    // ];
-    const [stations, setStations] = useState([
-        {
-            id: 1,
-            name: "Trạm Giao Thông Vận Tải",
-            address: "70 Tô Ký, Quận 12, TP.HCM",
-            lat: 10.848092,
-            lng: 106.717947,
-        },
-        {
-            id: 2,
-            name: "Trạm EV Quận 1",
-            address: "15 Nguyễn Huệ, Quận 1, TP.HCM",
-            lat: 10.774862,
-            lng: 106.703018,
-        },
-        {
-            id: 3,
-            name: "Trạm EV Quận 7",
-            address: "65 Nguyễn Văn Linh, Quận 7, TP.HCM",
-            lat: 10.732555,
-            lng: 106.721665,
-        },
-    ]);
+    useEffect(() => {
+        const fetchStations = async () => {
+            try {
+                const res = await axios.get("/api/station-service/tram");
+                const formatted = res.data.map((st, idx) => ({
+                    id: st.maTram || idx,
+                    name: st.tenTram,
+                    address: st.diaChi,
+                    lat: parseFloat(st.viDo),
+                    lng: parseFloat(st.kinhDo),
+                    status: st.trangThai,
+                    battery: st.soLuongPinToiDa || 0,
+                }));
+                setStations(formatted);
+                setLoading(false);
+            } catch (err) {
+                console.error("Lỗi khi tải danh sách trạm:", err);
+                setError("Không thể tải danh sách trạm");
+                setLoading(false);
+            }
+        };
+
+        fetchStations();
+    }, []);
+    if (loading) return <p>Đang tải dữ liệu trạm...</p>;
+    if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+
     return (
         <nav className={styles.wrapper}>
             <div className={styles.nearstation}>
