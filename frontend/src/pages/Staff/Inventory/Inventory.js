@@ -9,6 +9,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./Inventory.module.css";
+import FilterModal from "../Inventory/FilterModal/FilterModal";
 
 /* ========= ÁNH XẠ MÀU CHO TRẠNG THÁI ========= */
 const STATUS_COLORS = {
@@ -21,6 +22,15 @@ const STATUS_COLORS = {
 function Inventory() {
     const [pins, setPins] = useState([]);
     const [listLoading, setListLoading] = useState(true);
+    const [showFilter, setShowFilter] = useState(false);
+
+    // Bộ lọc hiện tại
+    const [filters, setFilters] = useState({
+        status: [],
+        model: "",
+        minCap: null,
+        maxCap: null,
+    });
 
     const getAuthToken = () => localStorage.getItem("token");
 
@@ -69,10 +79,6 @@ function Inventory() {
                         tramName = tram
                             ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
                             : `Trạm ${record.maTram}`;
-
-                        console.log(`✅ Pin ${pinId} → ${tramName}`);
-                    } else {
-                        console.warn(`⚠️ Pin ${pinId} chưa có lịch sử`);
                     }
 
                     return {
@@ -118,6 +124,17 @@ function Inventory() {
         );
     }
 
+    // ====== Lọc tại frontend ======
+    const filteredPins = pins.filter((p) => {
+        const matchStatus =
+            filters.status.length === 0 || filters.status.includes(p.status);
+        const matchModel = !filters.model || p.type === filters.model;
+        const matchCap =
+            (!filters.minCap || p.capacity >= filters.minCap) &&
+            (!filters.maxCap || p.capacity <= filters.maxCap);
+        return matchStatus && matchModel && matchCap;
+    });
+
     return (
         <div className={styles.inventoryPage}>
             <StatsHeader />
@@ -125,13 +142,15 @@ function Inventory() {
             <div className={styles.headerRow}>
                 <h2>Kho Pin</h2>
                 <div className={styles.headerButtons}>
+                    {/* Nút Lọc */}
                     <button
                         className={styles.filterBtn}
-                        onClick={() => alert("Tính năng lọc đang phát triển")}
+                        onClick={() => setShowFilter(true)}
                     >
                         <FontAwesomeIcon icon={faFilter} /> Lọc
                     </button>
 
+                    {/* Nút Kiểm tra */}
                     <button
                         className={styles.primaryBtn}
                         onClick={() => alert("Chức năng kiểm tra đang phát triển")}
@@ -139,6 +158,7 @@ function Inventory() {
                         <FontAwesomeIcon icon={faPlus} /> Kiểm tra
                     </button>
 
+                    {/* Nút Làm mới */}
                     <button
                         className={styles.primaryBtn}
                         onClick={fetchPinList}
@@ -153,8 +173,9 @@ function Inventory() {
                 </div>
             </div>
 
+            {/* Lưới hiển thị Pin */}
             <div className={styles.grid}>
-                {pins.map((pin) => {
+                {filteredPins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
                     return (
                         <div key={pin.id} className={styles.card}>
@@ -241,12 +262,24 @@ function Inventory() {
                     );
                 })}
 
-                {pins.length === 0 && (
+                {filteredPins.length === 0 && (
                     <div className={styles.emptyState}>
-                        Không có pin nào được tìm thấy.
+                        Không có pin nào phù hợp với bộ lọc.
                     </div>
                 )}
             </div>
+
+            {/* Hiển thị Modal Lọc */}
+            {showFilter && (
+                <FilterModal
+                    current={filters}
+                    onClose={() => setShowFilter(false)}
+                    onApply={(newFilters) => {
+                        setFilters(newFilters);
+                        setShowFilter(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
