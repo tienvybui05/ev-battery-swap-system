@@ -1,11 +1,19 @@
 package ut.edu.stationservice.controllers;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import ut.edu.stationservice.models.Tram;
 import ut.edu.stationservice.services.ITramService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/station-service/tram")
@@ -41,6 +49,18 @@ public class TramController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/batch")
+    public ResponseEntity<?> themNhieuTram(@RequestBody List<Tram> dsTram) {
+        try {
+            List<Tram> newTrams = tramService.addNhieuTram(dsTram);
+            return ResponseEntity.ok(newTrams);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> suaTram(@PathVariable Long id, @RequestBody Tram tram) {

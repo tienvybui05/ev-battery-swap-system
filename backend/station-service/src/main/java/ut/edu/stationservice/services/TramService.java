@@ -1,12 +1,13 @@
 package ut.edu.stationservice.services;
 
-import jakarta.transaction.Transactional;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import jakarta.transaction.Transactional;
 import ut.edu.stationservice.models.Tram;
 import ut.edu.stationservice.repositories.ITramRepository;
-
-import java.util.List;
 
 @Service
 public class TramService implements ITramService {
@@ -68,5 +69,10 @@ public class TramService implements ITramService {
     @Override
     public Tram save(Tram tram) {
         return tramRepository.save(tram);
+    }
+
+    @Override
+    public List<Tram> addNhieuTram(List<Tram> dsTram) {
+        return tramRepository.saveAll(dsTram);
     }
 }
