@@ -6,7 +6,11 @@ import { faPhone, faCircleExclamation, faShield, faGear, faXmark } from "@fortaw
 
 function Support() {
     const [openReport, setOpenReport] = useState(false);
-    const [openChangePass, setOpenChangePass] = useState(false)
+    const [openChangePass, setOpenChangePass] = useState(false);
+
+    const [newPass, setNewPass] = useState("");
+    const [confirmPass, setConfirmPass] = useState("");
+    const [loadingChange, setLoadingChange] = useState(false);
 
     const [report, setReport] = useState({
         Ma_Bao_Cao: "BC-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-4),
@@ -17,7 +21,6 @@ function Support() {
         Phan_Hoi: "",
     });
 
-    // checklist giống ảnh 2 (đổi tên chút cho hợp “báo cáo”)
     const checklist = [
         "Kiểm tra hư hỏng vật lý",
         "Kiểm tra kết nối",
@@ -40,7 +43,7 @@ function Support() {
 
     const handleSubmit = () => {
         if (!report.Tieu_De.trim() || !report.Noi_Dung.trim()) return;
-        console.log("SUBMIT BAOCAO", report); // thay bằng API thật của bạn
+        console.log("SUBMIT BAOCAO", report);
         setOpenReport(false);
         setReport({
             Ma_Bao_Cao: "BC-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-4),
@@ -50,6 +53,66 @@ function Support() {
             Trang_Thai_Xu_Ly: "Mới",
             Phan_Hoi: "",
         });
+    };
+
+    // ✅ ĐỔI MẬT KHẨU KHÔNG CẦN MẬT KHẨU CŨ
+    const handleChangePassword = async () => {
+        if (!newPass.trim() || !confirmPass.trim()) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            alert("Mật khẩu xác nhận không khớp!");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("userId");
+
+        if (!token || !userId) {
+            alert("Bạn chưa đăng nhập!");
+            return;
+        }
+
+        setLoadingChange(true);
+
+        // lấy lại dữ liệu user để giữ nguyên khi update
+        const resUser = await fetch(`/api/user-service/taixe/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const user = await resUser.json();
+
+        const payload = {
+            hoTen: user.hoTen || user.nguoiDung?.hoTen,
+            email: user.email || user.nguoiDung?.email,
+            soDienThoai: user.soDienThoai || user.nguoiDung?.soDienThoai,
+            gioiTinh: user.gioiTinh || user.nguoiDung?.gioiTinh,
+            ngaySinh: (user.ngaySinh || user.nguoiDung?.ngaySinh)?.substring(0, 10),
+            bangLaiXe: user.bangLaiXe,
+            matKhau: newPass
+        };
+
+        const res = await fetch(`/api/user-service/taixe/${userId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const msg = await res.text();
+        setLoadingChange(false);
+
+        if (res.ok) {
+            alert("Đổi mật khẩu thành công!");
+            setOpenChangePass(false);
+            setNewPass("");
+            setConfirmPass("");
+        } else {
+            alert("Đổi mật khẩu thất bại!\n" + msg);
+        }
     };
 
     return (
@@ -77,10 +140,7 @@ function Support() {
                     <p>Cài đặt bảo mật tài khoản</p>
                 </div>
                 <div className={styles.button}>
-                    <Button white blackoutline type="button">
-                        <FontAwesomeIcon icon={faShield} className={styles.icon} />
-                        Xác Thực Hai Lần
-                    </Button>
+                    
                     <Button white blackoutline type="button" onClick={() => setOpenChangePass(true)}>
                         <FontAwesomeIcon icon={faGear} className={styles.icon} />
                         Thay Mật Khẩu
@@ -92,38 +152,40 @@ function Support() {
                 <div className={styles.modalOverlay}>
                     <div className={styles.modal}>
                         <h1>Đổi Mật Khẩu</h1>
-                        <div className={styles.formchange}>
-                            <label htmlFor="oldpass">Mật khẩu cũ</label>
-                            <input
-                                id="oldpass"
-                                type="password"
-                                placeholder="123"
-                            />
-                        </div>
+
                         <div className={styles.formchange}>
                             <label htmlFor="newpass">Mật khẩu mới</label>
                             <input
                                 id="newpass"
                                 type="password"
-                                placeholder="123"
+                                value={newPass}
+                                onChange={(e) => setNewPass(e.target.value)}
+                                placeholder="Nhập mật khẩu mới"
                             />
                         </div>
+
                         <div className={styles.formchange}>
                             <label htmlFor="confirmpass">Xác nhận mật khẩu</label>
                             <input
                                 id="confirmpass"
                                 type="password"
-                                placeholder="123"
+                                value={confirmPass}
+                                onChange={(e) => setConfirmPass(e.target.value)}
+                                placeholder="Nhập lại mật khẩu mới"
                             />
                         </div>
+
                         <div className={styles.modalActions}>
-                            <Button change type="button">Lưu</Button>
+                            <Button change type="button" onClick={handleChangePassword} disabled={loadingChange}>
+                                {loadingChange ? "Đang lưu..." : "Lưu"}
+                            </Button>
                             <Button white blackoutline type="button" onClick={() => setOpenChangePass(false)}>Hủy</Button>
                         </div>
                     </div>
                 </div>
             )}
 
+            {/* Báo cáo giữ nguyên */}
             {openReport && (
                 <div className={styles.modalOverlay} onClick={() => setOpenReport(false)}>
                     <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -142,7 +204,7 @@ function Support() {
                             </button>
                         </div>
 
-                        {/* meta 2 cột */}
+                        {/* meta */}
                         <div className={styles.metaGrid}>
                             <div className={styles.metaItem}>
                                 <span className={styles.metaLabel}>Mã Báo Cáo</span>
@@ -154,6 +216,7 @@ function Support() {
                             </div>
                         </div>
 
+                        {/* các phần còn lại giữ nguyên */}
                         <div className={styles.formdetail}>
                             <label htmlFor="title">Tiêu Đề</label>
                             <input
