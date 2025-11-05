@@ -15,10 +15,9 @@ const statsData = [
     { id: 1, icon: faChartColumn, color: "#4F46E5", value: "47", label: "Thay Pin Hôm Nay" },
     { id: 2, icon: faDollarSign, color: "#10B981", value: "$1175", label: "Doanh Thu" },
     { id: 3, icon: faUser, color: "#F97316", value: "4.8", label: "Đánh Giá" },
-    { id: 4, icon: faTriangleExclamation, color: "#FACC15", value: "3", label: "Pin Nguy Hiểm" },
-    { id: 5, icon: faWrench, color: "#EF4444", value: "1", label: "Bảo Trì" },
-    { id: 6, icon: faBatteryFull, color: "#22C55E", value: "145", label: "Pin Sẵn Sàng" },
-    { id: 7, icon: faBolt, color: "#F59E0B", value: "87", label: "Pin Đang Sạc" },
+    { id: 4, icon: faWrench, color: "#EF4444", value: "1", label: "Pin bảo Trì" },
+    { id: 5, icon: faBatteryFull, color: "#22C55E", value: "145", label: "Pin Sẵn Sàng" },
+    { id: 6, icon: faBolt, color: "#F59E0B", value: "87", label: "Pin Đang Sạc" },
 ];
 
 const StatsHeader = () => {
