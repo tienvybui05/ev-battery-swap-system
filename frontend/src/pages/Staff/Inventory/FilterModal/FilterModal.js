@@ -3,10 +3,34 @@ import styles from "./FilterModal.module.css";
 
 export default function FilterModal({ current, onClose, onApply }) {
     const [local, setLocal] = useState(current);
+    const [models, setModels] = useState([]);
 
     useEffect(() => {
         setLocal(current);
     }, [current]);
+
+    // --- Fetch tất cả pin rồi lọc loại pin duy nhất ---
+    const fetchModels = async () => {
+        try {
+            const res = await fetch("/api/battery-service/pins");
+            if (!res.ok) throw new Error("Không thể tải danh sách pin");
+            const data = await res.json();
+
+            // Lấy danh sách model pin duy nhất
+            const uniqueModels = [
+                ...new Set(
+                    data.map((p) => p.loaiPin ?? p.loai_pin).filter(Boolean)
+                ),
+            ];
+            setModels(uniqueModels);
+        } catch (err) {
+            console.error("⚠️ Lỗi tải model pin:", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchModels();
+    }, []);
 
     // --- Toggle trạng thái ---
     function toggleStatus(s) {
@@ -18,12 +42,10 @@ export default function FilterModal({ current, onClose, onApply }) {
         });
     }
 
-    // --- Cập nhật model ---
     function updateModel(v) {
         setLocal((l) => ({ ...l, model: v }));
     }
 
-    // --- Cập nhật dung lượng ---
     function updateMinCap(v) {
         setLocal((l) => ({ ...l, minCap: v === "" ? null : Number(v) }));
     }
@@ -39,6 +61,12 @@ export default function FilterModal({ current, onClose, onApply }) {
             local.maxCap == null ||
             local.maxCap >= local.minCap);
 
+    const canApply = capValid;
+
+    const handleBackdropClick = (e) => {
+        if (e.target.classList.contains(styles.overlay)) onClose();
+    };
+
     function resetFilters() {
         onApply({
             status: [],
@@ -48,19 +76,9 @@ export default function FilterModal({ current, onClose, onApply }) {
         });
     }
 
-    const canApply = capValid;
-
-    // --- Xử lý click ra ngoài modal ---
-    const handleBackdropClick = (e) => {
-        if (e.target.classList.contains(styles.overlay)) {
-            onClose();
-        }
-    };
-
     return (
         <div className={styles.overlay} onClick={handleBackdropClick}>
             <div className={styles.modal}>
-                {/* Header */}
                 <div className={styles.modalHeader}>
                     <h3>Bộ lọc Pin</h3>
                     <button className={styles.closeBtn} onClick={onClose}>
@@ -68,9 +86,7 @@ export default function FilterModal({ current, onClose, onApply }) {
                     </button>
                 </div>
 
-                {/* Nội dung chính */}
                 <div className={styles.modalBody}>
-                    {/* ========== TRẠNG THÁI ========== */}
                     <h4>Tình trạng Pin</h4>
                     <div className={styles.checkboxRow}>
                         {["sẵn sàng", "đang sạc", "đang được sử dụng", "bảo trì"].map(
@@ -87,7 +103,7 @@ export default function FilterModal({ current, onClose, onApply }) {
                         )}
                     </div>
 
-                    {/* ========== MODEL ========== */}
+                    {/* Dropdown model pin tự động */}
                     <div className={styles.formRow}>
                         <label>Model Pin</label>
                         <select
@@ -95,13 +111,14 @@ export default function FilterModal({ current, onClose, onApply }) {
                             onChange={(e) => updateModel(e.target.value)}
                         >
                             <option value="">Tất cả</option>
-                            <option value="Lithium-ion 48V">Lithium-ion 48V</option>
-                            <option value="Lithium-ion 60V">Lithium-ion 60V</option>
-                            <option value="Lithium 72V">Lithium 72V</option>
+                            {models.map((m) => (
+                                <option key={m} value={m}>
+                                    {m}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
-                    {/* ========== DUNG LƯỢNG ========== */}
                     <h4>Dung lượng (kWh)</h4>
                     <div className={styles.filterRow}>
                         <div className={styles.formRow}>
@@ -113,7 +130,6 @@ export default function FilterModal({ current, onClose, onApply }) {
                                 placeholder="VD: 4.5"
                             />
                         </div>
-
                         <div className={styles.formRow}>
                             <label>Tối đa</label>
                             <input
@@ -132,7 +148,6 @@ export default function FilterModal({ current, onClose, onApply }) {
                     )}
                 </div>
 
-                {/* Footer */}
                 <div className={styles.modalFooter}>
                     <button className={styles.ghostBtn} onClick={resetFilters}>
                         Xóa lọc
