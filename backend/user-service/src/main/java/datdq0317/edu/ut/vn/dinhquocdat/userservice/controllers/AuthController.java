@@ -1,5 +1,20 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.CustomUserDetails;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.CustomUserDetailsService;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth.JwtUtil;
@@ -8,29 +23,8 @@ import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.LoginResponse;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.TaiXeDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
-import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INguoiDungRepository;
-
-
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.INguoiDungService;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.ITaiXeService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.*;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.*;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.*;
 
 @RestController
 @RequestMapping("/api/user-service/auth")
@@ -153,10 +147,10 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             NguoiDung user = nguoiDungService.timTheoSoDienThoai(request.getSoDienThoai())
-                    .orElseThrow(() -> new RuntimeException("Sai số điện thoại hoặc mật khẩu"));
+                    .orElseThrow(() -> new RuntimeException("Sai số điện thoại hoặc mật khẩu nè"));
 
             if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhau())) {
-                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu");
+                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu nè");
             }
 
             String token = jwtUtil.generateToken(user.getSoDienThoai(), user.getVaiTro());

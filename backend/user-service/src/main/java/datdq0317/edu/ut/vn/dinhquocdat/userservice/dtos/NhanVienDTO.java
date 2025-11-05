@@ -9,12 +9,11 @@ public class NhanVienDTO {
     private String gioiTinh;
     private String matKhau;
     private LocalDate ngaySinh;
-
     private String bangCap;
     private String kinhNghiem;
+    private Long maTram; // Thêm mã trạm
 
-    public NhanVienDTO() {}
-
+    // Getter và Setter
     public String getHoTen() {
         return hoTen;
     }
@@ -77,5 +76,13 @@ public class NhanVienDTO {
 
     public void setKinhNghiem(String kinhNghiem) {
         this.kinhNghiem = kinhNghiem;
+    }
+
+    public Long getMaTram() {
+        return maTram;
+    }
+
+    public void setMaTram(Long maTram) {
+        this.maTram = maTram;
     }
 }

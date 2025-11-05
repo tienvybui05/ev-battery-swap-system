@@ -10,19 +10,26 @@ import {
   faRefresh,
   faEdit,
   faTrash,
-  faPhone
+  faPhone,
+  faExchangeAlt,
+  faTimes
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Staff.module.css";
 import AddStaffModal from "./AddStaffModal";
-import EditStaffModal from "./EditStaffModal"; // Import component mới
+import EditStaffModal from "./EditStaffModal";
+import StationSelector from "./StationSelector";
 
 function Staff() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showChangeStationModal, setShowChangeStationModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [changeStationLoading, setChangeStationLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [stations, setStations] = useState([]);
   const [staffData, setStaffData] = useState({
     topKpi: [
       {
@@ -62,12 +69,77 @@ function Staff() {
     return localStorage.getItem("token");
   };
 
-  // Load danh sách nhân viên khi component mount
+  // Lấy danh sách trạm
+  const fetchStations = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        console.error("Không tìm thấy token!");
+        return;
+      }
+
+      console.log("Đang tải danh sách trạm...");
+      const response = await fetch('/api/station-service/tram', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const stationData = await response.json();
+        console.log("Dữ liệu trạm từ API:", stationData);
+        setStations(stationData);
+        return stationData; // Trả về dữ liệu để sử dụng
+      } else {
+        console.error("Lỗi khi tải danh sách trạm:", response.status);
+        return [];
+      }
+    } catch (err) {
+      console.error("Lỗi tải danh sách trạm:", err);
+      return [];
+    }
+  };
+
+  // Hàm helper để lấy thông tin trạm từ mã trạm
+  const getStationInfo = (maTram, stationsList = stations) => {
+    if (!maTram) return { 
+      name: "Chưa phân công", 
+      fullInfo: "Chưa phân công",
+      address: "Không xác định",
+      soDT: "Không có"
+    };
+    
+    const station = stationsList.find(s => s.maTram === maTram);
+    console.log("Tìm trạm với mã:", maTram, "Kết quả:", station);
+    
+    if (station) {
+      return {
+        name: station.tenTram,
+        fullInfo: `${station.tenTram}`,
+        address: station.diaChi,
+        soDT: station.soDT,
+        trangThai: station.trangThai
+      };
+    }
+    return {
+      name: `Trạm ${maTram}`,
+      fullInfo: `Trạm ${maTram}`,
+      address: "Không xác định",
+      soDT: "Không có",
+      trangThai: "Không xác định"
+    };
+  };
+
+  // Load danh sách nhân viên và trạm khi component mount
   useEffect(() => {
-    fetchStaffList();
+    const loadData = async () => {
+      const stationsData = await fetchStations();
+      await fetchStaffList(stationsData);
+    };
+    loadData();
   }, []);
 
-  const fetchStaffList = async () => {
+  const fetchStaffList = async (stationsData = null) => {
     try {
       setListLoading(true);
       const token = getAuthToken();
@@ -90,20 +162,33 @@ function Staff() {
         const nhanVienList = await response.json();
         console.log("Dữ liệu nhân viên từ API:", nhanVienList);
         
+        // Sử dụng stationsData nếu có, hoặc lấy từ state
+        const stationsToUse = stationsData || stations;
+        
         // Transform data từ API sang format hiển thị
-        const transformedList = nhanVienList.map(nv => ({
-          id: nv.maNhanVien,
-          name: nv.nguoiDung?.hoTen || "Chưa có tên",
-          role: getRoleFromData(nv),
-          station: getStationFromData(nv),
-          initials: getInitials(nv.nguoiDung?.hoTen || "NV"),
-          email: nv.nguoiDung?.email || "Chưa có email",
-          soDienThoai: nv.nguoiDung?.soDienThoai || "Chưa có SĐT",
-          bangCap: nv.bangCap || "Chưa có bằng cấp",
-          kinhNghiem: nv.kinhNghiem || "Chưa có kinh nghiệm",
-          ngaySinh: nv.nguoiDung?.ngaySinh || null,
-          gioiTinh: nv.nguoiDung?.gioiTinh || "Chưa xác định"
-        }));
+        const transformedList = nhanVienList.map(nv => {
+          const stationInfo = getStationInfo(nv.maTram, stationsToUse);
+          console.log(`Nhân viên ${nv.maNhanVien} - Mã trạm: ${nv.maTram}`, stationInfo);
+          
+          return {
+            id: nv.maNhanVien,
+            name: nv.nguoiDung?.hoTen || "Chưa có tên",
+            role: getRoleFromData(nv),
+            station: stationInfo.fullInfo, // Chỉ hiển thị tên trạm
+            stationName: stationInfo.name,
+            stationAddress: stationInfo.address,
+            stationSoDT: stationInfo.soDT,
+            stationTrangThai: stationInfo.trangThai,
+            initials: getInitials(nv.nguoiDung?.hoTen || "NV"),
+            email: nv.nguoiDung?.email || "Chưa có email",
+            soDienThoai: nv.nguoiDung?.soDienThoai || "Chưa có SĐT",
+            bangCap: nv.bangCap || "Chưa có bằng cấp",
+            kinhNghiem: nv.kinhNghiem || "Chưa có kinh nghiệm",
+            ngaySinh: nv.nguoiDung?.ngaySinh || null,
+            gioiTinh: nv.nguoiDung?.gioiTinh || "Chưa xác định",
+            maTram: nv.maTram
+          };
+        });
 
         // Cập nhật KPI dựa trên dữ liệu thực
         updateKpiData(transformedList);
@@ -183,7 +268,8 @@ function Staff() {
         matKhau: newStaffData.matKhau,
         ngaySinh: newStaffData.ngaySinh || null,
         bangCap: newStaffData.bangCap || "",
-        kinhNghiem: newStaffData.kinhNghiem || ""
+        kinhNghiem: newStaffData.kinhNghiem || "",
+        maTram: newStaffData.maTram
       };
 
       console.log("Đang gửi request thêm nhân viên...");
@@ -202,18 +288,24 @@ function Staff() {
         const addedStaff = await response.json();
         console.log("Nhân viên mới:", addedStaff);
         
+        const stationInfo = getStationInfo(addedStaff.maTram);
         const newStaffItem = {
           id: addedStaff.maNhanVien,
           name: addedStaff.nguoiDung?.hoTen || addedStaff.hoTen,
           role: "Nhân viên",
-          station: "Chưa phân công",
+          station: stationInfo.fullInfo,
+          stationName: stationInfo.name,
+          stationAddress: stationInfo.address,
+          stationSoDT: stationInfo.soDT,
+          stationTrangThai: stationInfo.trangThai,
           initials: getInitials(addedStaff.nguoiDung?.hoTen || addedStaff.hoTen),
           email: addedStaff.nguoiDung?.email || addedStaff.email,
           soDienThoai: addedStaff.nguoiDung?.soDienThoai || addedStaff.soDienThoai,
           bangCap: addedStaff.bangCap,
           kinhNghiem: addedStaff.kinhNghiem,
           ngaySinh: addedStaff.nguoiDung?.ngaySinh || addedStaff.ngaySinh,
-          gioiTinh: addedStaff.nguoiDung?.gioiTinh || addedStaff.gioiTinh
+          gioiTinh: addedStaff.nguoiDung?.gioiTinh || addedStaff.gioiTinh,
+          maTram: addedStaff.maTram
         };
 
         setStaffData(prev => {
@@ -270,7 +362,8 @@ function Staff() {
         gioiTinh: staffData.gioiTinh,
         ngaySinh: staffData.ngaySinh || null,
         bangCap: staffData.bangCap || "",
-        kinhNghiem: staffData.kinhNghiem || ""
+        kinhNghiem: staffData.kinhNghiem || "",
+        maTram: staffData.maTram
       };
 
       console.log("Đang gửi request cập nhật nhân viên...");
@@ -289,6 +382,8 @@ function Staff() {
         const updatedStaff = await response.json();
         console.log("Nhân viên đã cập nhật:", updatedStaff);
         
+        const stationInfo = getStationInfo(updatedStaff.maTram);
+        
         // Cập nhật danh sách
         setStaffData(prev => {
           const updatedList = prev.staffList.map(staff => 
@@ -301,6 +396,12 @@ function Staff() {
               kinhNghiem: updatedStaff.kinhNghiem,
               ngaySinh: updatedStaff.nguoiDung?.ngaySinh || updatedStaff.ngaySinh,
               gioiTinh: updatedStaff.nguoiDung?.gioiTinh || updatedStaff.gioiTinh,
+              maTram: updatedStaff.maTram,
+              station: stationInfo.fullInfo,
+              stationName: stationInfo.name,
+              stationAddress: stationInfo.address,
+              stationSoDT: stationInfo.soDT,
+              stationTrangThai: stationInfo.trangThai,
               initials: getInitials(updatedStaff.nguoiDung?.hoTen || updatedStaff.hoTen)
             } : staff
           );
@@ -378,6 +479,104 @@ function Staff() {
     setShowEditModal(true);
   };
 
+  // Hàm mở modal thay đổi trạm
+  const handleOpenChangeStationModal = (staff) => {
+    setSelectedStaff(staff);
+    // Tìm thông tin trạm hiện tại từ danh sách stations
+    const currentStation = stations.find(s => s.maTram === staff.maTram);
+    setSelectedStation(currentStation || null);
+    setShowChangeStationModal(true);
+  };
+
+  // Hàm xử lý thay đổi trạm
+  const handleChangeStation = async () => {
+    if (!selectedStaff || !selectedStation) return;
+    
+    setChangeStationLoading(true);
+    
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Vui lòng đăng nhập lại!");
+        return;
+      }
+
+      const requestData = {
+        hoTen: selectedStaff.name,
+        email: selectedStaff.email,
+        soDienThoai: selectedStaff.soDienThoai,
+        gioiTinh: selectedStaff.gioiTinh,
+        ngaySinh: selectedStaff.ngaySinh || null,
+        bangCap: selectedStaff.bangCap || "",
+        kinhNghiem: selectedStaff.kinhNghiem || "",
+        maTram: selectedStation.maTram
+      };
+
+      console.log("Đang cập nhật trạm cho nhân viên...");
+      const response = await fetch(`/api/user-service/nhanvien/${selectedStaff.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (response.ok) {
+        const updatedStaff = await response.json();
+        console.log("Nhân viên đã cập nhật trạm:", updatedStaff);
+        
+        const stationInfo = getStationInfo(updatedStaff.maTram);
+        
+        setStaffData(prev => {
+          const updatedList = prev.staffList.map(staff => 
+            staff.id === selectedStaff.id ? {
+              ...staff,
+              maTram: updatedStaff.maTram,
+              station: stationInfo.fullInfo,
+              stationName: stationInfo.name,
+              stationAddress: stationInfo.address,
+              stationSoDT: stationInfo.soDT,
+              stationTrangThai: stationInfo.trangThai
+            } : staff
+          );
+          return {
+            ...prev,
+            staffList: updatedList
+          };
+        });
+
+        setShowChangeStationModal(false);
+        setSelectedStaff(null);
+        setSelectedStation(null);
+        alert("Thay đổi trạm thành công!");
+      } else {
+        const errorText = await response.text();
+        console.error("Chi tiết lỗi từ server:", errorText);
+        
+        let errorMessage = "Lỗi khi thay đổi trạm";
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        alert("Lỗi: " + errorMessage);
+      }
+    } catch (error) {
+      console.error("Lỗi khi thay đổi trạm:", error);
+      alert("Lỗi kết nối server! Vui lòng thử lại.");
+    } finally {
+      setChangeStationLoading(false);
+    }
+  };
+
+  // Hàm xử lý chọn trạm trong modal
+  const handleStationChange = (station) => {
+    setSelectedStation(station);
+  };
+
   // Hàm helper để xác định các giá trị từ dữ liệu API
   const getRoleFromData = (nv) => {
     const role = nv.nguoiDung?.vaiTro;
@@ -387,10 +586,6 @@ function Staff() {
       case "ADMIN": return "Quản trị viên";
       default: return "Nhân viên";
     }
-  };
-
-  const getStationFromData = (nv) => {
-    return nv.tram || "Chưa phân công";
   };
 
   const getInitials = (name) => {
@@ -403,7 +598,9 @@ function Staff() {
   };
 
   const refreshStaffList = () => {
-    fetchStaffList();
+    fetchStations().then(stationsData => {
+      fetchStaffList(stationsData);
+    });
   };
 
   return (
@@ -460,13 +657,12 @@ function Staff() {
           </div>
         ) : staffData.staffList.length === 0 ? (
           <div className={styles.emptyState}>
-            {/* Empty state */}
+            Không có nhân viên nào
           </div>
         ) : (
           staffData.staffList.map((staff) => (
             <div key={staff.id} className={styles.staffCard}>
               <div className={styles.staffLeft}>
-                {/* <div className={styles.avatar}>{staff.initials}</div> */}
                 <div className={styles.staffInfo}>
                   <h4>{staff.name}</h4>
                   <p className={styles.station}>{staff.station}</p>
@@ -475,12 +671,23 @@ function Staff() {
                       <FontAwesomeIcon icon={faPhone} className={styles.contactIcon} />
                       <span>{staff.soDienThoai}</span>
                     </div>
+                    <div className={styles.contactItem}>
+                      <FontAwesomeIcon icon={faLocationDot} className={styles.contactIcon} />
+                      <span>{staff.stationAddress}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className={styles.staffRight}>
                 <div className={styles.actionButtons}>
+                  <button 
+                    className={`${styles.iconBtn} ${styles.changeStationBtn}`}
+                    title="Thay đổi trạm làm việc"
+                    onClick={() => handleOpenChangeStationModal(staff)}
+                  >
+                    <FontAwesomeIcon icon={faExchangeAlt} />
+                  </button>
                   <button 
                     className={styles.iconBtn}
                     title="Chỉnh sửa thông tin"
@@ -521,6 +728,67 @@ function Staff() {
         loading={editLoading}
         staff={selectedStaff}
       />
+
+      {/* Modal Thay đổi Trạm */}
+      {showChangeStationModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h3>Thay Đổi Trạm Làm Việc</h3>
+              <button 
+                className={styles.closeBtn}
+                onClick={() => {
+                  setShowChangeStationModal(false);
+                  setSelectedStaff(null);
+                  setSelectedStation(null);
+                }}
+                disabled={changeStationLoading}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+
+            <div className={styles.modalForm}>
+              <div className={styles.staffInfoSection}>
+                <h4>Nhân viên: {selectedStaff?.name}</h4>
+                <p>Trạm hiện tại: {selectedStaff?.station}</p>
+              </div>
+
+              <div className={styles.stationSection}>
+                <StationSelector
+                  selectedStation={selectedStation}
+                  onStationChange={handleStationChange}
+                  disabled={changeStationLoading}
+                  placeholder="Chọn trạm mới cho nhân viên"
+                />
+              </div>
+
+              <div className={styles.modalActions}>
+                <button 
+                  type="button" 
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    setShowChangeStationModal(false);
+                    setSelectedStaff(null);
+                    setSelectedStation(null);
+                  }}
+                  disabled={changeStationLoading}
+                >
+                  Hủy
+                </button>
+                <button 
+                  type="button" 
+                  className={styles.saveBtn}
+                  onClick={handleChangeStation}
+                  disabled={changeStationLoading || !selectedStation}
+                >
+                  {changeStationLoading ? "Đang cập nhật..." : "Thay Đổi Trạm"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

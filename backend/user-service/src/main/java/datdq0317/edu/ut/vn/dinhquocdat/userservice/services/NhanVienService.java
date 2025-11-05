@@ -1,17 +1,18 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.services;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.dtos.NhanVienDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NhanVien;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INguoiDungRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.repositories.INhanVienRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 public class NhanVienService implements INhanVienService {
@@ -25,6 +26,10 @@ public class NhanVienService implements INhanVienService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // Có thể inject TramServiceClient nếu cần validate trạm
+    // @Autowired
+    // private TramServiceClient tramServiceClient;
+
     @Transactional
     public NhanVien themNhanVien(NhanVienDTO dto) {
         // Kiểm tra email tồn tại
@@ -36,6 +41,14 @@ public class NhanVienService implements INhanVienService {
         nguoiDungRepository.findBySoDienThoai(dto.getSoDienThoai()).ifPresent(u -> {
             throw new RuntimeException("Số điện thoại đã tồn tại!");
         });
+
+        // Có thể thêm validation cho mã trạm ở đây
+        // if (dto.getMaTram() != null) {
+        //     boolean tramTonTai = tramServiceClient.kiemTraTramTonTai(dto.getMaTram());
+        //     if (!tramTonTai) {
+        //         throw new RuntimeException("Mã trạm không tồn tại!");
+        //     }
+        // }
 
         // Tạo người dùng mới
         NguoiDung nguoiDung = new NguoiDung();
@@ -57,6 +70,7 @@ public class NhanVienService implements INhanVienService {
         NhanVien nv = new NhanVien();
         nv.setBangCap(dto.getBangCap());
         nv.setKinhNghiem(dto.getKinhNghiem());
+        nv.setMaTram(dto.getMaTram()); // Thêm mã trạm
         nv.setNguoiDung(nguoiDung);
 
         return nhanVienRepository.save(nv);
@@ -64,6 +78,11 @@ public class NhanVienService implements INhanVienService {
 
     public List<NhanVien> danhSachNhanVien() {
         return nhanVienRepository.findAll();
+    }
+
+    // Thêm method để lấy nhân viên theo mã trạm
+    public List<NhanVien> danhSachNhanVienTheoTram(Long maTram) {
+        return nhanVienRepository.findByMaTram(maTram);
     }
 
     public NhanVien layNhanVienTheoId(Long id) {
@@ -101,6 +120,7 @@ public class NhanVienService implements INhanVienService {
         return nhanVienRepository.findById(id).map(nv -> {
             nv.setBangCap(dto.getBangCap());
             nv.setKinhNghiem(dto.getKinhNghiem());
+            nv.setMaTram(dto.getMaTram()); // Cập nhật mã trạm
 
             NguoiDung nd = nv.getNguoiDung();
 

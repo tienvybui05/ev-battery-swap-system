@@ -1,24 +1,31 @@
 /* ===============================
-   👥 STAFF PAGE - Unified with Customers
-=============================== */
+   👥 STAFF PAGE STYLES
+   =============================== */
 
-/* ========== Tổng layout ========== */
+/* ========== LAYOUT & CONTAINER ========== */
 .wrapper {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 0; /* đồng bộ Stations */
+  margin-top: 0;
   background: #ffffff;
   min-height: 100vh;
   animation: fadeIn 0.45s ease-in-out;
+  padding: 0 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* ========== KPI Cards ========== */
+/* ========== KPI CARDS ========== */
 .kpiGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
-  margin-bottom: 16px; /* giảm khoảng cách như Customers */
+  margin-bottom: 16px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .kpiCard {
@@ -64,12 +71,15 @@
   background-color: #f3f4f6;
 }
 
-/* ========== Header ========== */
+/* ========== HEADER & ACTIONS ========== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .title {
@@ -79,13 +89,13 @@
   margin: 0;
 }
 
-.actions {
+.headerActions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* Nút “Lọc” */
+/* Filter Button */
 .filterBtn {
   display: flex;
   align-items: center;
@@ -103,11 +113,30 @@
 .filterBtn:hover {
   background: #f3f4f6;
 }
-.refreshBtn{
+
+/* Refresh Button */
+.refreshBtn {
   margin: 10px 0;
   background-color: white;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
 }
-/* Nút “Thêm nhân viên” */
+
+.refreshBtn:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Add Button */
 .addBtn {
   display: flex;
   align-items: center;
@@ -127,15 +156,17 @@
   transform: translateY(-2px);
 }
 
-/* ========== Staff List ========== */
+/* ========== STAFF LIST & CARDS ========== */
 .staffList {
   display: flex;
   flex-direction: column;
   gap: 18px;
   animation: fadeUp 0.45s ease-in-out forwards;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Thẻ nhân viên */
 .staffCard {
   background: #fff;
   border-radius: 14px;
@@ -149,28 +180,26 @@
   opacity: 0;
   transform: translateY(8px);
   animation: fadeUp 0.45s ease forwards;
+  width: 100%;
+  min-height: 80px;
 }
 
-.staffCard:nth-child(1) {
-  animation-delay: 0.05s;
-}
-.staffCard:nth-child(2) {
-  animation-delay: 0.15s;
-}
-.staffCard:nth-child(3) {
-  animation-delay: 0.25s;
-}
+.staffCard:nth-child(1) { animation-delay: 0.05s; }
+.staffCard:nth-child(2) { animation-delay: 0.15s; }
+.staffCard:nth-child(3) { animation-delay: 0.25s; }
 
 .staffCard:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
 
-/* ========== Staff Info Left ========== */
+/* Staff Left Section */
 .staffLeft {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1;
+  min-width: 0;
 }
 
 .avatar {
@@ -189,6 +218,8 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  flex: 1;
+  min-width: 0;
 }
 
 .staffInfo h4 {
@@ -196,20 +227,57 @@
   font-weight: 600;
   color: #111827;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.staffInfo p {
+/* Station Display */
+.station {
   font-size: 14px;
-  color: #6b7280;
+  color: #111827;
+  font-weight: 600;
   margin: 2px 0 0;
   line-height: 1.4;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
 }
 
-/* ========== Staff Info Right ========== */
+/* Contact Information */
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.contactIcon {
+  font-size: 12px;
+  color: #9ca3af;
+  width: 14px;
+}
+
+/* Staff Right Section */
 .staffRight {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
+  margin-left: 20px;
 }
 
 .performance {
@@ -228,7 +296,7 @@
   margin: 0;
 }
 
-/* Trạng thái nhân viên */
+/* Staff Status */
 .status {
   font-size: 12px;
   font-weight: 600;
@@ -247,7 +315,13 @@
   background: #9ca3af;
 }
 
-/* Nút cài đặt */
+/* ========== ACTION BUTTONS ========== */
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .iconBtn {
   border: none;
   background: #f9fafb;
@@ -255,6 +329,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.25s ease;
+  color: #6b7280;
 }
 
 .iconBtn:hover {
@@ -262,7 +337,37 @@
   transform: scale(1.05);
 }
 
-/* Modal Styles */
+/* Change Station Button */
+.changeStationBtn {
+  color: #f59e0b;
+}
+
+.changeStationBtn:hover {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* Edit Button */
+.iconBtn:not(.changeStationBtn):not(.deleteBtn) {
+  color: #3b82f6;
+}
+
+.iconBtn:not(.changeStationBtn):not(.deleteBtn):hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Delete Button */
+.deleteBtn {
+  color: #ef4444;
+}
+
+.deleteBtn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ========== MODAL STYLES ========== */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -280,7 +385,7 @@
   background: white;
   border-radius: 12px;
   width: 90%;
-  max-width: 600px;
+  max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -318,8 +423,32 @@
 
 .modalForm {
   padding: 24px;
+  max-width: 100%;
 }
 
+/* Staff Info Section in Modal */
+.staffInfoSection {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.staffInfoSection h4 {
+  margin: 0 0 8px 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.staffInfoSection p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ========== FORM STYLES ========== */
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -391,38 +520,115 @@
 .saveBtn:hover {
   background: #1d4ed8;
 }
-/* Tab Navigation */
-.tabNavigation {
+
+/* ========== STATION SELECTOR STYLES ========== */
+.stationSection {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  grid-column: 1 / -1;
+}
+
+.stationSelector {
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.selectorHeader {
   display: flex;
-  border-bottom: 1px solid #e5e5e5;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
-.tabButton {
+.selectorHeader label {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.labelIcon {
+  margin-right: 0.5rem;
+  color: #6b7280;
+}
+
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-color: white;
+  transition: all 0.2s;
+  max-width: 100%;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.select:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.stationInfo {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  min-width: 0;
+}
+
+.infoRow:last-child {
+  margin-bottom: 0;
+}
+
+.infoLabel {
+  font-weight: 600;
+  color: #374151;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.infoRow span:last-child {
+  text-align: right;
   flex: 1;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.3s ease;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tabButton:hover {
-  color: #007bff;
-  background-color: #f8f9fa;
+.statusActive {
+  color: #16a34a;
+  font-weight: 600;
 }
 
-.activeTab {
-  color: #007bff;
-  border-bottom-color: #007bff;
-  background-color: #f8f9fa;
+.statusInactive {
+  color: #dc2626;
+  font-weight: 600;
 }
 
-/* Password Section */
+/* ========== PASSWORD STYLES ========== */
 .passwordSection {
   padding: 10px 0;
 }
@@ -476,18 +682,121 @@
   font-size: 0.875rem;
   color: #666;
 }
-/* Responsive */
-@media (max-width: 768px) {
-  .formRow {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal {
-    width: 95%;
-    margin: 20px;
-  }
+
+/* ========== TAB NAVIGATION ========== */
+.tabNavigation {
+  display: flex;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 20px;
 }
-/* ========== Animation ========== */
+
+.tabButton {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.tabButton:hover {
+  color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.activeTab {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+/* ========== LOADING & ERROR STATES ========== */
+.loadingState {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+.errorState {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+}
+
+.errorMessage {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.retryBtn {
+  padding: 0.25rem 0.75rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retryBtn:hover {
+  background-color: #b91c1c;
+}
+
+.emptyState {
+  padding: 1rem;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* ========== ERROR STYLES ========== */
+.errorInput {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ========== UTILITY CLASSES ========== */
+.textTruncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.textTruncateMulti {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ========== ANIMATIONS ========== */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -506,27 +815,131 @@
   }
 }
 
-/* ========== Responsive ========== */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========== SCROLLBAR STYLING ========== */
+.staffList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.staffList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.staffList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.staffList::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 1200px) {
+  .wrapper {
+    padding: 0 16px;
+  }
+  
+  .staffList {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
+  .staffCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+  }
+  
+  .staffRight {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+  
+  .stationInfo {
+    grid-template-columns: 1fr;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal {
+    width: 95%;
+    margin: 20px;
+    max-width: 95%;
+  }
+  
+  .station {
+    max-width: 200px;
+  }
+  
+  .actionButtons {
+    gap: 6px;
+  }
+  
+  .iconBtn {
+    padding: 6px 8px;
+  }
+  
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
   }
 
-  .actions {
+  .headerActions {
     width: 100%;
     justify-content: space-between;
   }
+}
 
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 0 12px;
+  }
+  
   .staffCard {
+    padding: 14px 16px;
+  }
+  
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-
-  .staffRight {
+  
+  .headerActions {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .station {
+    max-width: 150px;
+    font-size: 13px;
+  }
+  
+  .actionButtons {
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .iconBtn {
+    flex: 1;
+    text-align: center;
   }
 }

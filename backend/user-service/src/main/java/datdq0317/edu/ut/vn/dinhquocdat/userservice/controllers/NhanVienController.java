@@ -46,6 +46,17 @@ public class NhanVienController {
         }
     }
 
+    // Thêm endpoint để lấy nhân viên theo mã trạm
+    @GetMapping("/tram/{maTram}")
+    public ResponseEntity<List<NhanVien>> danhSachNhanVienTheoTram(@PathVariable Long maTram) {
+        try {
+            List<NhanVien> nhanViens = nhanVienService.danhSachNhanVienTheoTram(maTram);
+            return ResponseEntity.ok(nhanViens);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<NhanVien> layNhanVienTheoId(@PathVariable Long id) {
         try {
@@ -74,7 +85,7 @@ public class NhanVienController {
         try {
             boolean deleted = nhanVienService.xoaNhanVien(id);
             if (deleted) return ResponseEntity.ok().body("Xóa nhân viên thành công");
-            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa nha13");
+            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa 12321ádas312312");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }

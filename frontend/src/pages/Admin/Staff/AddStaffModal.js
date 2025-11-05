@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import StationSelector from "./StationSelector";
 import styles from "./Staff.module.css";
 
 function AddStaffModal({ show, onClose, onAddStaff, loading }) {
@@ -10,11 +11,14 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
     soDienThoai: "",
     gioiTinh: "",
     matKhau: "",
+    xacNhanMatKhau: "", // Thêm trường xác nhận mật khẩu
     ngaySinh: "",
     bangCap: "",
-    kinhNghiem: ""
+    kinhNghiem: "",
+    maTram: null
   });
 
+  const [selectedStation, setSelectedStation] = useState(null);
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
@@ -42,6 +46,12 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
       newErrors.matKhau = "Mật khẩu phải có ít nhất 6 ký tự";
     }
 
+    if (!newStaff.xacNhanMatKhau) {
+      newErrors.xacNhanMatKhau = "Vui lòng xác nhận mật khẩu";
+    } else if (newStaff.matKhau !== newStaff.xacNhanMatKhau) {
+      newErrors.xacNhanMatKhau = "Mật khẩu xác nhận không khớp";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -60,13 +70,31 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
         [name]: ""
       }));
     }
+
+    // Clear error xác nhận mật khẩu khi thay đổi mật khẩu chính
+    if (name === "matKhau" && errors.xacNhanMatKhau) {
+      setErrors(prev => ({
+        ...prev,
+        xacNhanMatKhau: ""
+      }));
+    }
+  };
+
+  const handleStationChange = (station) => {
+    setSelectedStation(station);
+    setNewStaff(prev => ({
+      ...prev,
+      maTram: station ? station.maTram : null
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onAddStaff(newStaff);
+      // Loại bỏ trường xác nhận mật khẩu trước khi gửi API
+      const { xacNhanMatKhau, ...staffDataToSubmit } = newStaff;
+      onAddStaff(staffDataToSubmit);
     }
   };
 
@@ -77,10 +105,13 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
       soDienThoai: "",
       gioiTinh: "",
       matKhau: "",
+      xacNhanMatKhau: "",
       ngaySinh: "",
       bangCap: "",
-      kinhNghiem: ""
+      kinhNghiem: "",
+      maTram: null
     });
+    setSelectedStation(null);
     setErrors({});
     onClose();
   };
@@ -179,6 +210,23 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
               {errors.matKhau && <span className={styles.errorText}>{errors.matKhau}</span>}
             </div>
             <div className={styles.formGroup}>
+              <label>Xác Nhận Mật Khẩu *</label>
+              <input
+                type="password"
+                name="xacNhanMatKhau"
+                value={newStaff.xacNhanMatKhau}
+                onChange={handleInputChange}
+                required
+                disabled={loading}
+                placeholder="Nhập lại mật khẩu"
+                className={errors.xacNhanMatKhau ? styles.errorInput : ""}
+              />
+              {errors.xacNhanMatKhau && <span className={styles.errorText}>{errors.xacNhanMatKhau}</span>}
+            </div>
+          </div>
+
+          <div className={styles.formRow}>
+            <div className={styles.formGroup}>
               <label>Ngày Sinh</label>
               <input
                 type="date"
@@ -188,9 +236,6 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
                 disabled={loading}
               />
             </div>
-          </div>
-
-          <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label>Bằng Cấp</label>
               <input
@@ -202,6 +247,9 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
                 disabled={loading}
               />
             </div>
+          </div>
+
+          <div className={styles.formRow}>
             <div className={styles.formGroup}>
               <label>Kinh Nghiệm</label>
               <input
@@ -213,6 +261,19 @@ function AddStaffModal({ show, onClose, onAddStaff, loading }) {
                 disabled={loading}
               />
             </div>
+            <div className={styles.formGroup}>
+              {/* Empty div để cân bằng layout */}
+            </div>
+          </div>
+
+          {/* Thêm component chọn trạm */}
+          <div className={styles.stationSection}>
+            <StationSelector
+              selectedStation={selectedStation}
+              onStationChange={handleStationChange}
+              disabled={loading}
+              placeholder="Chọn trạm làm việc cho nhân viên"
+            />
           </div>
 
           <div className={styles.modalActions}>
