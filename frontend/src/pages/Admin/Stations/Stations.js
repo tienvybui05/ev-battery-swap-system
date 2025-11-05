@@ -72,7 +72,7 @@ export default function Stations() {
   const [stations, setStations] = useState([]);         // danh sách trạm từ API
   const [modalMode, setModalMode] = useState("add");    // add | view | edit
   const [error, setError] = useState(null);             // lỗi khi gọi API
-  const[selectedStation, setSelectedStation] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null);
 
   // Dữ liệu form
   const [formData, setFormData] = useState({
@@ -94,14 +94,25 @@ export default function Stations() {
 
     try {
       if (modalMode === "add") {
-        await axios.post("/api/station-service/tram", formData);
+        const res = await axios.post("/api/station-service/tram", formData);
+        // ✅ Cập nhật danh sách ngay tại chỗ
+        setStations((prev) => [...prev, res.data]);
         alert("✅ Thêm trạm thành công!");
       } else if (modalMode === "edit") {
-        await axios.put(`/api/station-service/tram/${selectedStation.maTram}`, formData);
+        const res = await axios.put(
+          `/api/station-service/tram/${selectedStation.maTram}`,
+          formData
+        );
+        // ✅ Cập nhật danh sách cũ thành danh sách mới
+        setStations((prev) =>
+          prev.map((st) =>
+            st.maTram === selectedStation.maTram ? res.data : st
+          )
+        );
         alert("✅ Cập nhật trạm thành công!");
       }
+
       setShowModal(false);
-      window.location.reload(); // làm mới danh sách
     } catch (err) {
       alert("❌ Lỗi khi lưu dữ liệu, xem console để biết thêm chi tiết.");
       console.error(err);
@@ -109,20 +120,20 @@ export default function Stations() {
   };
 
   // ✨ Thêm hàm này phía trên return:
-const closeModal = () => {
-  // Reset dữ liệu form về rỗng
-  setFormData({
-    tenTram: "",
-    diaChi: "",
-    kinhDo: "",
-    viDo: "",
-    soLuongPinToiDa: "",
-    soDT: "",
-    trangThai: "Hoạt động",
-  });
-  setSelectedStation(null);
-  setShowModal(false);
-};
+  const closeModal = () => {
+    // Reset dữ liệu form về rỗng
+    setFormData({
+      tenTram: "",
+      diaChi: "",
+      kinhDo: "",
+      viDo: "",
+      soLuongPinToiDa: "",
+      soDT: "",
+      trangThai: "Hoạt động",
+    });
+    setSelectedStation(null);
+    setShowModal(false);
+  };
 
   // GỌI API GET TRẠM KHI COMPONENT MOUNT
   useEffect(() => {
