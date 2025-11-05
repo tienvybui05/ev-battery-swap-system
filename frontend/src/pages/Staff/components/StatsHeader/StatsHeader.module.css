@@ -1,38 +1,38 @@
 .statsHeader {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
 .card {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  flex: 1;
-  min-width: 150px;
-  text-align: center;
-  transition: all 0.2s ease-in-out;
-  border: 1.5px solid #e2e8f0; /* 🟩 Viền đậm hơn */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* 🟩 Bóng nhẹ */
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    flex: 1;
+    min-width: 150px;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .icon {
-  margin-bottom: 8px;
+    margin-bottom: 8px;
 }
 
 .value {
-  font-size: 22px;
-  font-weight: 600;
-  color: #111827;
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
 }
 
 .label {
-  font-size: 14px;
-  color: #6B7280;
+    font-size: 14px;
+    color: #6B7280;
 }
