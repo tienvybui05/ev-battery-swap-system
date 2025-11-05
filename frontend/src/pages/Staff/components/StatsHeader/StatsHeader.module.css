@@ -34,5 +34,13 @@
 
 .label {
     font-size: 14px;
-    color: #6B7280;
+    color: #6b7280;
+}
+
+.loading {
+    text-align: center;
+    width: 100%;
+    color: #4b5563;
+    font-style: italic;
+    padding: 12px;
 }
