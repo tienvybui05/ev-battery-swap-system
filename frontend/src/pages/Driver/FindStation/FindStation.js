@@ -18,18 +18,74 @@ function FindStation() {
     const [stations, setStations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const getDistances = async (userLat, userLng, stationList) => {
-        const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0="; // 👈 dán key bạn copy ở đây
-        const updated = [];
+    // const getDistances = async (userLat, userLng, stationList) => {
+    //     const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0="; // 👈 dán key bạn copy ở đây
+    //     const updated = [];
 
-        for (const st of stationList) {
+    //     for (const st of stationList) {
+    //         try {
+    //             const res = await axios.post(
+    //                 "https://api.openrouteservice.org/v2/directions/driving-car",
+    //                 {
+    //                     coordinates: [
+    //                         [userLng, userLat], // điểm đầu (người dùng)
+    //                         [st.lng, st.lat],   // điểm đích (trạm)
+    //                     ],
+    //                 },
+    //                 {
+    //                     headers: {
+    //                         Authorization: apiKey,
+    //                         "Content-Type": "application/json",
+    //                     },
+    //                 }
+    //             );
+
+    //             const distanceKm = res.data.routes[0].summary.distance / 1000; // mét → km
+    //             const durationMin = Math.ceil(res.data.routes[0].summary.duration / 60); // giây → phút
+
+    //             updated.push({
+    //                 ...st,
+    //                 distance: `${distanceKm.toFixed(2)} km`,
+    //                 time: `${durationMin} phút`,
+    //             });
+    //         } catch (err) {
+    //             console.error("Lỗi khi gọi ORS:", err);
+    //             updated.push(st);
+    //         }
+    //     }
+
+    //     // sắp xếp trạm gần nhất trước
+    //     updated.sort((a, b) => a.distance - b.distance);
+    //     setStations(updated);
+    // };
+
+    const getDistances = async (userLat, userLng, stationList) => {
+        const apiKey =
+            "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0=";
+
+        // 🔹 Kiểm tra xem trạm có tọa độ hợp lệ hay không
+        const isValidCoord = (lat, lng) =>
+            Number.isFinite(lat) &&
+            Number.isFinite(lng) &&
+            lat >= -90 &&
+            lat <= 90 &&
+            lng >= -180 &&
+            lng <= 180;
+
+        // 🔹 Tạo danh sách promise cho tất cả trạm hợp lệ
+        const promises = stationList.map(async (st) => {
+            // Bỏ qua trạm lỗi tọa độ
+            if (!isValidCoord(st.lat, st.lng)) {
+                return { ...st, distance: "N/A", time: "N/A", error: true };
+            }
+
             try {
                 const res = await axios.post(
                     "https://api.openrouteservice.org/v2/directions/driving-car",
                     {
                         coordinates: [
-                            [userLng, userLat], // điểm đầu (người dùng)
-                            [st.lng, st.lat],   // điểm đích (trạm)
+                            [userLng, userLat], // người dùng
+                            [st.lng, st.lat], // trạm
                         ],
                     },
                     {
@@ -37,22 +93,43 @@ function FindStation() {
                             Authorization: apiKey,
                             "Content-Type": "application/json",
                         },
+                        timeout: 8000, // ⏱ giới hạn 8s để tránh “chờ vô tận”
                     }
                 );
 
-                const distanceKm = res.data.routes[0].summary.distance / 1000; // mét → km
-                updated.push({
-                    ...st,
-                    distance: distanceKm.toFixed(2),
-                });
-            } catch (err) {
-                console.error("Lỗi khi gọi ORS:", err);
-                updated.push(st);
-            }
-        }
+                const summary = res.data.routes[0].summary;
+                const distanceKm = summary.distance / 1000; // m → km
+                const durationMin = Math.ceil(summary.duration / 60); // s → phút
 
-        // sắp xếp trạm gần nhất trước
-        updated.sort((a, b) => a.distance - b.distance);
+                return {
+                    ...st,
+                    distance: `${distanceKm.toFixed(2)} km`,
+                    time: `${durationMin} phút`,
+                };
+            } catch (err) {
+                console.error("Lỗi khi gọi ORS:", st.name, err.message);
+                return { ...st, distance: "N/A", time: "N/A", error: true };
+            }
+        });
+
+        // 🔹 Chờ tất cả hoàn tất (dù lỗi hay thành công)
+        const results = await Promise.allSettled(promises);
+
+        // 🔹 Lấy giá trị fulfilled hoặc rejected đã xử lý ở trên
+        const updated = results.map((r) =>
+            r.status === "fulfilled" ? r.value : { distance: "N/A", time: "N/A" }
+        );
+
+        // 🔹 Sắp xếp trạm gần nhất trước (lọc các trạm hợp lệ)
+        updated.sort((a, b) => {
+            const da = parseFloat(a.distance);
+            const db = parseFloat(b.distance);
+            if (isNaN(da)) return 1;
+            if (isNaN(db)) return -1;
+            return da - db;
+        });
+
+        // 🔹 Cập nhật lại state
         setStations(updated);
     };
 
@@ -135,12 +212,6 @@ function FindStation() {
                     Sử dụng vị trí của tôi
                 </Button>
 
-                {/* 🔹 Hiển thị vị trí hoặc lỗi */}
-                {location.lat && (
-                    <p>
-                        📍 Lat: {location.lat.toFixed(6)} | Lng: {location.lng.toFixed(6)}
-                    </p>
-                )}
                 {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
             <div className={styles.alreadystation}>
@@ -159,10 +230,15 @@ function FindStation() {
                     <div key={stations.id} className={styles.station}>
                         <div className={styles.local}>
                             <h3>{stations.name}</h3>
-                            <p className={`${styles.state} ${stations.status === "đang bảo trì"
-                                ? styles.maintenance
-                                : ""
-                                }`}>
+                            <p
+                                className={`${styles.state} ${styles[
+                                    stations.status === "Hoạt động"
+                                        ? "open"
+                                        : stations.status === "Bảo trì"
+                                            ? "maintenance"
+                                            : "offline"
+                                ]}`}
+                            >
                                 {stations.status}
                             </p>
                         </div>

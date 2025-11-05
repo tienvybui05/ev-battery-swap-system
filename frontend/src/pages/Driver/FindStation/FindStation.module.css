@@ -162,7 +162,7 @@
     margin-top: 5px;
 }
 
-.station .local .state {
+.state {
     color: var(--white);
     font-size: 12px;
     line-height: var(--caption-line-height);
@@ -175,15 +175,24 @@
     display: inline-block;
 }
 
-.station .local .open {
+/* Trạng thái hoạt động */
+.open {
     background-color: #4CAF50;
     color: #fff;
 }
 
-.station .local .maintenance {
+/* Trạng thái bảo trì */
+.maintenance {
+    background-color: #dc2626;
+    color: #fff;
+}
+
+/* Trạng thái ngoại tuyến */
+.offline {
     background-color: var(--color-gray-100);
     color: #000;
 }
+
 
 
 .station .information {

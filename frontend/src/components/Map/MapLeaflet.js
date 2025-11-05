@@ -110,8 +110,9 @@ function MapLeaflet({ userLocation, stations }) {
             <br />
             {st.address}
             <br />
-            🚗 {st.distance ? `${st.distance} km` : "Đang tính..."}
+            🚗 {st.distance ? st.distance : "Đang tính..."}
             <br />
+            ⏱️ {st.time ? st.time : ""}
           </Popup>
         </Marker>
       ))}
