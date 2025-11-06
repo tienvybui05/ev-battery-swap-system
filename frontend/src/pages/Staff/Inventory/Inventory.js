@@ -10,6 +10,7 @@ import {
 import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./Inventory.module.css";
 import FilterModal from "../Inventory/FilterModal/FilterModal";
+import CheckModal from "../Inventory/CheckModal/CheckModal";
 
 /* ========= ÁNH XẠ MÀU CHO TRẠNG THÁI ========= */
 const STATUS_COLORS = {
@@ -23,6 +24,7 @@ function Inventory() {
     const [pins, setPins] = useState([]);
     const [listLoading, setListLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
+    const [showCheck, setShowCheck] = useState(false);
 
     // Bộ lọc hiện tại
     const [filters, setFilters] = useState({
@@ -34,6 +36,7 @@ function Inventory() {
 
     const getAuthToken = () => localStorage.getItem("token");
 
+    // 🔹 Lấy danh sách pin + lịch sử + trạm
     const fetchPinList = async () => {
         try {
             setListLoading(true);
@@ -55,10 +58,6 @@ function Inventory() {
                 const pinsData = await pinsRes.json();
                 const historyData = await historyRes.json();
                 const tramData = await tramRes.json();
-
-                console.log("📦 pins:", pinsData);
-                console.log("📜 lịch sử:", historyData);
-                console.log("🏭 trạm:", tramData);
 
                 const mapped = pinsData.map((p, i) => {
                     const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
@@ -124,8 +123,9 @@ function Inventory() {
         );
     }
 
-    // ====== Lọc tại frontend ======
+    // 🔹 Lọc pin tại frontend
     const filteredPins = pins.filter((p) => {
+        if (p.status === "đang được sử dụng") return false; // Ẩn pin đang dùng
         const matchStatus =
             filters.status.length === 0 || filters.status.includes(p.status);
         const matchModel = !filters.model || p.type === filters.model;
@@ -141,8 +141,9 @@ function Inventory() {
 
             <div className={styles.headerRow}>
                 <h2>Kho Pin</h2>
+
                 <div className={styles.headerButtons}>
-                    {/* Nút Lọc */}
+                    {/* 🔹 Nút Lọc */}
                     <button
                         className={styles.filterBtn}
                         onClick={() => setShowFilter(true)}
@@ -150,15 +151,15 @@ function Inventory() {
                         <FontAwesomeIcon icon={faFilter} /> Lọc
                     </button>
 
-                    {/* Nút Kiểm tra */}
+                    {/* 🔹 Nút Ghi nhận trả pin */}
                     <button
                         className={styles.primaryBtn}
-                        onClick={() => alert("Chức năng kiểm tra đang phát triển")}
+                        onClick={() => setShowCheck(true)}
                     >
-                        <FontAwesomeIcon icon={faPlus} /> Kiểm tra
+                        <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
                     </button>
 
-                    {/* Nút Làm mới */}
+                    {/* 🔹 Nút Làm mới */}
                     <button
                         className={styles.primaryBtn}
                         onClick={fetchPinList}
@@ -173,7 +174,7 @@ function Inventory() {
                 </div>
             </div>
 
-            {/* Lưới hiển thị Pin */}
+            {/* 🔹 Hiển thị danh sách pin */}
             <div className={styles.grid}>
                 {filteredPins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
@@ -185,13 +186,13 @@ function Inventory() {
                                     <div className={styles.type}>{pin.type}</div>
                                 </div>
                                 <div className={styles.statusBadge}>
-                                    <span
-                                        className={styles.statusDot}
-                                        style={{ background: color }}
-                                    />
+                  <span
+                      className={styles.statusDot}
+                      style={{ background: color }}
+                  />
                                     <span className={styles.statusText}>
-                                        {pin.status.charAt(0).toUpperCase() + pin.status.slice(1)}
-                                    </span>
+                    {pin.status.charAt(0).toUpperCase() + pin.status.slice(1)}
+                  </span>
                                 </div>
                             </div>
 
@@ -269,7 +270,7 @@ function Inventory() {
                 )}
             </div>
 
-            {/* Hiển thị Modal Lọc */}
+            {/* 🔹 Filter Modal */}
             {showFilter && (
                 <FilterModal
                     current={filters}
@@ -278,6 +279,15 @@ function Inventory() {
                         setFilters(newFilters);
                         setShowFilter(false);
                     }}
+                />
+            )}
+
+            {/* 🔹 Check Modal (ghi nhận trả pin) */}
+            {showCheck && (
+                <CheckModal
+                    open={showCheck}
+                    onClose={() => setShowCheck(false)}
+                    onDone={() => fetchPinList()}
                 />
             )}
         </div>
