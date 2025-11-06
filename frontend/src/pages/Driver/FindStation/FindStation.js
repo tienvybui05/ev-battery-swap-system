@@ -18,47 +18,6 @@ function FindStation() {
     const [stations, setStations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // const getDistances = async (userLat, userLng, stationList) => {
-    //     const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0="; // 👈 dán key bạn copy ở đây
-    //     const updated = [];
-
-    //     for (const st of stationList) {
-    //         try {
-    //             const res = await axios.post(
-    //                 "https://api.openrouteservice.org/v2/directions/driving-car",
-    //                 {
-    //                     coordinates: [
-    //                         [userLng, userLat], // điểm đầu (người dùng)
-    //                         [st.lng, st.lat],   // điểm đích (trạm)
-    //                     ],
-    //                 },
-    //                 {
-    //                     headers: {
-    //                         Authorization: apiKey,
-    //                         "Content-Type": "application/json",
-    //                     },
-    //                 }
-    //             );
-
-    //             const distanceKm = res.data.routes[0].summary.distance / 1000; // mét → km
-    //             const durationMin = Math.ceil(res.data.routes[0].summary.duration / 60); // giây → phút
-
-    //             updated.push({
-    //                 ...st,
-    //                 distance: `${distanceKm.toFixed(2)} km`,
-    //                 time: `${durationMin} phút`,
-    //             });
-    //         } catch (err) {
-    //             console.error("Lỗi khi gọi ORS:", err);
-    //             updated.push(st);
-    //         }
-    //     }
-
-    //     // sắp xếp trạm gần nhất trước
-    //     updated.sort((a, b) => a.distance - b.distance);
-    //     setStations(updated);
-    // };
-
     const getDistances = async (userLat, userLng, stationList) => {
         const apiKey =
             "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0=";
@@ -195,6 +154,35 @@ function FindStation() {
     if (error) return <p style={{ color: "red" }}>{error}</p>;
 
 
+    // 🔹 Hàm xử lý khi người dùng bấm "Đặt chỗ"
+    const handleBooking = async (stationId) => {
+        try {
+            const userId = localStorage.getItem("userId");
+
+            if (!userId) {
+                alert("⚠️ Không tìm thấy ID người dùng. Vui lòng đăng nhập lại!");
+                return;
+            }
+
+            const body = {
+                maTaiXe: Number(userId),
+                maTram: Number(stationId),
+            };
+
+            const response = await axios.post("/api/station-service/dat-lich", body);
+
+            if (response.status === 200) {
+                alert("✅ Đặt lịch thành công!");
+                console.log("Kết quả:", response.data);
+            } else {
+                alert("❌ Không thể đặt lịch. Thử lại sau!");
+            }
+        } catch (error) {
+            console.error("Lỗi khi đặt lịch:", error);
+            alert("❌ Đặt lịch thất bại: " + (error.response?.data || error.message));
+        }
+    };
+
     return (
         <nav className={styles.wrapper}>
             <div className={styles.nearstation}>
@@ -263,7 +251,9 @@ function FindStation() {
                         </div>
                         <div className={styles.price}>
                             <p>{stations.price}</p>
-                            <Button order>Đặt chỗ</Button>
+                            <Button order onClick={() => handleBooking(stations.id)}>
+                                Đặt chỗ
+                            </Button>
                         </div>
                     </div>
                 ))}

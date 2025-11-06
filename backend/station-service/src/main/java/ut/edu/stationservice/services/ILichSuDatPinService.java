@@ -6,10 +6,14 @@ import ut.edu.stationservice.models.Tram;
 import java.util.List;
 
 public interface ILichSuDatPinService {
-    List<Tram> findAllByPin(Tram pin);
+    // CRUD cơ bản
     LichSuDatPin findById(Long id);
-    LichSuDatPin save(LichSuDatPin lichSuDatPin);
+    List<LichSuDatPin> findAll();
     boolean deleteById(Long id);
-    LichSuDatPin addLichSuDatPin(LichSuDatPin lichSu);
-    LichSuDatPin updateLichSuDatPin(LichSuDatPin lichSu);
+    LichSuDatPin save(LichSuDatPin lichSuDatPin);
+
+    // Nghiệp vụ chính
+    LichSuDatPin datLich(Long maTaiXe, Long maTram);     // Đặt lịch mới
+    LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin); // Cập nhật trạng thái
+    List<LichSuDatPin> findByMaTaiXe(Long maTaiXe);      // Lọc lịch sử theo tài xế
 }

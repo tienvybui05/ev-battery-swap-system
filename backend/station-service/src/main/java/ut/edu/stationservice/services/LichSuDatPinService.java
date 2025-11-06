@@ -1,37 +1,45 @@
 package ut.edu.stationservice.services;
 
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ut.edu.stationservice.models.LichSuDatPin;
 import ut.edu.stationservice.models.Tram;
 import ut.edu.stationservice.repositories.ILichSuDatPinRepository;
+import ut.edu.stationservice.repositories.ITramRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class LichSuDatPinService implements ILichSuDatPinService {
-
-    @Autowired
     private ILichSuDatPinRepository lichSuDatPinRepository;
+    private ITramRepository tramRepository;
 
-    @Override
-    public List<Tram> findAllByPin(Tram pin) {
-        // 🔹 Hiện chưa có quan hệ giữa Tram và LichSuDatPin, nên để tạm
-        return List.of();
+    public LichSuDatPinService(ILichSuDatPinRepository lichSuDatPinRepository, ITramRepository tramRepository) {
+        this.lichSuDatPinRepository = lichSuDatPinRepository;
+        this.tramRepository = tramRepository;
     }
 
+    // 🟢 Lấy tất cả lịch sử đặt pin
+    @Override
+    public List<LichSuDatPin> findAll() {
+        return lichSuDatPinRepository.findAll();
+    }
+
+    // 🟢 Lấy lịch sử theo ID
     @Override
     public LichSuDatPin findById(Long id) {
         return lichSuDatPinRepository.findById(id).orElse(null);
     }
 
+    // 🟢 Lưu lịch sử (nếu cần save trực tiếp)
     @Transactional
     @Override
     public LichSuDatPin save(LichSuDatPin lichSuDatPin) {
         return lichSuDatPinRepository.save(lichSuDatPin);
     }
 
+    // 🟢 Xóa lịch sử
     @Transactional
     @Override
     public boolean deleteById(Long id) {
@@ -42,25 +50,39 @@ public class LichSuDatPinService implements ILichSuDatPinService {
         return true;
     }
 
+    // 🧩 Nghiệp vụ: Đặt lịch đổi pin
     @Transactional
     @Override
-    public LichSuDatPin addLichSuDatPin(LichSuDatPin lichSu) {
-        // 🔹 Nếu cần kiểm tra trùng dữ liệu, có thể thêm logic tại đây
+    public LichSuDatPin datLich(Long maTaiXe, Long maTram) {
+        Tram tram = tramRepository.findById(maTram)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy trạm có ID: " + maTram));
+
+        LichSuDatPin lichSu = new LichSuDatPin();
+        lichSu.setMaTaiXe(maTaiXe);
+        lichSu.setTram(tram);
+        lichSu.setNgayDat(LocalDateTime.now());
+        lichSu.setTrangThaiXacNhan("Chờ xác nhận");
+        lichSu.setTrangThaiDoiPin("Chưa đổi pin");
+
         return lichSuDatPinRepository.save(lichSu);
     }
 
+    // 🧩 Nghiệp vụ: Cập nhật trạng thái lịch sử đặt pin
     @Transactional
     @Override
-    public LichSuDatPin updateLichSuDatPin(LichSuDatPin lichSu) {
-        return lichSuDatPinRepository.findById(lichSu.getMaLichSuDat())
-                .map(existing -> {
-                    existing.setTrangThaiXacNhan(lichSu.getTrangThaiXacNhan());
-                    existing.setTrangThaiDoiPin(lichSu.getTrangThaiDoiPin());
-                    existing.setNgayDat(lichSu.getNgayDat());
-                    existing.setMaTaiXe(lichSu.getMaTaiXe());
-                    existing.setMaTram(lichSu.getMaTram());
-                    return lichSuDatPinRepository.save(existing);
-                })
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch sử đặt pin với ID: " + lichSu.getMaLichSuDat()));
+    public LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin) {
+        LichSuDatPin lichSu = lichSuDatPinRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch sử đặt pin với ID: " + id));
+
+        if (trangThaiXacNhan != null) lichSu.setTrangThaiXacNhan(trangThaiXacNhan);
+        if (trangThaiDoiPin != null) lichSu.setTrangThaiDoiPin(trangThaiDoiPin);
+
+        return lichSuDatPinRepository.save(lichSu);
+    }
+
+    // 🧩 Nghiệp vụ: Lấy tất cả lịch sử đặt pin theo mã tài xế
+    @Override
+    public List<LichSuDatPin> findByMaTaiXe(Long maTaiXe) {
+        return lichSuDatPinRepository.findByMaTaiXe(maTaiXe);
     }
 }
