@@ -11,6 +11,7 @@ import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./Inventory.module.css";
 import FilterModal from "../Inventory/FilterModal/FilterModal";
 import CheckModal from "../Inventory/CheckModal/CheckModal";
+import LogsModal from "../Inventory/LogsModal/LogsModal";
 
 /* ========= ÁNH XẠ MÀU CHO TRẠNG THÁI ========= */
 const STATUS_COLORS = {
@@ -25,8 +26,9 @@ function Inventory() {
     const [listLoading, setListLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
     const [showCheck, setShowCheck] = useState(false);
+    const [showLogs, setShowLogs] = useState(false);
+    const [selectedPin, setSelectedPin] = useState(null);
 
-    // Bộ lọc hiện tại
     const [filters, setFilters] = useState({
         status: [],
         model: "",
@@ -125,7 +127,7 @@ function Inventory() {
 
     // 🔹 Lọc pin tại frontend
     const filteredPins = pins.filter((p) => {
-        if (p.status === "đang được sử dụng") return false; // Ẩn pin đang dùng
+        if (p.status === "đang được sử dụng") return false;
         const matchStatus =
             filters.status.length === 0 || filters.status.includes(p.status);
         const matchModel = !filters.model || p.type === filters.model;
@@ -143,7 +145,7 @@ function Inventory() {
                 <h2>Kho Pin</h2>
 
                 <div className={styles.headerButtons}>
-                    {/* 🔹 Nút Lọc */}
+                    {/* Bộ lọc */}
                     <button
                         className={styles.filterBtn}
                         onClick={() => setShowFilter(true)}
@@ -151,7 +153,7 @@ function Inventory() {
                         <FontAwesomeIcon icon={faFilter} /> Lọc
                     </button>
 
-                    {/* 🔹 Nút Ghi nhận trả pin */}
+                    {/* Ghi nhận trả pin */}
                     <button
                         className={styles.primaryBtn}
                         onClick={() => setShowCheck(true)}
@@ -159,7 +161,7 @@ function Inventory() {
                         <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
                     </button>
 
-                    {/* 🔹 Nút Làm mới */}
+                    {/* Làm mới toàn trang */}
                     <button
                         className={styles.primaryBtn}
                         onClick={fetchPinList}
@@ -174,7 +176,7 @@ function Inventory() {
                 </div>
             </div>
 
-            {/* 🔹 Hiển thị danh sách pin */}
+            {/* Lưới hiển thị pin */}
             <div className={styles.grid}>
                 {filteredPins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
@@ -186,20 +188,23 @@ function Inventory() {
                                     <div className={styles.type}>{pin.type}</div>
                                 </div>
                                 <div className={styles.statusBadge}>
-                  <span
-                      className={styles.statusDot}
-                      style={{ background: color }}
-                  />
+                                    <span
+                                        className={styles.statusDot}
+                                        style={{ background: color }}
+                                    />
                                     <span className={styles.statusText}>
-                    {pin.status.charAt(0).toUpperCase() + pin.status.slice(1)}
-                  </span>
+                                        {pin.status.charAt(0).toUpperCase() +
+                                            pin.status.slice(1)}
+                                    </span>
                                 </div>
                             </div>
 
                             <div className={styles.metrics}>
                                 <div>
                                     <div className={styles.metricLabel}>Sức khỏe:</div>
-                                    <div className={styles.metricValue}>{pin.health}%</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.health}%
+                                    </div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>Dung lượng:</div>
@@ -212,7 +217,9 @@ function Inventory() {
                             <div className={styles.datesRow}>
                                 <div>
                                     <div className={styles.metricLabel}>Ngày nhập kho:</div>
-                                    <div className={styles.metricValue}>{pin.importDate}</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.importDate}
+                                    </div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>
@@ -235,20 +242,16 @@ function Inventory() {
                             </div>
 
                             <div className={styles.cardActions}>
+                                {/* 🔹 Đổi tên Chi tiết → Lịch sử */}
                                 <button
                                     className={styles.action}
-                                    onClick={() => alert(`Làm mới ${pin.title}`)}
-                                >
-                                    <FontAwesomeIcon icon={faRotateRight} />
-                                    Làm mới
-                                </button>
-
-                                <button
-                                    className={styles.action}
-                                    onClick={() => alert(`Chi tiết ${pin.title}`)}
+                                    onClick={() => {
+                                        setSelectedPin(pin);
+                                        setShowLogs(true);
+                                    }}
                                 >
                                     <FontAwesomeIcon icon={faFileLines} />
-                                    Chi tiết
+                                    Lịch sử
                                 </button>
 
                                 <button
@@ -270,7 +273,7 @@ function Inventory() {
                 )}
             </div>
 
-            {/* 🔹 Filter Modal */}
+            {/* Modal lọc */}
             {showFilter && (
                 <FilterModal
                     current={filters}
@@ -282,12 +285,23 @@ function Inventory() {
                 />
             )}
 
-            {/* 🔹 Check Modal (ghi nhận trả pin) */}
+            {/* Modal ghi nhận trả pin */}
             {showCheck && (
                 <CheckModal
                     open={showCheck}
                     onClose={() => setShowCheck(false)}
                     onDone={() => fetchPinList()}
+                />
+            )}
+
+            {/* Modal lịch sử pin */}
+            {showLogs && selectedPin && (
+                <LogsModal
+                    slot={selectedPin}
+                    onClose={() => {
+                        setSelectedPin(null);
+                        setShowLogs(false);
+                    }}
                 />
             )}
         </div>
