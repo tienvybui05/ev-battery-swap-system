@@ -40,7 +40,7 @@ public class Pin {
     }
 
     public enum TrangThaiSoHuu {
-        SAN_SANG, DANG_VAN_CHUYEN, DUOC_GIU_CHO, DANG_SU_DUNG
+        SAN_SANG, DANG_VAN_CHUYEN, DUOC_GIU_CHO, DANG_SU_DUNG, CHUA_SAN_SANG
     }
 
     // --- Constructors ---

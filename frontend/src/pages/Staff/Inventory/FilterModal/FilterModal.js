@@ -54,6 +54,14 @@ export default function FilterModal({ current, onClose, onApply }) {
         setLocal((l) => ({ ...l, maxCap: v === "" ? null : Number(v) }));
     }
 
+    function updateMinHealth(v) {
+        setLocal((l) => ({ ...l, minHealth: v === "" ? null : Number(v) }));
+    }
+
+    function updateMaxHealth(v) {
+        setLocal((l) => ({ ...l, maxHealth: v === "" ? null : Number(v) }));
+    }
+
     const capValid =
         (local.minCap == null || local.minCap >= 0) &&
         (local.maxCap == null || local.maxCap >= 0) &&
@@ -61,7 +69,14 @@ export default function FilterModal({ current, onClose, onApply }) {
             local.maxCap == null ||
             local.maxCap >= local.minCap);
 
-    const canApply = capValid;
+    const healthValid =
+        (local.minHealth == null || local.minHealth >= 0) &&
+        (local.maxHealth == null || local.maxHealth <= 100) &&
+        (local.minHealth == null ||
+            local.maxHealth == null ||
+            local.maxHealth >= local.minHealth);
+
+    const canApply = capValid && healthValid;
 
     const handleBackdropClick = (e) => {
         if (e.target.classList.contains(styles.overlay)) onClose();
@@ -73,6 +88,8 @@ export default function FilterModal({ current, onClose, onApply }) {
             model: "",
             minCap: null,
             maxCap: null,
+            minHealth: null,
+            maxHealth: null,
         });
     }
 
@@ -87,23 +104,22 @@ export default function FilterModal({ current, onClose, onApply }) {
                 </div>
 
                 <div className={styles.modalBody}>
+                    {/* ========= LỌC TÌNH TRẠNG PIN ========= */}
                     <h4>Tình trạng Pin</h4>
                     <div className={styles.checkboxRow}>
-                        {["sẵn sàng", "đang sạc", "đang được sử dụng", "bảo trì"].map(
-                            (s) => (
-                                <label key={s}>
-                                    <input
-                                        type="checkbox"
-                                        checked={local.status.includes(s)}
-                                        onChange={() => toggleStatus(s)}
-                                    />
-                                    {` ${s.charAt(0).toUpperCase() + s.slice(1)}`}
-                                </label>
-                            )
-                        )}
+                        {["đầy", "đang sạc", "bảo trì"].map((s) => (
+                            <label key={s}>
+                                <input
+                                    type="checkbox"
+                                    checked={local.status.includes(s)}
+                                    onChange={() => toggleStatus(s)}
+                                />
+                                {` ${s.charAt(0).toUpperCase() + s.slice(1)}`}
+                            </label>
+                        ))}
                     </div>
 
-                    {/* Dropdown model pin tự động */}
+                    {/* ========= LỌC MODEL PIN ========= */}
                     <div className={styles.formRow}>
                         <label>Model Pin</label>
                         <select
@@ -119,6 +135,7 @@ export default function FilterModal({ current, onClose, onApply }) {
                         </select>
                     </div>
 
+                    {/* ========= LỌC DUNG LƯỢNG ========= */}
                     <h4>Dung lượng (kWh)</h4>
                     <div className={styles.filterRow}>
                         <div className={styles.formRow}>
@@ -141,13 +158,38 @@ export default function FilterModal({ current, onClose, onApply }) {
                         </div>
                     </div>
 
-                    {!capValid && (
+                    {/* ========= LỌC SỨC KHỎE ========= */}
+                    <h4>Sức khỏe (%)</h4>
+                    <div className={styles.filterRow}>
+                        <div className={styles.formRow}>
+                            <label>Tối thiểu</label>
+                            <input
+                                type="number"
+                                value={local.minHealth ?? ""}
+                                onChange={(e) => updateMinHealth(e.target.value)}
+                                placeholder="VD: 70"
+                            />
+                        </div>
+                        <div className={styles.formRow}>
+                            <label>Tối đa</label>
+                            <input
+                                type="number"
+                                value={local.maxHealth ?? ""}
+                                onChange={(e) => updateMaxHealth(e.target.value)}
+                                placeholder="VD: 100"
+                            />
+                        </div>
+                    </div>
+
+                    {/* ========= VALIDATION ========= */}
+                    {(!capValid || !healthValid) && (
                         <small className={styles.inputError}>
-                            ⚠️ Giá trị không hợp lệ (Tối đa ≥ Tối thiểu và ≥ 0)
+                            ⚠️ Giá trị không hợp lệ (phải ≥ 0, và Tối đa ≥ Tối thiểu)
                         </small>
                     )}
                 </div>
 
+                {/* ========= FOOTER ========= */}
                 <div className={styles.modalFooter}>
                     <button className={styles.ghostBtn} onClick={resetFilters}>
                         Xóa lọc

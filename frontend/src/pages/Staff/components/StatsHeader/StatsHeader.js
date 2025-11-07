@@ -7,32 +7,31 @@ import {
     faWrench,
     faBatteryFull,
     faBolt,
-    faPlugCircleBolt,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./StatsHeader.module.css";
 
 const StatsHeader = () => {
     const [statusData, setStatusData] = useState({
-        ready: 0,
-        charging: 0,
-        using: 0,
-        maintenance: 0,
+        day: 0,        // pin đầy
+        charging: 0,   // pin đang sạc
+        maintenance: 0 // pin bảo trì
     });
 
     const [loading, setLoading] = useState(true);
 
-    // 🟢 Gọi API backend lấy dữ liệu thống kê pin
+    // 🟢 Gọi API backend lấy dữ liệu thống kê pin (theo tình trạng kỹ thuật)
     const fetchBatteryStatus = async () => {
         try {
             const res = await fetch("/api/battery-service/status");
             if (!res.ok) throw new Error("Không thể tải dữ liệu trạng thái pin");
+
             const data = await res.json();
             console.log("📊 Battery status:", data);
+
             setStatusData({
-                ready: data.sanSang ?? data.ready ?? 0,
-                charging: data.dangSac ?? data.charging ?? 0,
-                using: data.dangSuDung ?? data.using ?? 0,
-                maintenance: data.baoTri ?? data.maintenance ?? 0,
+                day: data.day ?? 0,
+                charging: data.dangSac ?? 0,
+                maintenance: data.baoTri ?? 0,
             });
         } catch (err) {
             console.error("⚠️ Lỗi khi tải dữ liệu pin:", err);
@@ -54,15 +53,14 @@ const StatsHeader = () => {
         );
     }
 
-    // 🔹 Các dữ liệu khác vẫn giả lập
+    // 🔹 Dữ liệu hiển thị
     const statsData = [
         { id: 1, icon: faChartColumn, color: "#4F46E5", value: "47", label: "Thay Pin Hôm Nay" },
         { id: 2, icon: faDollarSign, color: "#10B981", value: "$1175", label: "Doanh Thu" },
         { id: 3, icon: faUser, color: "#F97316", value: "4.8", label: "Đánh Giá" },
         { id: 4, icon: faWrench, color: "#EF4444", value: statusData.maintenance, label: "Pin Bảo Trì" },
-        { id: 5, icon: faBatteryFull, color: "#22C55E", value: statusData.ready, label: "Pin Sẵn Sàng" },
+        { id: 5, icon: faBatteryFull, color: "#22C55E", value: statusData.day, label: "Pin Đầy" },
         { id: 6, icon: faBolt, color: "#F59E0B", value: statusData.charging, label: "Pin Đang Sạc" },
-        { id: 7, icon: faPlugCircleBolt, color: "#3B82F6", value: statusData.using, label: "Pin Đang Sử Dụng" },
     ];
 
     return (
