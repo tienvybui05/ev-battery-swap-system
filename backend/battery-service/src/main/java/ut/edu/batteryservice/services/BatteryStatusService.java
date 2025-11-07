@@ -3,6 +3,7 @@ package ut.edu.batteryservice.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ut.edu.batteryservice.dtos.BatteryStatusDTO;
+import ut.edu.batteryservice.models.Pin;
 import ut.edu.batteryservice.repositories.IPinRepository;
 
 @Service
@@ -14,11 +15,16 @@ public class BatteryStatusService implements IBatteryStatusService {
     @Override
     public BatteryStatusDTO getBatteryStatusSummary() {
         long total = pinRepository.count();
-        long sanSang = pinRepository.countByTinhTrangIgnoreCase("Sẵn sàng");
-        long dangSac = pinRepository.countByTinhTrangIgnoreCase("Đang sạc");
-        long dangSuDung = pinRepository.countByTinhTrangIgnoreCase("Đang được sử dụng");
-        long baoTri = pinRepository.countByTinhTrangIgnoreCase("Bảo trì");
+        long day = pinRepository.countByTinhTrang(Pin.TinhTrang.DAY);
+        long dangSac = pinRepository.countByTinhTrang(Pin.TinhTrang.DANG_SAC);
+        long baoTri = pinRepository.countByTinhTrang(Pin.TinhTrang.BAO_TRI);
 
-        return new BatteryStatusDTO(total, sanSang, dangSac, dangSuDung, baoTri);
+        // Có thể thêm thống kê trạng thái sở hữu nếu muốn
+        long sanSang = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.SAN_SANG);
+        long dangVanChuyen = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DANG_VAN_CHUYEN);
+        long duocGiuCho = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DUOC_GIU_CHO);
+        long dangSuDung = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DANG_SU_DUNG);
+
+        return new BatteryStatusDTO(total, day, dangSac, baoTri);
     }
 }

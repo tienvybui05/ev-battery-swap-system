@@ -1,19 +1,18 @@
 package ut.edu.batteryservice.dtos;
 
 public class BatteryStatusDTO {
+
     private long tongSoPin;
-    private long sanSang;
-    private long dangSac;
-    private long dangSuDung;
-    private long baoTri;
+    private long day;       // pin đầy
+    private long dangSac;   // pin đang sạc
+    private long baoTri;    // pin đang bảo trì
 
     public BatteryStatusDTO() {}
 
-    public BatteryStatusDTO(long tongSoPin, long sanSang, long dangSac, long dangSuDung, long baoTri) {
+    public BatteryStatusDTO(long tongSoPin, long day, long dangSac, long baoTri) {
         this.tongSoPin = tongSoPin;
-        this.sanSang = sanSang;
+        this.day = day;
         this.dangSac = dangSac;
-        this.dangSuDung = dangSuDung;
         this.baoTri = baoTri;
     }
 
@@ -25,12 +24,12 @@ public class BatteryStatusDTO {
         this.tongSoPin = tongSoPin;
     }
 
-    public long getSanSang() {
-        return sanSang;
+    public long getDay() {
+        return day;
     }
 
-    public void setSanSang(long sanSang) {
-        this.sanSang = sanSang;
+    public void setDay(long day) {
+        this.day = day;
     }
 
     public long getDangSac() {
@@ -39,14 +38,6 @@ public class BatteryStatusDTO {
 
     public void setDangSac(long dangSac) {
         this.dangSac = dangSac;
-    }
-
-    public long getDangSuDung() {
-        return dangSuDung;
-    }
-
-    public void setDangSuDung(long dangSuDung) {
-        this.dangSuDung = dangSuDung;
     }
 
     public long getBaoTri() {
