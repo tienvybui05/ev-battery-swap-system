@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 function ChangeBattery() {
     const [packageList, setPackageList] = useState([]);
-    const [order, setOrder] = useState(null);
+    const [orders, setOrders] = useState([]);
 
 
     useEffect(() => {
@@ -20,15 +20,16 @@ function ChangeBattery() {
                     const data = await res.json();
 
                     if (data.length > 0) {
-                        // 🔸 Lấy đơn đặt mới nhất (hoặc đơn đầu tiên)
-                        const latest = data[data.length - 1];
+                        // 🆕 Lưu toàn bộ danh sách
+                        const allOrders = data.map(item => ({
+                            status: item.trangThaiXacNhan || "Không xác định",
+                            stationName: item.tram?.tenTram || "Không rõ trạm",
+                            time: new Date(item.ngayDat).toLocaleString("vi-VN"),
+                            orderCode: "ORD-" + String(item.maLichSuDat).padStart(4, "0"),
+                        }));
 
-                        setOrder({
-                            status: latest.trangThaiXacNhan || "Không xác định",
-                            stationName: latest.tram?.tenTram || "Không rõ trạm",
-                            time: new Date(latest.ngayDat).toLocaleString("vi-VN"),
-                            orderCode: "ORD-" + String(latest.maLichSuDat).padStart(4, "0"),
-                        });
+                        // Đảo ngược nếu muốn mới nhất lên đầu
+                        setOrders(allOrders.reverse());
                     }
                 } else {
                     console.error("Không thể tải lịch đặt pin");
@@ -97,24 +98,33 @@ function ChangeBattery() {
             <div className={styles.orderplace}>
                 <div className={styles.header}>
                     <h1>Đặt Chỗ Hoạt Động</h1>
-                    <p>Đơn đặt pin hiện tại của bạn</p>
+                    <p>Danh sách đơn đặt pin của bạn</p>
                 </div>
 
-                {order ? (
-                    <>
-                        <div className={styles.info}>
-                            <p className={`${styles.status} ${order.status === "Chờ xác nhận" ? styles.pending : ""}`}>
-                                {order.status}
-                            </p>
-                            <h3>{order.stationName}</h3>
-                            <p className={styles.time}>{order.time}</p>
-                        </div>
-                        <div className={styles.orderid}>
-                            <FontAwesomeIcon icon={faMapLocationDot} className={styles.faMapLocationDot} />
-                            <p>{order.orderCode}</p>
-                        </div>
-                        <LinkButton to="/dashboard" black>Đường đi</LinkButton>
-                    </>
+                {orders.length > 0 ? (
+                    <div className={styles.orderList}>
+                        {orders.map((order, index) => (
+                            <div key={index} className={styles.orderItem}>
+                                {/* Cột trái */}
+                                <div className={styles.info}>
+                                    <p className={`${styles.status} ${order.status === "Chờ xác nhận" ? styles.pending : ""}`}>
+                                        {order.status}
+                                    </p>
+                                    <h3>{order.stationName}</h3>
+                                    <p className={styles.time}>{order.time}</p>
+                                </div>
+
+                                {/* Cột phải */}
+                                <div className={styles.orderRight}>
+                                    <div className={styles.orderid}>
+                                        <FontAwesomeIcon icon={faMapLocationDot} className={styles.faMapLocationDot} />
+                                        <p>{order.orderCode}</p>
+                                    </div>
+                                    <LinkButton to="/dashboard" black>Đường đi</LinkButton>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <p style={{ marginTop: "10px" }}>⏳ Bạn chưa có đơn đặt pin nào.</p>
                 )}

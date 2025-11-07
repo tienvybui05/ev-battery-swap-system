@@ -10,9 +10,11 @@
     display: flex;
     flex-direction: column;
     border: var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: var(--a);
-    gap: var(--a);
+    gap: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .header {
@@ -37,67 +39,110 @@
 
 }
 
-.orderplace .info {
+
+/* Danh sách đơn hàng */
+.orderList {
     display: flex;
     flex-direction: column;
+    gap: 12px;
+}
+
+/* Card ngang */
+.orderItem {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.orderplace .info .status {
-    color: red;
-    background-color: #DCFCE7;
-    padding: 2px 8px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    font-size: 12px;
-    line-height: var(--caption-line-height);
-    letter-spacing: var(--p-letter-spacing);
-}
-
-.orderplace .info .status.pending {
-    color: #B45309; 
-    background-color: #FEF9C3;
-    padding: 2px 8px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    font-size: 12px;
-    line-height: var(--caption-line-height);
-    letter-spacing: var(--p-letter-spacing);
-}
-
-
-.orderplace .info h3 {
-    color: var(--black);
-    font-size: var(--h3-font-size);
-    line-height: var(--h3-line-height);
-    letter-spacing: var(--p-letter-spacing);
-    font-weight: 500;
-}
-
-.orderplace .info .time {
-    color: var(--color-gray-600);
-    font-size: var(--p-font-size);
-    line-height: var(--p-line-height);
-    letter-spacing: var(--p-letter-spacing);
-}
-
-.orderplace .orderid {
-    background-color: var(--color-gray-25);
+    justify-content: space-between;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
+    padding: 12px 18px;
+    transition: all 0.25s ease;
+}
+
+.orderItem:hover {
+    background-color: #fff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+/* -------- CỘT TRÁI -------- */
+.orderItem .info {
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 16px;
+    align-items: flex-start;
+    text-align: left;
+    gap: 4px;
+}
+
+.orderItem .status {
+    background-color: #dcfce7;
+    color: #166534;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.orderItem .status.pending {
+    background-color: #fef9c3;
+    color: #b45309;
+}
+
+.orderItem h3 {
+    font-size: 0.95rem;
+    /* bình thường lại */
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.orderItem .time {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* -------- CỘT PHẢI -------- */
+.orderRight {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.orderid {
+    background-color: #eef2ff;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .faMapLocationDot {
-    color: purple;
-    width: 96px;
-    height: 96px;
+    color: #6d28d9;
+    font-size: 20px;
+}
+
+.orderid p {
+    font-size: 0.85rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+/* -------- NÚT "Đường đi" -------- */
+.orderItem a {
+    background-color: #111827;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.orderItem a:hover {
+    background-color: #374151;
 }
 
 
@@ -174,7 +219,4 @@
     background-color: var(--primary);
     border-radius: 9999px;
     transition: width 0.3s ease;
-}
-.packageItem{
-    margin-top: 10px;
 }
