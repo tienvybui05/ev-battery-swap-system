@@ -12,13 +12,14 @@ import styles from "./Inventory.module.css";
 import FilterModal from "../Inventory/FilterModal/FilterModal";
 import CheckModal from "../Inventory/CheckModal/CheckModal";
 import LogsModal from "../Inventory/LogsModal/LogsModal";
+import SettingsModal from "../Inventory/SettingsModal/SettingsModal";
 
-/* ========= ÁNH XẠ MÀU CHO TRẠNG THÁI ========= */
+/* ========= ÁNH XẠ MÀU CHO TÌNH TRẠNG KỸ THUẬT ========= */
 const STATUS_COLORS = {
-    "sẵn sàng": "#10B981",
+    "đầy": "#22C55E",
     "đang sạc": "#F59E0B",
-    "đang được sử dụng": "#3B82F6",
     "bảo trì": "#EF4444",
+    "không xác định": "#6B7280",
 };
 
 function Inventory() {
@@ -27,6 +28,7 @@ function Inventory() {
     const [showFilter, setShowFilter] = useState(false);
     const [showCheck, setShowCheck] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const [selectedPin, setSelectedPin] = useState(null);
 
     const [filters, setFilters] = useState({
@@ -34,11 +36,13 @@ function Inventory() {
         model: "",
         minCap: null,
         maxCap: null,
+        minHealth: null,
+        maxHealth: null,
     });
 
     const getAuthToken = () => localStorage.getItem("token");
 
-    // 🔹 Lấy danh sách pin + lịch sử + trạm
+    // 🟢 Lấy danh sách pin, chỉ lấy pin còn trong kho
     const fetchPinList = async () => {
         try {
             setListLoading(true);
@@ -61,22 +65,44 @@ function Inventory() {
                 const historyData = await historyRes.json();
                 const tramData = await tramRes.json();
 
-                const mapped = pinsData.map((p, i) => {
+                // 🎯 Lọc chỉ lấy pin KHÔNG ở trạng thái "ĐANG SỬ DỤNG" hoặc "ĐANG VẬN CHUYỂN"
+                const pinsInStock = pinsData.filter((p) => {
+                    const own = (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "").toUpperCase();
+                    return own !== "DANG_SU_DUNG" && own !== "DANG_VAN_CHUYEN";
+                });
+
+                const mapped = pinsInStock.map((p, i) => {
                     const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
 
+                    // 🔹 Map tinhTrang enum → label tiếng Việt
+                    const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
+                    let statusLabel = "không xác định";
+                    switch (tinhTrangEnum) {
+                        case "DAY":
+                            statusLabel = "đầy";
+                            break;
+                        case "DANG_SAC":
+                            statusLabel = "đang sạc";
+                            break;
+                        case "BAO_TRI":
+                            statusLabel = "bảo trì";
+                            break;
+                        default:
+                            statusLabel = "không xác định";
+                    }
+
+                    // 🔹 Lấy trạm từ lịch sử
                     const record = historyData.find(
                         (h) => Number(h.maPin ?? h.ma_pin) === pinId
                     );
 
                     let tramName = "Chưa có lịch sử";
-
                     if (record) {
                         const tram = tramData.find(
                             (t) =>
                                 Number(t.maTram ?? t.ma_tram) ===
                                 Number(record.maTram ?? record.ma_tram)
                         );
-
                         tramName = tram
                             ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
                             : `Trạm ${record.maTram}`;
@@ -86,7 +112,7 @@ function Inventory() {
                         id: pinId,
                         title: `Pin ${pinId} – ${tramName}`,
                         type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
-                        status: (p.tinhTrang ?? p.tinh_trang ?? "sẵn sàng").toLowerCase(),
+                        status: statusLabel,
                         health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
                         capacity: p.dungLuong ?? p.dung_luong ?? 0,
                         lastMaintenance:
@@ -125,16 +151,19 @@ function Inventory() {
         );
     }
 
-    // 🔹 Lọc pin tại frontend
+    // 🔹 Lọc thêm theo bộ lọc frontend
     const filteredPins = pins.filter((p) => {
-        if (p.status === "đang được sử dụng") return false;
         const matchStatus =
             filters.status.length === 0 || filters.status.includes(p.status);
         const matchModel = !filters.model || p.type === filters.model;
         const matchCap =
             (!filters.minCap || p.capacity >= filters.minCap) &&
             (!filters.maxCap || p.capacity <= filters.maxCap);
-        return matchStatus && matchModel && matchCap;
+        const matchHealth =
+            (!filters.minHealth || p.health >= filters.minHealth) &&
+            (!filters.maxHealth || p.health <= filters.maxHealth);
+
+        return matchStatus && matchModel && matchCap && matchHealth;
     });
 
     return (
@@ -161,7 +190,7 @@ function Inventory() {
                         <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
                     </button>
 
-                    {/* Làm mới toàn trang */}
+                    {/* Làm mới */}
                     <button
                         className={styles.primaryBtn}
                         onClick={fetchPinList}
@@ -242,7 +271,6 @@ function Inventory() {
                             </div>
 
                             <div className={styles.cardActions}>
-                                {/* 🔹 Đổi tên Chi tiết → Lịch sử */}
                                 <button
                                     className={styles.action}
                                     onClick={() => {
@@ -256,7 +284,10 @@ function Inventory() {
 
                                 <button
                                     className={styles.action}
-                                    onClick={() => alert(`Cài đặt ${pin.title}`)}
+                                    onClick={() => {
+                                        setSelectedPin(pin);
+                                        setShowSettings(true);
+                                    }}
                                 >
                                     <FontAwesomeIcon icon={faWrench} />
                                     Cài đặt
@@ -268,12 +299,12 @@ function Inventory() {
 
                 {filteredPins.length === 0 && (
                     <div className={styles.emptyState}>
-                        Không có pin nào phù hợp với bộ lọc.
+                        Không có pin nào trong kho.
                     </div>
                 )}
             </div>
 
-            {/* Modal lọc */}
+            {/* Modal */}
             {showFilter && (
                 <FilterModal
                     current={filters}
@@ -285,7 +316,6 @@ function Inventory() {
                 />
             )}
 
-            {/* Modal ghi nhận trả pin */}
             {showCheck && (
                 <CheckModal
                     open={showCheck}
@@ -294,13 +324,26 @@ function Inventory() {
                 />
             )}
 
-            {/* Modal lịch sử pin */}
             {showLogs && selectedPin && (
                 <LogsModal
                     slot={selectedPin}
                     onClose={() => {
                         setSelectedPin(null);
                         setShowLogs(false);
+                    }}
+                />
+            )}
+
+            {showSettings && selectedPin && (
+                <SettingsModal
+                    slot={selectedPin}
+                    onClose={() => {
+                        setSelectedPin(null);
+                        setShowSettings(false);
+                    }}
+                    onApply={() => {
+                        setShowSettings(false);
+                        fetchPinList();
                     }}
                 />
             )}

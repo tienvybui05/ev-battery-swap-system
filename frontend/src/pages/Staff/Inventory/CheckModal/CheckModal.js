@@ -7,19 +7,25 @@ export default function CheckModal({ open, onClose, onDone }) {
     const [stations, setStations] = useState([]);
     const [oldHealth, setOldHealth] = useState(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [allowedTinhTrangOptions, setAllowedTinhTrangOptions] = useState(["đầy", "đang sạc", "bảo trì"]);
 
     const [form, setForm] = useState({
         maPin: "",
         loaiPin: "",
         dungLuong: "",
-        newTinhTrang: "đang sạc",
+        newTinhTrang: "đầy",
         newSucKhoe: "",
         maTram: "",
+        ngayNhapKho: "",
+        ngayBaoDuongGanNhat: "",
+        logNote: "",
+        trangThaiSoHuu: "",
+        oldTinhTrang: "",
     });
 
     const token = localStorage.getItem("token");
 
-    // 🔹 Load dữ liệu Pin & Trạm
+    // 🟢 Load dữ liệu Pin & Trạm
     useEffect(() => {
         if (!open) return;
         (async () => {
@@ -39,7 +45,7 @@ export default function CheckModal({ open, onClose, onDone }) {
 
                 setPins(pinsData);
 
-                // Lọc trạm trùng tên
+                // 🔹 Loại bỏ trạm trùng tên
                 const uniq = [];
                 const seen = new Set();
                 tramData.forEach((t) => {
@@ -60,34 +66,72 @@ export default function CheckModal({ open, onClose, onDone }) {
         })();
     }, [open]);
 
-    // 🔹 Lọc các pin “đang được sử dụng”
-    const inUsePins = useMemo(() => {
-        return pins.filter(
-            (p) =>
-                (p.tinhTrang ?? p.tinh_trang ?? "").toLowerCase().trim() ===
-                "đang được sử dụng"
-        );
+    // 🟢 Lọc pin đang sử dụng hoặc vận chuyển
+    const eligiblePins = useMemo(() => {
+        return pins.filter((p) => {
+            const s = (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "").toUpperCase();
+            return s === "DANG_SU_DUNG" || s === "DANG_VAN_CHUYEN";
+        });
     }, [pins]);
 
-    // 🔹 Khi chọn pin → tự điền thông tin
+    // 🔹 Khi chọn pin → điền thông tin + giới hạn rule ô “Tình trạng mới”
     function handleSelectPin(id) {
         const p = pins.find((x) => Number(x.maPin ?? x.ma_pin) === Number(id));
         if (!p) return;
+
+        const trangThaiSoHuu = p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "";
+        const oldTinhTrang = (p.tinhTrang ?? p.tinh_trang ?? "").toUpperCase();
+
+        let options = ["đầy", "đang sạc", "bảo trì"];
+        let defaultTinhTrang = "đầy";
+
+        // ⚙️ Rule cho pin đang vận chuyển
+        if (trangThaiSoHuu.toUpperCase() === "DANG_VAN_CHUYEN") {
+            if (oldTinhTrang === "DAY") {
+                options = ["đầy", "bảo trì"];
+                defaultTinhTrang = "đầy";
+            } else if (oldTinhTrang === "DANG_SAC") {
+                options = ["đang sạc", "bảo trì"];
+                defaultTinhTrang = "đang sạc";
+            } else if (oldTinhTrang === "BAO_TRI") {
+                options = ["bảo trì"];
+                defaultTinhTrang = "bảo trì";
+            }
+        }
+
+        // ⚙️ Rule cho pin đang sử dụng
+        else if (trangThaiSoHuu.toUpperCase() === "DANG_SU_DUNG") {
+            options = ["đang sạc", "bảo trì"];
+            defaultTinhTrang = "đang sạc";
+        }
+
+        setAllowedTinhTrangOptions(options);
+
         setForm((f) => ({
             ...f,
             maPin: id,
             loaiPin: p?.loaiPin ?? p?.loai_pin ?? "",
             dungLuong: p?.dungLuong ?? p?.dung_luong ?? "",
+            ngayNhapKho: p?.ngayNhapKho ?? p?.ngay_nhap_kho ?? "",
+            ngayBaoDuongGanNhat:
+                p?.ngayBaoDuongGanNhat ?? p?.ngay_bao_duong_gan_nhat ?? "",
+            trangThaiSoHuu,
+            oldTinhTrang,
+            newTinhTrang: defaultTinhTrang,
+            logNote:
+                trangThaiSoHuu?.toUpperCase() === "DANG_SU_DUNG"
+                    ? "Trả pin sau khi sử dụng"
+                    : trangThaiSoHuu?.toUpperCase() === "DANG_VAN_CHUYEN"
+                        ? "Hoàn tất vận chuyển pin về trạm"
+                        : "",
         }));
         setOldHealth(Number(p?.sucKhoe ?? p?.suc_khoe ?? 100));
     }
 
-    // 🔹 Cập nhật field form
     function update(field, value) {
         setForm((f) => ({ ...f, [field]: value }));
     }
 
-    // 🔹 Kiểm tra hợp lệ % sức khỏe
     const healthValue = Number(form.newSucKhoe);
     const invalidHealth =
         isNaN(healthValue) ||
@@ -95,7 +139,6 @@ export default function CheckModal({ open, onClose, onDone }) {
         healthValue > 100 ||
         (oldHealth !== null && healthValue > oldHealth);
 
-    // 🔹 Rule kiểm tra hợp lệ tổng thể
     const canSubmit =
         form.maPin &&
         form.maTram &&
@@ -103,17 +146,51 @@ export default function CheckModal({ open, onClose, onDone }) {
         form.newSucKhoe !== "" &&
         !invalidHealth;
 
-    // 🔹 Khi nhấn “Xác nhận”
+    const tinhTrangMap = {
+        "đầy": "DAY",
+        "đang sạc": "DANG_SAC",
+        "bảo trì": "BAO_TRI",
+    };
+
+    // 🔹 Submit
     async function handleSubmit() {
         try {
             const pinId = form.maPin;
+            const currentDate = new Date().toISOString().split("T")[0];
+
+            const oldPin = pins.find(
+                (p) => Number(p.maPin ?? p.ma_pin) === Number(pinId)
+            );
+            if (!oldPin) throw new Error("Không tìm thấy thông tin pin hiện tại");
+
+            const oldTrangThaiSoHuu =
+                oldPin.trangThaiSoHuu ?? oldPin.trang_thai_so_huu ?? "SAN_SANG";
+            const newTinhTrangEnum = tinhTrangMap[form.newTinhTrang];
+
+            let newTrangThaiSoHuu = oldTrangThaiSoHuu;
+            const isVanChuyen = ["DANG_VAN_CHUYEN"].includes(oldTrangThaiSoHuu);
+            const isSuDung = ["DANG_SU_DUNG"].includes(oldTrangThaiSoHuu);
+
+            // 🧩 Rule xử lý trạng thái sở hữu
+            if (isVanChuyen) {
+                if (newTinhTrangEnum === "DAY") newTrangThaiSoHuu = "SAN_SANG";
+                else newTrangThaiSoHuu = "CHUA_SAN_SANG";
+            } else if (isSuDung) {
+                newTrangThaiSoHuu = "CHUA_SAN_SANG";
+            }
+
             const pinUpdate = {
-                loaiPin: form.loaiPin,
-                dungLuong: form.dungLuong,
-                tinhTrang: form.newTinhTrang,
-                sucKhoe: Number(form.newSucKhoe),
+                maPin: oldPin.maPin ?? oldPin.ma_pin,
+                loaiPin: form.loaiPin || oldPin.loaiPin || oldPin.loai_pin,
+                dungLuong: form.dungLuong || oldPin.dungLuong || oldPin.dung_luong,
+                tinhTrang: newTinhTrangEnum,
+                trangThaiSoHuu: newTrangThaiSoHuu,
+                sucKhoe: Number(form.newSucKhoe || oldPin.sucKhoe || oldPin.suc_khoe || 100),
+                ngayBaoDuongGanNhat: oldPin.ngayBaoDuongGanNhat || oldPin.ngay_bao_duong_gan_nhat || null,
+                ngayNhapKho: currentDate,
             };
 
+            // 🟢 PUT cập nhật pin
             const res1 = await fetch(`/api/battery-service/pins/${pinId}`, {
                 method: "PUT",
                 headers: {
@@ -124,8 +201,11 @@ export default function CheckModal({ open, onClose, onDone }) {
             });
             if (!res1.ok) throw new Error("Cập nhật pin thất bại");
 
+            // 🟢 POST lịch sử pin – trạm
             const historyBody = {
-                hanhDong: "Trả pin về trạm",
+                hanhDong:
+                    form.logNote?.trim() ||
+                    `Trả pin từ trạng thái ${form.trangThaiSoHuu || "chưa xác định"}`,
                 maPin: Number(form.maPin),
                 maTram: Number(form.maTram),
                 ngayThayDoi: new Date().toISOString(),
@@ -141,7 +221,6 @@ export default function CheckModal({ open, onClose, onDone }) {
             });
             if (!res2.ok) throw new Error("Ghi lịch sử thất bại");
 
-            // ✅ Hiển thị thông báo ngắn, auto đóng sau 1.5s
             setShowSuccess(true);
             setTimeout(() => {
                 setShowSuccess(false);
@@ -149,7 +228,7 @@ export default function CheckModal({ open, onClose, onDone }) {
                 onClose?.();
             }, 1500);
         } catch (err) {
-            console.error(err);
+            console.error("❌", err);
             alert("❌ Lỗi: " + err.message);
         }
     }
@@ -176,56 +255,72 @@ export default function CheckModal({ open, onClose, onDone }) {
                         <p>Đang tải dữ liệu...</p>
                     ) : (
                         <>
-                            <div className={styles.twoCols}>
-                                <div className={styles.formRow}>
-                                    <label>Chọn pin (đang được sử dụng)</label>
-                                    <select
-                                        value={form.maPin}
-                                        onChange={(e) => handleSelectPin(e.target.value)}
-                                    >
-                                        <option value="">-- Chọn --</option>
-                                        {inUsePins.map((p) => {
-                                            const id = p.maPin ?? p.ma_pin;
-                                            return (
-                                                <option key={id} value={id}>
-                                                    {`Pin ${id} | ${p.loaiPin ?? p.loai_pin ?? ""} (${p.dungLuong ?? p.dung_luong ?? ""} kWh)`}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
+                            {/* 1️⃣ Chọn pin */}
+                            <div className={styles.formRow}>
+                                <label>Chọn pin (đang sử dụng hoặc đang vận chuyển)</label>
+                                <select
+                                    value={form.maPin}
+                                    onChange={(e) => handleSelectPin(e.target.value)}
+                                >
+                                    <option value="">-- Chọn --</option>
+                                    {eligiblePins.map((p) => {
+                                        const id = p.maPin ?? p.ma_pin;
+                                        const sohuu =
+                                            (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "")
+                                                .toLowerCase()
+                                                .replaceAll("_", " ");
+                                        return (
+                                            <option key={id} value={id}>
+                                                {`Pin ${id} | ${p.loaiPin ?? p.loai_pin ?? ""} (${p.dungLuong ?? p.dung_luong ?? ""} kWh) — ${sohuu}`}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
 
-                                <div className={styles.formRow}>
-                                    <label>Chọn trạm</label>
-                                    <select
-                                        value={form.maTram}
-                                        onChange={(e) => update("maTram", e.target.value)}
-                                    >
-                                        <option value="">-- Chọn --</option>
-                                        {stations.map((t) => {
-                                            const id = t.maTram ?? t.ma_tram;
-                                            const name = t.tenTram ?? t.ten_tram ?? `Trạm ${id}`;
-                                            return (
-                                                <option key={id} value={id}>
-                                                    {name}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                </div>
+                                {form.trangThaiSoHuu && (
+                                    <small className={styles.note}>
+                                        ⚙️ Pin đang ở trạng thái sở hữu:{" "}
+                                        <strong>
+                                            {form.trangThaiSoHuu.toLowerCase().replaceAll("_", " ")}
+                                        </strong>
+                                    </small>
+                                )}
                             </div>
 
-                            <div className={styles.formGrid}>
+                            {/* 2️⃣ Chọn trạm */}
+                            <div className={styles.formRow}>
+                                <label>Chọn trạm</label>
+                                <select
+                                    value={form.maTram}
+                                    onChange={(e) => update("maTram", e.target.value)}
+                                >
+                                    <option value="">-- Chọn --</option>
+                                    {stations.map((t) => {
+                                        const id = t.maTram ?? t.ma_tram;
+                                        const name = t.tenTram ?? t.ten_tram ?? `Trạm ${id}`;
+                                        return (
+                                            <option key={id} value={id}>
+                                                {name}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+
+                            {/* 3️⃣ Model + Dung lượng */}
+                            <div className={styles.twoCols}>
                                 <div className={styles.formRow}>
                                     <label>Model</label>
                                     <input value={form.loaiPin} readOnly />
                                 </div>
-
                                 <div className={styles.formRow}>
                                     <label>Dung lượng (kWh)</label>
                                     <input value={form.dungLuong} readOnly />
                                 </div>
+                            </div>
 
+                            {/* 4️⃣ Sức khỏe + Tình trạng */}
+                            <div className={styles.twoCols}>
                                 <div className={styles.formRow}>
                                     <label>% Sức khỏe (0–100)</label>
                                     <input
@@ -243,17 +338,48 @@ export default function CheckModal({ open, onClose, onDone }) {
                                         </small>
                                     )}
                                 </div>
-
                                 <div className={styles.formRow}>
-                                    <label>Trạng thái mới</label>
+                                    <label>Tình trạng mới</label>
                                     <select
                                         value={form.newTinhTrang}
                                         onChange={(e) => update("newTinhTrang", e.target.value)}
                                     >
-                                        <option value="đang sạc">Đang sạc</option>
-                                        <option value="bảo trì">Bảo trì</option>
+                                        {allowedTinhTrangOptions.map((opt) => (
+                                            <option key={opt} value={opt}>
+                                                {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* 5️⃣ Ngày nhập kho + bảo dưỡng */}
+                            <div className={styles.twoCols}>
+                                <div className={styles.formRow}>
+                                    <label>Ngày nhập kho (mới)</label>
+                                    <input
+                                        value={new Date().toISOString().split("T")[0]}
+                                        readOnly
+                                    />
+                                </div>
+                                <div className={styles.formRow}>
+                                    <label>Lần bảo dưỡng gần nhất</label>
+                                    <input
+                                        value={form.ngayBaoDuongGanNhat || "—"}
+                                        readOnly
+                                    />
+                                </div>
+                            </div>
+
+                            {/* 6️⃣ Ghi chú lịch sử */}
+                            <div className={styles.formRow}>
+                                <label>Ghi chú lịch sử</label>
+                                <input
+                                    type="text"
+                                    placeholder="VD: Pin trả sau khi sử dụng, kiểm tra OK..."
+                                    value={form.logNote}
+                                    onChange={(e) => update("logNote", e.target.value)}
+                                />
                             </div>
                         </>
                     )}
