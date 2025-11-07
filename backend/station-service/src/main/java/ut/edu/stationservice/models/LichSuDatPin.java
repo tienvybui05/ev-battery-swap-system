@@ -34,6 +34,18 @@ public class LichSuDatPin {
     @Column(name = "ma_tai_xe")
     private Long maTaiXe;
 
+    public Long getMaGiaoDichDoiPin() {
+        return maGiaoDichDoiPin;
+    }
+
+    public void setMaGiaoDichDoiPin(Long maGiaoDichDoiPin) {
+        this.maGiaoDichDoiPin = maGiaoDichDoiPin;
+    }
+
+    @Column(name = "ma_giao_dich_doi_pin")
+    private Long maGiaoDichDoiPin;
+
+
     @ManyToOne
     @JoinColumn(name = "ma_tram", referencedColumnName = "ma_tram")
     private Tram tram;

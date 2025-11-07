@@ -54,6 +54,19 @@ public class LichSuDatPinService implements ILichSuDatPinService {
     @Transactional
     @Override
     public LichSuDatPin datLich(Long maTaiXe, Long maTram) {
+        List<LichSuDatPin> lichChuaXong = lichSuDatPinRepository.findByMaTaiXe(maTaiXe)
+                .stream()
+                .filter(ls ->
+                        (
+                                "Chờ xác nhận".equalsIgnoreCase(ls.getTrangThaiXacNhan()) ||
+                                        "Chưa đổi pin".equalsIgnoreCase(ls.getTrangThaiDoiPin())
+                        )
+                                && ls.getTram().getMaTram().equals(maTram)
+                ).toList();
+        if(!lichChuaXong.isEmpty()){
+            throw new RuntimeException("Bạn đang có đơn đổi pin chưa hoàn thành. Hãy hoàn tất trước khi đặt mới.");
+        }
+
         Tram tram = tramRepository.findById(maTram)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy trạm có ID: " + maTram));
 
