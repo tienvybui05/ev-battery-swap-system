@@ -27,7 +27,7 @@ public class PinService implements IPinService {
     @Transactional
     @Override
     public Pin createPinType(Pin pin) {
-        validatePinState(pin, null);
+        // ❌ Không còn validate rule nào
         return pinRepository.save(pin);
     }
 
@@ -35,7 +35,7 @@ public class PinService implements IPinService {
     @Override
     public Pin updatePinType(Long id, Pin pin) {
         return pinRepository.findById(id).map(existing -> {
-            validatePinState(pin, existing);
+            // ❌ Không gọi validatePinState nữa
             existing.setLoaiPin(pin.getLoaiPin());
             existing.setDungLuong(pin.getDungLuong());
             existing.setTinhTrang(pin.getTinhTrang());
@@ -60,39 +60,7 @@ public class PinService implements IPinService {
     @Transactional
     @Override
     public Pin addPin(Pin pin) {
-        return createPinType(pin);
-    }
-
-    /**
-     * 🔒 Validate quy tắc chuyển trạng thái sở hữu.
-     */
-    private void validatePinState(Pin newPin, Pin oldPin) {
-        var tinhTrang = newPin.getTinhTrang();
-        var trangThai = newPin.getTrangThaiSoHuu();
-
-        // 1️⃣ "Sẵn sàng" chỉ khi tinh_trang = Đầy
-        if (trangThai == Pin.TrangThaiSoHuu.SAN_SANG && tinhTrang != Pin.TinhTrang.DAY) {
-            throw new RuntimeException("Pin chỉ có thể ở trạng thái 'Sẵn sàng' khi tinh_trang = 'Đầy'.");
-        }
-
-        // 2️⃣ "Được giữ chỗ" chỉ chuyển từ "Sẵn sàng"
-        if (oldPin != null && trangThai == Pin.TrangThaiSoHuu.DUOC_GIU_CHO &&
-                oldPin.getTrangThaiSoHuu() != Pin.TrangThaiSoHuu.SAN_SANG) {
-            throw new RuntimeException("Chỉ có thể giữ chỗ pin đang ở trạng thái 'Sẵn sàng'.");
-        }
-
-        // 3️⃣ "Đang sử dụng" chỉ chuyển từ "Sẵn sàng" hoặc "Được giữ chỗ"
-        if (oldPin != null && trangThai == Pin.TrangThaiSoHuu.DANG_SU_DUNG &&
-                !(oldPin.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.SAN_SANG ||
-                        oldPin.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DUOC_GIU_CHO)) {
-            throw new RuntimeException("Chỉ có thể chuyển sang 'Đang sử dụng' từ 'Sẵn sàng' hoặc 'Được giữ chỗ'.");
-        }
-
-        // 4️⃣ Không được chuyển sang 'Đang vận chuyển' nếu đang sử dụng hoặc được giữ chỗ
-        if (oldPin != null && trangThai == Pin.TrangThaiSoHuu.DANG_VAN_CHUYEN &&
-                (oldPin.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DANG_SU_DUNG ||
-                        oldPin.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DUOC_GIU_CHO)) {
-            throw new RuntimeException("Không thể chuyển sang 'Đang vận chuyển' khi pin đang được sử dụng hoặc được giữ chỗ.");
-        }
+        // ❌ Không validate
+        return pinRepository.save(pin);
     }
 }
