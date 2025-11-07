@@ -85,7 +85,7 @@ public class NhanVienController {
         try {
             boolean deleted = nhanVienService.xoaNhanVien(id);
             if (deleted) return ResponseEntity.ok().body("Xóa nhân viên thành công");
-            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa 12321ádas312312");
+            return ResponseEntity.badRequest().body("Không tìm thấy nhân viên để xóa 1231231231");
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Lỗi server: " + e.getMessage());
         }

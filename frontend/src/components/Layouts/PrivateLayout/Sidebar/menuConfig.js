@@ -11,6 +11,7 @@ import {
   faUserTie,
   faComment,
   faBrain,
+  faBoxesPacking,
 } from "@fortawesome/free-solid-svg-icons";
 import { href } from "react-router";
 const menu = {
@@ -58,6 +59,11 @@ const menu = {
         icon: <FontAwesomeIcon icon={faBatteryFull} />,
       },
       {
+        title: "Gói dịch vụ",
+        href: "/dashboard/servicePackages",
+        icon: <FontAwesomeIcon icon={faBoxesPacking} />,
+      },
+      {
         title: "Khách hàng",
         href: "/dashboard/customers",
         icon: <FontAwesomeIcon icon={faUserTie} />,
@@ -77,6 +83,7 @@ const menu = {
         href: "/dashboard/alerts",
         icon: <FontAwesomeIcon icon={faComment} />,
       },
+      
     ],
 
     staff: [

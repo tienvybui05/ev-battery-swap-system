@@ -14,7 +14,7 @@ import {
   ChangeBattery,
   Support
 } from "./pages/Driver";
-import { Batteries, Customers, Overview, Staff, Stations } from "./pages/Admin";
+import { Batteries, Customers, Overview, Staff, Stations,ServicePackages } from "./pages/Admin";
 import { Report, Inventory, QueueManagement, Transaction } from "./pages/Staff";
 import ProtectedRoute from "./components/Shares/ProtectedRoute/ProtectedRoute.js";
 import Unauthorized from "./utils/Unauthorized/Unauthorized.js";
@@ -179,6 +179,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
                   <Alerts />
+                </ProtectedRoute>
+              }
+            />
+             <Route
+              path="servicePackages"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <ServicePackages/>
                 </ProtectedRoute>
               }
             />
