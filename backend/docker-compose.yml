@@ -1,32 +1,9 @@
 version: "3.8"
 
 services:
-  # 🚪 API Gateway
-  gateway:
-    build: ./gateway
-    container_name: gateway
-    ports:
-      - "8080:8080"
-    depends_on:
-      - user-service
-      - subscription-service
-      - battery-service
-      - station-service
-      - transaction-service
-      - feedback-service
-      - vehicle-service
-    networks:
-      - evnet
-
-  # 👤 USER SERVICE
-  user-service:
-    build: ./user-service
-    container_name: user-service
-    depends_on:
-      - mysql_user
-    networks:
-      - evnet
-
+  # ==============================
+  # 🗄️ DATABASES (Có healthcheck)
+  # ==============================
   mysql_user:
     image: mysql:8.0
     container_name: mysql_user
@@ -34,18 +11,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: user_service
     ports:
-      - "3308:3306" 
+      - "3308:3306"
     networks:
       - evnet
-
-  # 📦 SUBSCRIPTION SERVICE
-  subscription-service:
-    build: ./subscription-service
-    container_name: subscription-service
-    depends_on:
-      - mysql_subscription
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_subscription:
     image: mysql:8.0
@@ -54,18 +28,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: subscription_service
     ports:
-      - "3309:3306" 
+      - "3309:3306"
     networks:
       - evnet
-
-  # 🔋 BATTERY SERVICE
-  battery-service:
-    build: ./battery-service
-    container_name: battery-service
-    depends_on:
-      - mysql_battery
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_battery:
     image: mysql:8.0
@@ -74,18 +45,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: battery_service
     ports:
-      - "3310:3306" 
+      - "3310:3306"
     networks:
       - evnet
-
-  # 🏭 STATION SERVICE
-  station-service:
-    build: ./station-service
-    container_name: station-service
-    depends_on:
-      - mysql_station
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_station:
     image: mysql:8.0
@@ -94,18 +62,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: station_service
     ports:
-      - "3311:3306"  
+      - "3311:3306"
     networks:
       - evnet
-
-  # 💳 TRANSACTION SERVICE
-  transaction-service:
-    build: ./transaction-service
-    container_name: transaction-service
-    depends_on:
-      - mysql_transaction
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_transaction:
     image: mysql:8.0
@@ -114,18 +79,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: transaction_service
     ports:
-      - "3312:3306"  
+      - "3312:3306"
     networks:
       - evnet
-
-  # 💬 FEEDBACK SERVICE
-  feedback-service:
-    build: ./feedback-service
-    container_name: feedback-service
-    depends_on:
-      - mysql_feedback
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_feedback:
     image: mysql:8.0
@@ -134,18 +96,15 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: feedback_service
     ports:
-      - "3313:3306"  
+      - "3313:3306"
     networks:
       - evnet
-
-  # 🚗 VEHICLE SERVICE
-  vehicle-service:
-    build: ./vehicle-service
-    container_name: vehicle-service
-    depends_on:
-      - mysql_vehicle
-    networks:
-      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   mysql_vehicle:
     image: mysql:8.0
@@ -154,13 +113,111 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: vehicle_service
     ports:
-      - "3314:3306" 
+      - "3314:3306"
+    networks:
+      - evnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ==============================
+  # ⚙️ MICROSERVICES (Chờ DB healthy)
+  # ==============================
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    depends_on:
+      mysql_user:
+        condition: service_healthy
     networks:
       - evnet
 
-# 🌐 Shared Network
+  subscription-service:
+    build: ./subscription-service
+    container_name: subscription-service
+    depends_on:
+      mysql_subscription:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  battery-service:
+    build: ./battery-service
+    container_name: battery-service
+    depends_on:
+      mysql_battery:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  station-service:
+    build: ./station-service
+    container_name: station-service
+    depends_on:
+      mysql_station:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  transaction-service:
+    build: ./transaction-service
+    container_name: transaction-service
+    depends_on:
+      mysql_transaction:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  feedback-service:
+    build: ./feedback-service
+    container_name: feedback-service
+    depends_on:
+      mysql_feedback:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  vehicle-service:
+    build: ./vehicle-service
+    container_name: vehicle-service
+    depends_on:
+      mysql_vehicle:
+        condition: service_healthy
+    networks:
+      - evnet
+
+  # ==============================
+  # 🚪 API GATEWAY (Chạy cuối)
+  # ==============================
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-service:
+        condition: service_started
+      subscription-service:
+        condition: service_started
+      battery-service:
+        condition: service_started
+      station-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+      feedback-service:
+        condition: service_started
+      vehicle-service:
+        condition: service_started
+    networks:
+      - evnet
+
+# ==============================
+# 🌐 NETWORK
+# ==============================
 networks:
   evnet:
     driver: bridge
-
-# docker compose up mysql_user mysql_subscription mysql_battery mysql_station mysql_transaction mysql_feedback mysql_vehicle
