@@ -1,8 +1,8 @@
 package ngocvct0133.ut.edu.feedbackservice.services;
 
-import ngocvct0133.ut.edu.feedbackservice.modules.BaoCao;
-
 import java.util.List;
+
+import ngocvct0133.ut.edu.feedbackservice.modules.BaoCao;
 
 public interface IBaoCaoService {
     BaoCao themBaoCao(BaoCao baoCao);
@@ -10,4 +10,6 @@ public interface IBaoCaoService {
     BaoCao suaBaoCao(Long id ,BaoCao baoCao);
     BaoCao layBaoCao(Long id);
     List<BaoCao> layTatCaBaoCao();
+
+    BaoCao phanHoiBaoCao(Long id, String phanHoi);
 }
