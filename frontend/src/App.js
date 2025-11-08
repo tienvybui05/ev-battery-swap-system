@@ -7,6 +7,13 @@ import Login from "./pages/Authentication/Login/Login";
 import Register from "./pages/Authentication/Register/Register";
 import AIInsights from "./pages/Admin/AIInsights/AIInsights";
 import Alerts from "./pages/Admin/Alerts/Alerts";
+import React, { useEffect } from "react";
+import { requestPermission } from "./firebase";
+import { onMessageListener } from "./firebase";
+import { analytics } from "./firebase";
+import { logEvent } from "firebase/analytics";
+
+
 import {
   FindStation,
   History,
@@ -26,6 +33,37 @@ const ProtectedLayout = ({ children }) => {
 };
 
 function App() {
+ useEffect(() => {
+  console.log("App loaded, Analytics active");
+
+  // 🧩 Gửi event để Analytics đếm user
+  logEvent(analytics, "app_open");
+
+  // 🔑 Khi app load, yêu cầu quyền thông báo và lấy FCM token
+  requestPermission().then((token) => {
+    if (token) {
+      console.log("FCM Token:", token);
+
+      // 👉 Nếu người dùng đã đăng nhập, gửi token này lên backend
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user.id) {
+        fetch("http://localhost:8080/api/user/update-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, fcmToken: token }),
+        });
+      }
+    }
+  });
+
+  // 🔔 Lắng nghe thông báo khi web đang mở
+  onMessageListener().then((payload) => {
+    console.log("📨 Nhận thông báo:", payload);
+    alert(`${payload.notification.title}\n${payload.notification.body}`);
+  });
+}, []);
+
+
   return (
     <>
       <BrowserRouter>
