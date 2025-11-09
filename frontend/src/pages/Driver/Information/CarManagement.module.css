@@ -45,6 +45,12 @@
     padding: 16px;
     margin-bottom: 16px;
     background: #fafafa;
+    transition: all 0.3s ease;
+}
+
+.carname:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
 }
 
 .carname .icon {
@@ -84,9 +90,14 @@
 }
 
 .iconbutton {
-    height: 16px;
-    width: 16px;
+    height: 18px;
+    width: 18px;
     color: var(--black);
+    transition: all 0.3s ease;
+}
+
+.iconbutton:hover {
+    transform: scale(1.1);
 }
 
 /* Pin info styles */
@@ -99,7 +110,7 @@
 
 .batteryIcon {
     color: #4CAF50;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .noPin {
@@ -147,6 +158,9 @@
     margin-bottom: 16px;
     color: #333;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .formdetail {
@@ -174,6 +188,7 @@
     border-radius: 8px;
     font-size: 14px;
     outline: none;
+    transition: all 0.3s ease;
 }
 
 .formdetail select {
@@ -193,11 +208,13 @@
     background-repeat: no-repeat;
     background-position: right 16px center;
     background-size: 18px;
+    transition: all 0.3s ease;
 }
 
 .formdetail input:focus,
 .formdetail select:focus {
     background-color: #e8f0fe;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .modalActions {
@@ -217,6 +234,8 @@
 .sectionDivider h4 {
     margin: 0;
     color: #333;
+    display: flex;
+    align-items: center;
 }
 
 .note {
@@ -270,6 +289,11 @@
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     background: #fafafa;
+    transition: all 0.3s ease;
+}
+
+.pinItem:hover {
+    background: #f0f0f0;
 }
 
 .pinItem .pinInfo {
@@ -316,6 +340,10 @@
 }
 
 /* Thay pin styles */
+.currentPinWarning {
+    margin-bottom: 15px;
+}
+
 .pinInfoCurrent {
     display: flex;
     align-items: flex-start;
@@ -357,55 +385,6 @@
     margin-top: 8px;
 }
 
-/* Trạng thái pin */
-.pinStatusText {
-    margin: 4px 0 0 0;
-    font-size: 0.85rem;
-}
-
-.statusReady {
-    color: #28a745;
-    font-weight: 500;
-}
-
-.statusCharging {
-    color: #ffc107;
-    font-weight: 500;
-}
-
-/* Hướng dẫn quy trình */
-.instructionSection {
-    margin: 15px 0;
-}
-
-.infoBox {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 15px;
-    background: #e3f2fd;
-    border: 1px solid #bbdefb;
-    border-radius: 6px;
-}
-
-.rotateIcon {
-    color: #2196f3;
-    font-size: 1.2rem;
-    margin-top: 2px;
-}
-
-.procedureList {
-    margin: 8px 0 0 0;
-    padding-left: 20px;
-}
-
-.procedureList li {
-    margin-bottom: 6px;
-    color: #555;
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
 /* Animation */
 @keyframes fadeIn {
     from {
@@ -428,6 +407,12 @@
     
     .carActions {
         align-self: flex-end;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .carActions button {
+        margin-bottom: 5px;
     }
     
     .modal {
@@ -458,4 +443,401 @@
     .pinItem .pinInfo {
         width: 100%;
     }
+    
+    .modalActions {
+        flex-direction: column;
+    }
+    
+    .modalActions button {
+        width: 100%;
+    }
+}
+/* Thêm vào CarManagement.module.css */
+
+/* Nút hành động trong modal */
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+.deleteButton,
+.cancelButton,
+.actionButton {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+/* Nút Tháo pin (màu đỏ) */
+.deleteButton,
+.removeButton {
+    background-color: #d30015;
+    color:white;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+.deleteButton:hover,
+.removeButton:hover {
+   background-color: hsl(0, 100%, 80%);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+.deleteButton:active,
+.removeButton:active {
+    transform: translateY(0);
+}
+
+/* Nút Hủy (màu xám) */
+.cancelButton,
+.cancelButton {
+    background-color: white;
+    border: 1px solid black;
+    color: rgb(0, 0, 0);
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+.cancelButton:hover,
+.cancelButton:hover {
+    background-color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+}
+.cancelButton:active,
+.cancelButton:active {
+    transform: translateY(0);
+}
+
+/* Responsive cho nút */
+@media (max-width: 768px) {
+    .modalActions {
+        flex-direction: column;
+    }
+    
+    .actionButton {
+        width: 100%;
+        min-width: auto;
+    }
+}
+/* Phiên bản nâng cao với hiệu ứng đẹp hơn */
+/* Thêm vào CarManagement.module.css - Phần CSS cho modal xem pin */
+
+/* Modal xem pin */
+.healthEditSection {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px;
+    background: #f9fafb;
+    margin: 16px 0;
+}
+
+.healthSlider {
+    margin: 15px 0;
+}
+
+.healthRange {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e5e7eb;
+    outline: none;
+    margin: 10px 0;
+    -webkit-appearance: none;
+}
+
+.healthRange::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2563eb;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.healthRange::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #2563eb;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.rangeLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.healthIndicator {
+    width: 100%;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.healthBar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+/* Màu sắc thanh sức khỏe pin */
+.healthBar[data-health="100"] { background: linear-gradient(90deg, #10b981, #34d399); }
+.healthBar[data-health="99"],
+.healthBar[data-health="98"],
+.healthBar[data-health="97"],
+.healthBar[data-health="96"],
+.healthBar[data-health="95"],
+.healthBar[data-health="94"],
+.healthBar[data-health="93"],
+.healthBar[data-health="92"],
+.healthBar[data-health="91"],
+.healthBar[data-health="90"],
+.healthBar[data-health="89"],
+.healthBar[data-health="88"],
+.healthBar[data-health="87"],
+.healthBar[data-health="86"],
+.healthBar[data-health="85"],
+.healthBar[data-health="84"],
+.healthBar[data-health="83"],
+.healthBar[data-health="82"],
+.healthBar[data-health="81"],
+.healthBar[data-health="80"] { background: linear-gradient(90deg, #10b981, #34d399); }
+
+.healthBar[data-health="79"],
+.healthBar[data-health="78"],
+.healthBar[data-health="77"],
+.healthBar[data-health="76"],
+.healthBar[data-health="75"],
+.healthBar[data-health="74"],
+.healthBar[data-health="73"],
+.healthBar[data-health="72"],
+.healthBar[data-health="71"],
+.healthBar[data-health="70"],
+.healthBar[data-health="69"],
+.healthBar[data-health="68"],
+.healthBar[data-health="67"],
+.healthBar[data-health="66"],
+.healthBar[data-health="65"],
+.healthBar[data-health="64"],
+.healthBar[data-health="63"],
+.healthBar[data-health="62"],
+.healthBar[data-health="61"],
+.healthBar[data-health="60"],
+.healthBar[data-health="59"],
+.healthBar[data-health="58"],
+.healthBar[data-health="57"],
+.healthBar[data-health="56"],
+.healthBar[data-health="55"],
+.healthBar[data-health="54"],
+.healthBar[data-health="53"],
+.healthBar[data-health="52"],
+.healthBar[data-health="51"],
+.healthBar[data-health="50"] { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+.healthBar[data-health="49"],
+.healthBar[data-health="48"],
+.healthBar[data-health="47"],
+.healthBar[data-health="46"],
+.healthBar[data-health="45"],
+.healthBar[data-health="44"],
+.healthBar[data-health="43"],
+.healthBar[data-health="42"],
+.healthBar[data-health="41"],
+.healthBar[data-health="40"],
+.healthBar[data-health="39"],
+.healthBar[data-health="38"],
+.healthBar[data-health="37"],
+.healthBar[data-health="36"],
+.healthBar[data-health="35"],
+.healthBar[data-health="34"],
+.healthBar[data-health="33"],
+.healthBar[data-health="32"],
+.healthBar[data-health="31"],
+.healthBar[data-health="30"],
+.healthBar[data-health="29"],
+.healthBar[data-health="28"],
+.healthBar[data-health="27"],
+.healthBar[data-health="26"],
+.healthBar[data-health="25"],
+.healthBar[data-health="24"],
+.healthBar[data-health="23"],
+.healthBar[data-health="22"],
+.healthBar[data-health="21"],
+.healthBar[data-health="20"] { background: linear-gradient(90deg, #f97316, #fb923c); }
+
+.healthBar[data-health="19"],
+.healthBar[data-health="18"],
+.healthBar[data-health="17"],
+.healthBar[data-health="16"],
+.healthBar[data-health="15"],
+.healthBar[data-health="14"],
+.healthBar[data-health="13"],
+.healthBar[data-health="12"],
+.healthBar[data-health="11"],
+.healthBar[data-health="10"],
+.healthBar[data-health="9"],
+.healthBar[data-health="8"],
+.healthBar[data-health="7"],
+.healthBar[data-health="6"],
+.healthBar[data-health="5"],
+.healthBar[data-health="4"],
+.healthBar[data-health="3"],
+.healthBar[data-health="2"],
+.healthBar[data-health="1"],
+.healthBar[data-health="0"] { background: linear-gradient(90deg, #dc2626, #ef4444); }
+
+.healthStatus {
+    text-align: center;
+    font-weight: 600;
+    margin: 10px 0;
+}
+
+.statusGood { color: #10b981; }
+.statusFair { color: #f59e0b; }
+.statusPoor { color: #f97316; }
+.statusCritical { color: #dc2626; }
+
+/* Thông tin pin chi tiết */
+.pinInfoCard {
+    padding: 10px;
+    border: 1px solid rgb(217, 217, 217);
+    background-color: white;
+    color: rgb(0, 0, 0);
+    border-radius: 10px;
+}
+
+.pinInfoCard h4 {
+    color: rgb(0, 0, 0);
+}
+
+.pinDetails p {
+    margin: 8px 0;
+    color: rgb(0, 0, 0);
+}
+
+.ownershipStatus {
+    font-weight: 500;
+}
+
+/* Footer modal */
+.footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancelBtn,
+.primaryBtn {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.cancelBtn {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.cancelBtn:hover {
+    background: #d1d5db;
+}
+
+.primaryBtn {
+    background: #2563eb;
+    color: white;
+}
+
+.primaryBtn:hover {
+    background: #1d4ed8;
+}
+
+/* Close button */
+.closeBtn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.closeBtn:hover {
+    color: #374151;
+}
+
+/* Customer card và info grid */
+.customerCard {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    font-size: 14px;
+}
+
+/* Pin grid */
+.pinGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 16px 0 20px;
+}
+
+/* Status colors */
+.statusReady {
+    color: #16a34a;
+    font-weight: 500;
+}
+
+.statusCharging {
+    color: #f59e0b;
+    font-weight: 500;
+}
+
+/* Main content trong modal */
+.main {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.main::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.main::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.main::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
