@@ -27,7 +27,7 @@ function Sidebar() {
   return (
     <nav className={styles.wrapper}>
       <div className={styles.brand}>
-        <Link to="/dashboard">
+        <Link to="/">
           <div className={styles.logo}>
             <img src={logo} alt="logo" />
           </div>

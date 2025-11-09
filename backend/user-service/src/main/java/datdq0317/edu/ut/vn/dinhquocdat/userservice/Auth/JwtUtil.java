@@ -10,7 +10,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtil {
     private final String SECRET_KEY = "datdq0317VeryLongAndSecureSecretKeyForJWTTokenGeneration2024";
-
+    public String getSecretKey() {
+        return SECRET_KEY;
+    }
     public String generateToken(String soDienThoai, String role) {
         return Jwts.builder()
                 .claim("role", role)

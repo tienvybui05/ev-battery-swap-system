@@ -12,6 +12,12 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+  # 🔥 BẬT LẠI REDIS CONFIG
+  data:
+    redis:
+      host: redis
+      port: 6379
+      timeout: 5000ms
 
 server:
   port: 8081

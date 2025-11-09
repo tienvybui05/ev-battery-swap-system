@@ -19,3 +19,17 @@
     letter-spacing: var(--h3-letter-spacing);
     font-weight: 600;
 }
+.logoutBtn{
+    padding: 10px 20px;
+  border: none;
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  border: 1px solid black;
+  transition: all 0.3s ease;
+}
+.logoutBtn:hover{
+    background: #e6e6e6;
+}

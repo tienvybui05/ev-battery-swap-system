@@ -3,7 +3,53 @@ import { Link as ScrollLink } from "react-scroll";
 import styles from "./Header.module.css";
 import logo from "../../../../assets/logo/logo.svg";
 import LinkButton from "../../../Shares/LinkButton/LinkButton";
+import { useEffect, useState } from "react";
+
 function Header() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+
+  // Kiểm tra trạng thái đăng nhập
+  useEffect(() => {
+    checkAuthStatus();
+    
+    // Kiểm tra mỗi 1 giây để bắt kịp thay đổi
+    const interval = setInterval(checkAuthStatus, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkAuthStatus = () => {
+    const token = localStorage.getItem("token");
+    const userRole = localStorage.getItem("userRole");
+    const hoTen = localStorage.getItem("hoTen");
+    
+    if (token && userRole) {
+      setIsLoggedIn(true);
+      setUserInfo({
+        hoTen: hoTen,
+        role: userRole
+      });
+    } else {
+      setIsLoggedIn(false);
+      setUserInfo(null);
+    }
+  };
+
+  const getDashboardLink = () => {
+    const role = localStorage.getItem("userRole");
+    switch (role) {
+      case "ADMIN":
+        return "/dashboard/overview";
+      case "TAIXE":
+        return "/dashboard/findstation";
+      case "NHANVIEN":
+        return "/dashboard/transaction";
+      default:
+        return "/dashboard";
+    }
+  };
+
   return (
     <header className={styles.wrapper}>
       <div className={styles.brand}>
@@ -46,14 +92,25 @@ function Header() {
         </ScrollLink>
       </nav>
       <div className={styles.actions}>
-        <LinkButton to="/login" text>
-          Đăng nhập
-        </LinkButton>
-        <LinkButton to="/dashboard" primary>
-          Đăng ký
-        </LinkButton>
+        {isLoggedIn ? (
+          // ✅ CHỈ HIỆN "TRANG CÁ NHÂN" KHI ĐÃ ĐĂNG NHẬP
+          <LinkButton to={getDashboardLink()} primary>
+            Trang cá nhân
+          </LinkButton>
+        ) : (
+          // ❌ HIỆN "ĐĂNG NHẬP/ĐĂNG KÝ" KHI CHƯA ĐĂNG NHẬP
+          <>
+            <LinkButton to="/login" text>
+              Đăng nhập
+            </LinkButton>
+            <LinkButton to="/register" primary>
+              Đăng ký
+            </LinkButton>
+          </>
+        )}
       </div>
     </header>
   );
 }
+
 export default Header;

@@ -1,6 +1,7 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,9 @@ import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NguoiDung;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.TaiXe;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.INguoiDungService;
 import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.ITaiXeService;
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.services.RedisService;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/user-service/auth")
@@ -46,55 +50,8 @@ public class AuthController {
     private CustomUserDetailsService customUserDetailsService;
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-//    /**
-//     * API đăng ký người dùng
-//     */
-//    @PostMapping("/register")
-//    public Map<String, Object> register(@RequestBody NguoiDung nguoiDung) {
-//        NguoiDung saved = nguoiDungService.dangKy(nguoiDung);
-//        return Map.of(
-//                "message", "Đăng ký thành công",
-//                "userId", saved.getMaNguoiDung(),
-//                "email", saved.getEmail()
-//        );
-//    }
-//
-//    /**
-//     * API đăng nhập, trả về JWT Token
-//     */
-//    @PostMapping("/login")
-//    public Map<String, Object> login(@RequestBody Map<String, String> body) {
-//        String email = body.get("email");
-//        String matKhau = body.get("matKhau");
-//
-//        authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(email, matKhau)
-//        );
-//
-//        NguoiDung user = nguoiDungService.timTheoEmail(email)
-//                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
-//
-//        String token = jwtUtil.generateToken(user.getEmail(), user.getVaiTro());
-//
-//        return Map.of(
-//                "token", token,
-//                "role", user.getVaiTro(),
-//                "email", user.getEmail()
-//        );
-//    }
-//    @PostMapping("/register-tai-xe")
-//    public Map<String, Object> registerTaiXe(@RequestBody TaiXeDTO dto) {
-//        System.out.println("Đã vào API /register-tai-xe với DTO: " + dto);
-//        TaiXe taiXe = taiXeService.themTaiXe(dto);
-//        System.out.println("Tạo tài xế thành công: " + taiXe.getMaTaiXe());
-//        return Map.of(
-//                "message", "Đăng ký tài xế thành công",
-//                "taiXeId", taiXe.getMaTaiXe(),
-//                "nguoiDungId", taiXe.getNguoiDung().getMaNguoiDung(),
-//                "email", taiXe.getNguoiDung().getEmail()
-//        );
-//    }
+    @Autowired
+    private RedisService redisService;
     @GetMapping("/verify")
     public ResponseEntity<?> verifyToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -146,12 +103,29 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
+            // 🔒 KIỂM TRA LOGIN ATTEMPTS
+            int attempts = redisService.getLoginAttempts(request.getSoDienThoai());
+            if (attempts >= 5) {
+                return ResponseEntity.status(429).body(
+                        Map.of("error", "Tài khoản tạm thời bị khóa do đăng nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút.")
+                );
+            }
+
             NguoiDung user = nguoiDungService.timTheoSoDienThoai(request.getSoDienThoai())
-                    .orElseThrow(() -> new RuntimeException("Sai số điện thoại hoặc mật khẩu nè"));
+                    .orElseThrow(() -> {
+                        // Tăng số lần thử sai
+                        redisService.incrementLoginAttempts(request.getSoDienThoai());
+                        return new RuntimeException("Sai số điện thoại hoặc mật khẩu");
+                    });
 
             if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhau())) {
-                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu nè");
+                // Tăng số lần thử sai
+                redisService.incrementLoginAttempts(request.getSoDienThoai());
+                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu ");
             }
+
+            // ✅ ĐĂNG NHẬP THÀNH CÔNG - Reset attempts
+            redisService.resetLoginAttempts(request.getSoDienThoai());
 
             String token = jwtUtil.generateToken(user.getSoDienThoai(), user.getVaiTro());
             return ResponseEntity.ok(new LoginResponse(token, user));
@@ -160,7 +134,42 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+    try {
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            
+            // Lấy expiration time từ token
+            Date expiration = Jwts.parserBuilder()
+                    .setSigningKey(jwtUtil.getSecretKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
 
+            // Blacklist token
+            redisService.blacklistToken(token, expiration.getTime());
+
+            // Xóa cache user details
+            String soDienThoai = jwtUtil.extractSoDienThoai(token);
+            redisService.evictUserDetails(soDienThoai);
+            
+            System.out.println("✅ Đã logout: " + soDienThoai + ", Token blacklisted");
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "message", "Đăng xuất thành công",
+            "success", true
+        ));
+    } catch (Exception e) {
+        return ResponseEntity.ok(Map.of(
+            "message", "Đăng xuất thành công",
+            "success", true
+        ));
+    }
+}
     @PostMapping("/register-tai-xe")
     public ResponseEntity<?> registerTaiXe(@RequestBody TaiXeDTO dto) {
         try {

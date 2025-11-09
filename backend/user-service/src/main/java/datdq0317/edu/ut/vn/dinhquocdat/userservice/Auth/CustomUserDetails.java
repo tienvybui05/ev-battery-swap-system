@@ -16,7 +16,16 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(NguoiDung nguoiDung) {
         this.nguoiDung = nguoiDung;
     }
-
+public CustomUserDetails(Long maNguoiDung, String hoTen, String soDienThoai, String vaiTro) {
+    // Tạo đối tượng NguoiDung tạm thời từ basic info
+    NguoiDung tempUser = new NguoiDung();
+    tempUser.setMaNguoiDung(maNguoiDung);
+    tempUser.setHoTen(hoTen);
+    tempUser.setSoDienThoai(soDienThoai);
+    tempUser.setVaiTro(vaiTro);
+    
+    this.nguoiDung = tempUser;
+}
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // Kiểm tra nếu vai trò đã có ROLE_ chưa
