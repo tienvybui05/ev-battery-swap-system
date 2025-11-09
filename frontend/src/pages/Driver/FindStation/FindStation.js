@@ -18,6 +18,12 @@ function FindStation() {
     const [stations, setStations] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Lưu xe đã chọn
+    const [showVehiclePopup, setShowVehiclePopup] = useState(false);
+    const [vehicles, setVehicles] = useState([]);
+    const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+
+
     const getDistances = async (userLat, userLng, stationList) => {
         const apiKey =
             "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0=";
@@ -126,6 +132,33 @@ function FindStation() {
         );
     };
 
+    const fetchVehicles = async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+
+        try {
+            const vehicleRes = await axios.get(`/api/vehicle-service/vehicles/by-driver/${userId}`);
+            const rawVehicles = vehicleRes.data || [];
+
+            const enrichedVehicles = await Promise.all(
+                rawVehicles.map(async (v) => {
+                    try {
+                        const pinRes = await axios.get(`/api/battery-service/pins/${v.maPin}`);
+                        return { ...v, pinInfo: pinRes.data };
+                    } catch {
+                        return { ...v, pinInfo: { loaiPin: "Không rõ", dungLuong: "?" } };
+                    }
+                })
+            );
+
+            setVehicles(enrichedVehicles);
+            console.log("🚗 Danh sách xe:", enrichedVehicles);
+        } catch (err) {
+            console.error("Lỗi tải danh sách xe:", err);
+            setVehicles([]);
+        }
+    };
+
     useEffect(() => {
         const fetchStations = async () => {
             try {
@@ -149,6 +182,7 @@ function FindStation() {
         };
 
         fetchStations();
+        fetchVehicles();
     }, []);
     if (loading) return <p>Đang tải dữ liệu trạm...</p>;
     if (error) return <p style={{ color: "red" }}>{error}</p>;
@@ -156,30 +190,47 @@ function FindStation() {
 
     // 🔹 Hàm xử lý khi người dùng bấm "Đặt chỗ"
     const handleBooking = async (stationId) => {
+        if (!selectedVehicleId) return alert("⚠️ Vui lòng chọn xe!");
+
         try {
             const userId = localStorage.getItem("userId");
+            const token = localStorage.getItem("token");
 
-            if (!userId) {
-                alert("⚠️ Không tìm thấy ID người dùng. Vui lòng đăng nhập lại!");
+            if (!userId || !token) {
+                alert("⚠️ Bạn chưa đăng nhập. Vui lòng đăng nhập lại!");
                 return;
             }
 
+            // 1) Lấy thông tin tài xế dựa trên userId
+            const taiXeRes = await axios.get(`/api/user-service/taixe/user/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const taiXe = taiXeRes.data;
+            if (!taiXe || !taiXe.maTaiXe) {
+                alert("❌ Tài khoản này chưa đăng ký tài xế!");
+                return;
+            }
+
+            const maTaiXe = taiXe.maTaiXe; // ✅ Đây mới là mã tài xế thật
+
+            // 2) Gửi yêu cầu đặt lịch
             const body = {
-                maTaiXe: Number(userId),
+                maTaiXe: maTaiXe,
                 maTram: Number(stationId),
+                maXeGiaoDich: Number(selectedVehicleId)
             };
 
-            const response = await axios.post("/api/station-service/dat-lich", body);
+            const response = await axios.post("/api/station-service/dat-lich", body, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
-            if (response.status === 200) {
-                alert("✅ Đặt lịch thành công!");
-                console.log("Kết quả:", response.data);
-            } else {
-                alert("❌ Không thể đặt lịch. Thử lại sau!");
-            }
+            alert("✅ Đặt lịch thành công!");
+            console.log("Kết quả:", response.data);
+
         } catch (error) {
-            console.error("Lỗi khi đặt lịch:", error);
-            alert("❌ Đặt lịch thất bại: " + (error.response?.data || error.message));
+            console.error("❌ Lỗi khi đặt lịch:", error);
+            alert(error.response?.data || error.message);
         }
     };
 
@@ -193,6 +244,32 @@ function FindStation() {
 
                 <div className={styles.map}>
                     <MapLeaflet userLocation={location} stations={stations} />
+                </div>
+
+                {/* Chọn xe giao dịch */}
+                <div style={{ marginTop: "12px" }}>
+                    <label style={{ fontWeight: 600, display: "block", marginBottom: "6px" }}>
+                        Chọn xe để đổi pin:
+                    </label>
+
+                    <select
+                        style={{
+                            width: "100%",
+                            padding: "10px",
+                            borderRadius: "8px",
+                            border: "1px solid #ccc",
+                            fontSize: "15px"
+                        }}
+                        value={selectedVehicleId || ""}
+                        onChange={(e) => setSelectedVehicleId(e.target.value)}
+                    >
+                        <option value="" disabled>-- Chọn xe --</option>
+                        {vehicles.map(v => (
+                            <option key={v.maPhuongTien} value={v.maPhuongTien}>
+                                {v.loaiXe} | {v.bienSo} | 🔋 {v.pinInfo?.loaiPin}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 {/* 🔹 Nút gọi hàm lấy vị trí */}

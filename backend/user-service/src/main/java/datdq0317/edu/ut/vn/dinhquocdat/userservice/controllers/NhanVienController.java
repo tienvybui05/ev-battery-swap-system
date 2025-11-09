@@ -68,6 +68,17 @@ public class NhanVienController {
         }
     }
 
+    @GetMapping("/user/{id}")
+    public ResponseEntity<NhanVien> layNhanVienTheoMaNguoiDung(@PathVariable Long id) {
+        try {
+            NhanVien nv = nhanVienService.layNhanVienTheoMaNguoiDung(id);
+            if (nv == null) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(nv);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<?> suaNhanVien(@PathVariable Long id, @RequestBody NhanVienDTO dto) {
         try {

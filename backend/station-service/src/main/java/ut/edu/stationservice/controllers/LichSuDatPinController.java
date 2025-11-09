@@ -43,11 +43,27 @@ public class LichSuDatPinController {
         return ResponseEntity.ok(ds);
     }
 
+    // 🟢 Lấy danh sách đơn theo trạm
+    @GetMapping("/tram/{maTram}")
+    public ResponseEntity<List<LichSuDatPin>> layTheoTram(@PathVariable Long maTram) {
+        return ResponseEntity.ok(lichSuDatPinService.findByMaTram(maTram));
+    }
+
+    // 🟢 Lấy danh sách đơn theo trạm + trạng thái (chờ xác nhận hoặc đã xác nhận)
+    @GetMapping("/tram/{maTram}/trang-thai")
+    public ResponseEntity<List<LichSuDatPin>> layTheoTramVaTrangThai(
+            @PathVariable Long maTram,
+            @RequestParam String trangThai
+    ) {
+        return ResponseEntity.ok(lichSuDatPinService.findByMaTramAndTrangThai(maTram, trangThai));
+    }
+
+
     // 🟢 Đặt lịch đổi pin (người dùng đặt)
     @PostMapping
     public ResponseEntity<?> datLich(@RequestBody DatLichRequest req) {
         try {
-            LichSuDatPin created = lichSuDatPinService.datLich(req.getMaTaiXe(), req.getMaTram());
+            LichSuDatPin created = lichSuDatPinService.datLich(req.getMaTaiXe(), req.getMaTram(), req.getMaXeGiaoDich());
             return ResponseEntity.ok(created);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("❌ Lỗi khi đặt lịch: " + e.getMessage());

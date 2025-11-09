@@ -12,4 +12,5 @@ public interface INhanVienService {
     NhanVien layNhanVienTheoId(Long id);
     boolean xoaNhanVien(Long id);
     NhanVien suaNhanVien(Long id, NhanVienDTO dto);
+    NhanVien layNhanVienTheoMaNguoiDung(Long maNguoiDung);
 }

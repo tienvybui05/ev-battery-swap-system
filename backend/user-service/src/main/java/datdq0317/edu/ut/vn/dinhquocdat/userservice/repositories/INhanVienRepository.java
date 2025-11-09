@@ -9,4 +9,5 @@ import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NhanVien;
 @Repository
 public interface INhanVienRepository extends JpaRepository<NhanVien, Long> {
     List<NhanVien> findByMaTram(Long maTram);
+    NhanVien findByNguoiDung_MaNguoiDung(Long maNguoiDung);
 }

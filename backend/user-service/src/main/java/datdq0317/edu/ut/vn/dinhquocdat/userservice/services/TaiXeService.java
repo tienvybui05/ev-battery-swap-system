@@ -60,6 +60,11 @@ public class TaiXeService implements ITaiXeService{
     }
 
     @Override
+    public TaiXe layTaiXeTheoMaNguoiDung(Long maNguoiDung) {
+        return taiXeRepository.findByNguoiDung_MaNguoiDung(maNguoiDung);
+    }
+
+    @Override
     public List<TaiXe> danhSachTaiXe() {
         return taiXeRepository.findAll();
     }

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface ILichSuDatPinRepository extends JpaRepository<LichSuDatPin,Long> {
     List<LichSuDatPin> findByMaTaiXe(Long maTaiXe);
+    List<LichSuDatPin> findByTram_MaTramAndTrangThaiXacNhan(Long maTram, String trangThaiXacNhan);
+    List<LichSuDatPin> findByTram_MaTram(Long maTram);
 }

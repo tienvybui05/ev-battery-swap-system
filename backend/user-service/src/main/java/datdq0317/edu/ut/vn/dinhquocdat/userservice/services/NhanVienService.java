@@ -76,6 +76,11 @@ public class NhanVienService implements INhanVienService {
         return nhanVienRepository.save(nv);
     }
 
+    @Override
+    public NhanVien layNhanVienTheoMaNguoiDung(Long maNguoiDung) {
+        return nhanVienRepository.findByNguoiDung_MaNguoiDung(maNguoiDung);
+    }
+
     public List<NhanVien> danhSachNhanVien() {
         return nhanVienRepository.findAll();
     }

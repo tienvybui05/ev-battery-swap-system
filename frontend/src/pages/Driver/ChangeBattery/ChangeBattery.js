@@ -13,29 +13,59 @@ function ChangeBattery() {
         const fetchOrderInfo = async () => {
             try {
                 const userId = localStorage.getItem("userId");
-                if (!userId) return;
+                const token = localStorage.getItem("token");
 
-                const res = await fetch(`/api/station-service/dat-lich/tai-xe/${userId}`);
-                if (res.ok) {
-                    const data = await res.json();
+                if (!userId || !token) return;
 
-                    if (data.length > 0) {
-                        // 🆕 Lưu toàn bộ danh sách
-                        const allOrders = data.map(item => ({
-                            status: item.trangThaiXacNhan || "Không xác định",
-                            stationName: item.tram?.tenTram || "Không rõ trạm",
-                            time: new Date(item.ngayDat).toLocaleString("vi-VN"),
-                            orderCode: "ORD-" + String(item.maLichSuDat).padStart(4, "0"),
-                        }));
-
-                        // Đảo ngược nếu muốn mới nhất lên đầu
-                        setOrders(allOrders.reverse());
+                // 1) Lấy thông tin tài xế theo userId
+                const taiXeRes = await fetch(`/api/user-service/taixe/user/${userId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
                     }
-                } else {
-                    console.error("Không thể tải lịch đặt pin");
+                });
+
+                if (!taiXeRes.ok) {
+                    console.error("❌ Không lấy được thông tin tài xế");
+                    return;
                 }
+
+                const taiXeData = await taiXeRes.json();
+                const maTaiXe = taiXeData.maTaiXe; // ✅ Lấy mã tài xế
+
+                if (!maTaiXe) {
+                    console.error("❌ Không tìm thấy mã tài xế");
+                    return;
+                }
+
+                // 2) Lấy lịch đặt pin theo mã tài xế
+                const res = await fetch(`/api/station-service/dat-lich/tai-xe/${maTaiXe}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (!res.ok) {
+                    console.error("❌ Không thể tải danh sách đặt lịch");
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (data.length > 0) {
+                    const allOrders = data.map(item => ({
+                        status: item.trangThaiXacNhan || "Không xác định",
+                        stationName: item.tram?.tenTram || "Không rõ trạm",
+                        time: new Date(item.ngayDat).toLocaleString("vi-VN"),
+                        orderCode: "ORD-" + String(item.maLichSuDat).padStart(4, "0"),
+                    }));
+
+                    setOrders(allOrders.reverse()); // Mới nhất lên đầu
+                } else {
+                    setOrders([]); // Không có đơn nào
+                }
+
             } catch (err) {
-                console.error("Lỗi khi tải lịch đặt pin:", err);
+                console.error("💥 Lỗi khi tải lịch đặt pin:", err);
             }
         };
 

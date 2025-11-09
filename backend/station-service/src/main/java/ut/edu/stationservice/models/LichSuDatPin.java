@@ -46,6 +46,10 @@ public class LichSuDatPin {
     private Long maGiaoDichDoiPin;
 
 
+    @Column(name = "ma_xe_giao_dich")
+    private Long maXeGiaoDich;
+
+
     @ManyToOne
     @JoinColumn(name = "ma_tram", referencedColumnName = "ma_tram")
     private Tram tram;
@@ -53,12 +57,15 @@ public class LichSuDatPin {
     // ===== Constructors =====
     public LichSuDatPin() {}
 
-    public LichSuDatPin(String trangThaiXacNhan, String trangThaiDoiPin,
-                        LocalDateTime ngayDat, Long maTaiXe) {
+    public LichSuDatPin(Long maLichSuDat, String trangThaiXacNhan, String trangThaiDoiPin, LocalDateTime ngayDat, Long maTaiXe, Long maGiaoDichDoiPin, Long maXeGiaoDich, Tram tram) {
+        this.maLichSuDat = maLichSuDat;
         this.trangThaiXacNhan = trangThaiXacNhan;
         this.trangThaiDoiPin = trangThaiDoiPin;
         this.ngayDat = ngayDat;
         this.maTaiXe = maTaiXe;
+        this.maGiaoDichDoiPin = maGiaoDichDoiPin;
+        this.maXeGiaoDich = maXeGiaoDich;
+        this.tram = tram;
     }
 
     // ===== Getters & Setters =====
@@ -108,5 +115,13 @@ public class LichSuDatPin {
 
     public void setTram(Tram tram) {
         this.tram = tram;
+    }
+
+    public Long getMaXeGiaoDich() {
+        return maXeGiaoDich;
+    }
+
+    public void setMaXeGiaoDich(Long maXeGiaoDich) {
+        this.maXeGiaoDich = maXeGiaoDich;
     }
 }

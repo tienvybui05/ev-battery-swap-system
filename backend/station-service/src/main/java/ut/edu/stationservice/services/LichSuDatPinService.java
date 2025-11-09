@@ -53,7 +53,7 @@ public class LichSuDatPinService implements ILichSuDatPinService {
     // 🧩 Nghiệp vụ: Đặt lịch đổi pin
     @Transactional
     @Override
-    public LichSuDatPin datLich(Long maTaiXe, Long maTram) {
+    public LichSuDatPin datLich(Long maTaiXe, Long maTram, Long maXeGiaoDich) {
         List<LichSuDatPin> lichChuaXong = lichSuDatPinRepository.findByMaTaiXe(maTaiXe)
                 .stream()
                 .filter(ls ->
@@ -64,7 +64,7 @@ public class LichSuDatPinService implements ILichSuDatPinService {
                                 && ls.getTram().getMaTram().equals(maTram)
                 ).toList();
         if(!lichChuaXong.isEmpty()){
-            throw new RuntimeException("Bạn đang có đơn đổi pin chưa hoàn thành. Hãy hoàn tất trước khi đặt mới.");
+            throw new RuntimeException("Bạn đang có đơn đổi pin chưa hoàn thành cùng 1 trạm. Hãy hoàn tất trước khi đặt mới.");
         }
 
         Tram tram = tramRepository.findById(maTram)
@@ -76,7 +76,7 @@ public class LichSuDatPinService implements ILichSuDatPinService {
         lichSu.setNgayDat(LocalDateTime.now());
         lichSu.setTrangThaiXacNhan("Chờ xác nhận");
         lichSu.setTrangThaiDoiPin("Chưa đổi pin");
-
+        lichSu.setMaXeGiaoDich(maXeGiaoDich);
         return lichSuDatPinRepository.save(lichSu);
     }
 
@@ -98,4 +98,15 @@ public class LichSuDatPinService implements ILichSuDatPinService {
     public List<LichSuDatPin> findByMaTaiXe(Long maTaiXe) {
         return lichSuDatPinRepository.findByMaTaiXe(maTaiXe);
     }
+
+    @Override
+    public List<LichSuDatPin> findByMaTram(Long maTram) {
+        return lichSuDatPinRepository.findByTram_MaTram(maTram);
+    }
+
+    @Override
+    public List<LichSuDatPin> findByMaTramAndTrangThai(Long maTram, String trangThaiXacNhan) {
+        return lichSuDatPinRepository.findByTram_MaTramAndTrangThaiXacNhan(maTram, trangThaiXacNhan);
+    }
+
 }

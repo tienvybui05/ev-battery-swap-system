@@ -2,6 +2,7 @@ package datdq0317.edu.ut.vn.dinhquocdat.userservice.controllers;
 
 import java.util.List;
 
+import datdq0317.edu.ut.vn.dinhquocdat.userservice.models.NhanVien;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,6 +42,17 @@ public class TaiXeController {
         TaiXe tx = taiXeService.layTaiXeTheoId(id);
         if (tx == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(tx);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<TaiXe> layTaiXeTheoMaNguoiDung(@PathVariable Long id) {
+        try {
+            TaiXe tx = taiXeService.layTaiXeTheoMaNguoiDung(id);
+            if (tx == null) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(tx);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @PutMapping("/{id}")

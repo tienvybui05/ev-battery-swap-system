@@ -127,3 +127,77 @@
   color: #9ca3af;
   font-style: italic;
 }
+
+.ordersSection h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  /* 👈 tạo khoảng cách giữa h2 và subtitle */
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  /* giữ khoảng cách phía dưới */
+}
+
+
+
+.skeletonCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  animation: pulse 1.4s infinite ease-in-out;
+}
+
+.skeletonLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.skeletonBlock {
+  background: #e5e7eb;
+  border-radius: 6px;
+}
+
+.skeletonTime {
+  width: 50px;
+  height: 16px;
+}
+
+.skeletonName {
+  width: 140px;
+  height: 16px;
+  margin-bottom: 6px;
+}
+
+.skeletonCar {
+  width: 100px;
+  height: 14px;
+  margin-bottom: 4px;
+}
+
+.skeletonCode {
+  width: 80px;
+  height: 12px;
+}
+
+.skeletonBtn {
+  width: 90px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.45; }
+  50% { opacity: 1; }
+  100% { opacity: 0.45; }
+}
