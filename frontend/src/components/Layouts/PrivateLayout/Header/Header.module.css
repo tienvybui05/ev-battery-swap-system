@@ -19,6 +19,12 @@
     letter-spacing: var(--h3-letter-spacing);
     font-weight: 600;
 }
+.right{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
 .logoutBtn{
     padding: 10px 20px;
   border: none;

@@ -1,88 +1,133 @@
 // src/components/Shares/ProtectedRoute/ProtectedRoute.js
-import { useState, useEffect } from "react";
-import { Navigate } from "react-router";
+import React, { useState, useEffect } from "react";
+import { Navigate, useLocation } from "react-router";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const [isVerified, setIsVerified] = useState(false);
+const ProtectedRoute = ({ 
+  children, 
+  allowedRoles = [], 
+  requireAuth = true,
+  redirectTo = "/login"
+}) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [userRole, setUserRole] = useState(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
-    const verifyAccess = async () => {
+    const checkAuth = async () => {
       const token = localStorage.getItem("token");
-      
-      if (!token) {
-        setIsVerified(false);
+      const storedUserId = localStorage.getItem("userId");
+      const storedUserRole = localStorage.getItem("userRole");
+
+      console.log("🔐 ProtectedRoute - Checking authentication");
+
+      // Nếu route không yêu cầu auth
+      if (!requireAuth) {
         setIsLoading(false);
+        setIsVerified(true);
+        return;
+      }
+
+      // Nếu không có token
+      if (!token) {
+        console.log("❌ No token found");
+        setIsLoading(false);
+        setIsVerified(false);
         return;
       }
 
       try {
-        // GỌI BACKEND ĐỂ VERIFY ROLE THỰC
+        // Verify token với backend
+        console.log("🔄 Verifying token...");
         const response = await fetch("/api/user-service/auth/verify", {
-          headers: { 
+          method: "GET",
+          headers: {
             "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
 
-        if (response.ok) {
-          const userData = await response.json();
-          const realRole = userData.role;
-          
-          // CẬP NHẬT LOCAL STORAGE VỚI ROLE THẬT
-          localStorage.setItem("userRole", realRole);
-          setUserRole(realRole);
+        if (!response.ok) {
+          throw new Error("Token invalid");
+        }
 
-          // KIỂM TRA ROLE CÓ TRONG allowedRoles KHÔNG
-          const hasAccess = !allowedRoles || allowedRoles.includes(realRole);
-          setIsVerified(hasAccess);
-        } else {
-          // TOKEN INVALID - XÓA LOCAL STORAGE
+        const userData = await response.json();
+        console.log("✅ Token verified:", userData);
+
+        const { role: realRole, userId: realUserId } = userData;
+
+        // 🔒 QUAN TRỌNG: Kiểm tra chống giả mạo localStorage
+        if (storedUserId !== realUserId.toString() || storedUserRole !== realRole) {
+          console.error("🚨 LocalStorage tampering detected!");
+          // Xóa hết auth data và đá ra login
           localStorage.removeItem("token");
           localStorage.removeItem("userRole");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("hoTen");
+          localStorage.removeItem("userEmail");
+          setIsLoading(false);
           setIsVerified(false);
+          return;
         }
+
+        // Kiểm tra role nếu có yêu cầu
+        if (allowedRoles.length > 0 && !allowedRoles.includes(realRole)) {
+          console.log(`❌ Role not allowed: ${realRole}`);
+          setIsLoading(false);
+          setIsVerified(false);
+          return;
+        }
+
+        // Cập nhật state
+        setIsVerified(true);
+        
       } catch (error) {
-        console.error("Verify error:", error);
+        console.error("💥 Auth verification failed:", error);
+        // Xóa token invalid
         localStorage.removeItem("token");
         localStorage.removeItem("userRole");
+        localStorage.removeItem("userId");
         setIsVerified(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    verifyAccess();
-  }, [allowedRoles]);
+    checkAuth();
+  }, [requireAuth, allowedRoles, location.pathname]); // Chỉ chạy lại khi route thay đổi
 
-  // HIỂN THỊ LOADING
+  // Hiển thị loading
   if (isLoading) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
+      <div style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         height: "200px",
         fontSize: "16px",
         color: "#666"
       }}>
-        🔐 Đang kiểm tra quyền truy cập...
+        <div>🔐 Đang kiểm tra quyền truy cập...</div>
       </div>
     );
   }
 
-  // CHUYỂN HƯỚNG ĐẾN LOGIN NẾU KHÔNG CÓ TOKEN
-  if (!isVerified && !localStorage.getItem("token")) {
-    return <Navigate to="/login" replace />;
+  // Nếu route không yêu cầu auth
+  if (!requireAuth) {
+    return children;
   }
 
-  // CHUYỂN HƯỚNG ĐẾN UNAUTHORIZED NẾU KHÔNG ĐÚNG ROLE
+  // Nếu không được verify → redirect đến login
   if (!isVerified) {
-    return <Navigate to="/unauthorized" replace />;
+    return (
+      <Navigate 
+        to={redirectTo} 
+        replace 
+        state={{ from: location }} 
+      />
+    );
   }
 
-  // CHO PHÉP TRUY CẬP
+  // Cho phép truy cập
   return children;
 };
 

@@ -115,13 +115,13 @@ public class AuthController {
                     .orElseThrow(() -> {
                         // Tăng số lần thử sai
                         redisService.incrementLoginAttempts(request.getSoDienThoai());
-                        return new RuntimeException("Sai số điện thoại hoặc mật khẩu");
+                        return new RuntimeException("Sai số điện thoại hoặc mật khẩu  sai nha ấ");
                     });
 
             if (!passwordEncoder.matches(request.getMatKhau(), user.getMatKhau())) {
                 // Tăng số lần thử sai
                 redisService.incrementLoginAttempts(request.getSoDienThoai());
-                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu ");
+                throw new RuntimeException("Sai số điện thoại hoặc mật khẩu sai nhá ");
             }
 
             // ✅ ĐĂNG NHẬP THÀNH CÔNG - Reset attempts
