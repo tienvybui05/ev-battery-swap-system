@@ -2,8 +2,7 @@ package ngocvct0133.ut.edu.transactionservice.modules;
 
 import jakarta.persistence.*;
 
-import javax.xml.crypto.Data;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "giaodichdoipin")
@@ -13,15 +12,17 @@ public class GiaoDichDoiPin {
     private Long maGiaoDichDoiPin;
     private String maPinTra;
     private String maPinNhan;
-    private LocalDate ngayGiaoDich;
+    private LocalDateTime ngayGiaoDich;
     private String trangThaiGiaoDich;
     private double thanhtien;
     private String phuongThucThanhToan;
+    private Long maTram;
+    private Long maTaiXe;
 
     public GiaoDichDoiPin() {
     }
 
-    public GiaoDichDoiPin(Long maGiaoDichDoiPin, String maPinTra, String maPinNhan, LocalDate ngayGiaoDich, String trangThaiGiaoDich, double thanhtien, String phuongThucThanhToan) {
+    public GiaoDichDoiPin(Long maGiaoDichDoiPin, String maPinTra, String maPinNhan, LocalDateTime ngayGiaoDich, String trangThaiGiaoDich, double thanhtien, String phuongThucThanhToan) {
         this.maGiaoDichDoiPin = maGiaoDichDoiPin;
         this.maPinTra = maPinTra;
         this.maPinNhan = maPinNhan;
@@ -29,6 +30,22 @@ public class GiaoDichDoiPin {
         this.trangThaiGiaoDich = trangThaiGiaoDich;
         this.thanhtien = thanhtien;
         this.phuongThucThanhToan = phuongThucThanhToan;
+    }
+
+    public Long getMaTram() {
+        return maTram;
+    }
+
+    public void setMaTram(Long maTram) {
+        this.maTram = maTram;
+    }
+
+    public Long getMaTaiXe() {
+        return maTaiXe;
+    }
+
+    public void setMaTaiXe(Long maTaiXe) {
+        this.maTaiXe = maTaiXe;
     }
 
     public String getPhuongThucThanhToan() {
@@ -55,11 +72,11 @@ public class GiaoDichDoiPin {
         this.trangThaiGiaoDich = trangThaiGiaoDich;
     }
 
-    public LocalDate getNgayGiaoDich() {
+    public LocalDateTime getNgayGiaoDich() {
         return ngayGiaoDich;
     }
 
-    public void setNgayGiaoDich(LocalDate ngayGiaoDich) {
+    public void setNgayGiaoDich(LocalDateTime ngayGiaoDich) {
         this.ngayGiaoDich = ngayGiaoDich;
     }
 
