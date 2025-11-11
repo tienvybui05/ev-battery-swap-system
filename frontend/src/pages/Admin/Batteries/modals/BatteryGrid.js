@@ -21,7 +21,7 @@ const STATUS_COLORS = {
     "không xác định": "#6B7280",
 };
 
-function BatteryGrid({ stationId = null }) {
+function BatteryGrid({ stationId = null, onPinMoved }) {
     const [pins, setPins] = useState([]);
     const [listLoading, setListLoading] = useState(true);
     const [showFilter, setShowFilter] = useState(false);
@@ -66,12 +66,14 @@ function BatteryGrid({ stationId = null }) {
 
                 let filteredPins = pinsData;
 
-                // 🧩 Nếu có stationId, chỉ lấy pin thuộc trạm đó (theo lịch sử mới nhất)
+                // 🧩 Nếu có stationId, chỉ lấy pin thuộc trạm đó (dựa vào lịch sử mới nhất)
                 if (stationId) {
                     const latestHistoryMap = {};
                     for (const h of historyData) {
                         const pinId = Number(h.maPin ?? h.ma_pin);
-                        const date = new Date(h.ngayCapNhat ?? h.ngay_cap_nhat ?? h.ngay ?? "1970-01-01");
+                        const date = new Date(
+                            h.ngayThayDoi ?? h.ngay_thay_doi ?? "1970-01-01"
+                        );
                         if (!latestHistoryMap[pinId] || date > latestHistoryMap[pinId].date) {
                             latestHistoryMap[pinId] = { ...h, date };
                         }
@@ -103,20 +105,25 @@ function BatteryGrid({ stationId = null }) {
                             statusLabel = "không xác định";
                     }
 
-                    const record = historyData.find(
-                        (h) => Number(h.maPin ?? h.ma_pin) === pinId
-                    );
+                    // 🔹 Lấy lịch sử mới nhất theo ngày thay đổi
+                    const latestRecord = historyData
+                        .filter((h) => Number(h.maPin ?? h.ma_pin) === pinId)
+                        .sort(
+                            (a, b) =>
+                                new Date(b.ngayThayDoi ?? b.ngay_thay_doi ?? 0) -
+                                new Date(a.ngayThayDoi ?? a.ngay_thay_doi ?? 0)
+                        )[0];
 
                     let tramName = "Chưa có lịch sử";
-                    if (record) {
+                    if (latestRecord) {
                         const tram = tramData.find(
                             (t) =>
                                 Number(t.maTram ?? t.ma_tram) ===
-                                Number(record.maTram ?? record.ma_tram)
+                                Number(latestRecord.maTram ?? latestRecord.ma_tram)
                         );
                         tramName = tram
-                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
-                            : `Trạm ${record.maTram}`;
+                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${latestRecord.maTram}`
+                            : `Trạm ${latestRecord.maTram}`;
                     }
 
                     return {
@@ -219,38 +226,31 @@ function BatteryGrid({ stationId = null }) {
                                     <div className={styles.type}>{pin.type}</div>
                                 </div>
                                 <div className={styles.statusBadge}>
-                                    <span
-                                        className={styles.statusDot}
-                                        style={{ background: color }}
-                                    />
+                  <span
+                      className={styles.statusDot}
+                      style={{ background: color }}
+                  />
                                     <span className={styles.statusText}>
-                                        {pin.status.charAt(0).toUpperCase() +
-                                            pin.status.slice(1)}
-                                    </span>
+                    {pin.status.charAt(0).toUpperCase() + pin.status.slice(1)}
+                  </span>
                                 </div>
                             </div>
 
                             <div className={styles.metrics}>
                                 <div>
                                     <div className={styles.metricLabel}>Sức khỏe:</div>
-                                    <div className={styles.metricValue}>
-                                        {pin.health}%
-                                    </div>
+                                    <div className={styles.metricValue}>{pin.health}%</div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>Dung lượng:</div>
-                                    <div className={styles.metricValue}>
-                                        {pin.capacity} kWh
-                                    </div>
+                                    <div className={styles.metricValue}>{pin.capacity} kWh</div>
                                 </div>
                             </div>
 
                             <div className={styles.datesRow}>
                                 <div>
                                     <div className={styles.metricLabel}>Ngày nhập kho:</div>
-                                    <div className={styles.metricValue}>
-                                        {pin.importDate}
-                                    </div>
+                                    <div className={styles.metricValue}>{pin.importDate}</div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>
@@ -300,9 +300,7 @@ function BatteryGrid({ stationId = null }) {
                 })}
 
                 {filteredPins.length === 0 && (
-                    <div className={styles.emptyState}>
-                        Không có pin nào phù hợp.
-                    </div>
+                    <div className={styles.emptyState}>Không có pin nào phù hợp.</div>
                 )}
             </div>
 
@@ -323,6 +321,8 @@ function BatteryGrid({ stationId = null }) {
                     open={showCheck}
                     onClose={() => setShowCheck(false)}
                     onDone={() => fetchPinList()}
+                    context={stationId ? "station" : "batteries"}
+                    tramId={stationId}
                 />
             )}
 
@@ -343,9 +343,15 @@ function BatteryGrid({ stationId = null }) {
                         setSelectedPin(null);
                         setShowSettings(false);
                     }}
-                    onApply={() => {
+                    onApply={(newTramId) => {
                         setShowSettings(false);
-                        fetchPinList();
+                        // ✅ Nếu đổi sang trạm khác thì loại pin khỏi danh sách hiện tại
+                        if (newTramId && Number(newTramId) !== Number(stationId)) {
+                            setPins((prev) => prev.filter((p) => p.id !== selectedPin.id));
+                            onPinMoved?.(selectedPin.id, newTramId);
+                        } else {
+                            fetchPinList();
+                        }
                     }}
                 />
             )}

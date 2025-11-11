@@ -277,7 +277,15 @@ export default function Stations() {
 
             {/* ===== Modal BatteryGrid ===== */}
             {showBatteryGrid && (
-                <div className={styles.modalOverlay}>
+                <div
+                    className={styles.modalOverlay}
+                    onClick={(e) => {
+                        // Khi click vào overlay (không phải vào phần nội dung modal)
+                        if (e.target.classList.contains(styles.modalOverlay)) {
+                            setShowBatteryGrid(false);
+                        }
+                    }}
+                >
                     <div className={styles.modalContentLarge}>
                         <div className={styles.modalHeader}>
                             <h3>

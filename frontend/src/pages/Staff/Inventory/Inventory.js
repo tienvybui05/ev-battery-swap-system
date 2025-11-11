@@ -91,10 +91,16 @@ function Inventory() {
                             statusLabel = "không xác định";
                     }
 
-                    // 🔹 Lấy trạm từ lịch sử
-                    const record = historyData.find(
-                        (h) => Number(h.maPin ?? h.ma_pin) === pinId
-                    );
+                    // ✅ Lấy bản ghi mới nhất theo ngày thay đổi
+                    const latestRecord = historyData
+                        .filter((h) => Number(h.maPin ?? h.ma_pin) === pinId)
+                        .sort((a, b) =>
+                            new Date(b.ngayThayDoi ?? b.ngay_thay_doi ?? 0) -
+                            new Date(a.ngayThayDoi ?? a.ngay_thay_doi ?? 0)
+                        )[0];
+
+                    const record = latestRecord;
+
 
                     let tramName = "Chưa có lịch sử";
                     if (record) {

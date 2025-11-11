@@ -238,8 +238,8 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         />
                     </div>
 
-                    {/* 🔹 Đổi trạm */}
-                    <div className={styles.formGroup}>
+                    {/* 🔹 Đổi trạm tạm thời không dùng*/}
+                    {/*<div className={styles.formGroup}>
                         <label>Đổi trạm</label>
                         <select
                             value={form.maTram}
@@ -260,7 +260,7 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         {errors.maTram && (
                             <small className={styles.errorMsg}>{errors.maTram}</small>
                         )}
-                    </div>
+                    </div>*/}
 
                     {/* 🔹 Nếu đổi trạm thì yêu cầu nhập hành động + hiện ngày thay đổi */}
                     {tramChanged && (

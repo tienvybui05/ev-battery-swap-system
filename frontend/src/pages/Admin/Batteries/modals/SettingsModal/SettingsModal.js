@@ -1,4 +1,3 @@
-// SettingsModal.jsx
 import React, { useEffect, useState } from "react";
 import styles from "./SettingsModal.module.css";
 
@@ -11,11 +10,11 @@ export default function SettingsModal({ slot, onClose, onApply }) {
     const [errors, setErrors] = useState({});
 
     const [form, setForm] = useState({
-        tinhTrang: (slot.status || "đầy").toLowerCase(), // đầy | đang sạc | bảo trì
-        trangThaiSoHuu: "sẵn sàng",                      // tự cập nhật theo tinhTrang
+        tinhTrang: (slot.status || "đầy").toLowerCase(),
+        trangThaiSoHuu: "sẵn sàng",
         sucKhoe: slot.health || 100,
         ngayBaoDuongGanNhat: slot.lastMaintenance || "",
-        ngayNhapKho: slot.importDate || new Date().toISOString().split("T")[0], // ✅ khôi phục ô ngày nhập kho
+        ngayNhapKho: slot.importDate || new Date().toISOString().split("T")[0],
         loaiPin: slot.type || "Không rõ",
         dungLuong: slot.capacity || 0,
         maTram: "",
@@ -64,7 +63,10 @@ export default function SettingsModal({ slot, onClose, onApply }) {
         setForm((f) => ({ ...f, trangThaiSoHuu: newTrangThai }));
     }, [form.tinhTrang]);
 
-    /* 🔹 Kiểm tra lỗi từng trường (khôi phục validation + viền đỏ) */
+    const tramChanged =
+        form.maTram && String(form.maTram) !== String(initialTram);
+
+    /* 🔹 Kiểm tra lỗi từng trường */
     const validate = (field, value) => {
         let message = "";
         const today = new Date().toISOString().split("T")[0];
@@ -77,11 +79,13 @@ export default function SettingsModal({ slot, onClose, onApply }) {
         }
 
         if (field === "ngayBaoDuongGanNhat") {
-            if (value && value > today) message = "Không được chọn ngày trong tương lai";
+            if (value && value > today)
+                message = "Không được chọn ngày trong tương lai";
         }
 
-        if (field === "ngayNhapKho") { // ✅ validate ngày nhập kho không vượt quá hôm nay
-            if (value && value > today) message = "Ngày nhập kho không được vượt quá hôm nay";
+        if (field === "ngayNhapKho") {
+            if (value && value > today)
+                message = "Ngày nhập kho không được vượt quá hôm nay";
         }
 
         if (field === "hanhDong" && tramChanged && !String(value || "").trim()) {
@@ -90,9 +94,6 @@ export default function SettingsModal({ slot, onClose, onApply }) {
 
         return message;
     };
-
-    const tramChanged =
-        form.maTram && String(form.maTram) !== String(initialTram);
 
     /* 🔹 Khi user thay đổi field */
     const handleChange = (field, value) => {
@@ -105,7 +106,8 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                 );
                 if (selected) {
                     updated.maTram = selected.maTram;
-                    updated.tramName = selected.tenTram ?? `Trạm ${selected.maTram}`;
+                    updated.tramName =
+                        selected.tenTram ?? `Trạm ${selected.maTram}`;
                 }
             } else {
                 updated[field] = value;
@@ -119,7 +121,6 @@ export default function SettingsModal({ slot, onClose, onApply }) {
 
     /* 🔹 Submit cập nhật */
     const handleSubmit = async () => {
-        // Re-validate all
         const newErrors = {};
         Object.keys(form).forEach((k) => {
             const msg = validate(k, form[k]);
@@ -139,16 +140,21 @@ export default function SettingsModal({ slot, onClose, onApply }) {
             const trangThaiSoHuuMap = {
                 "sẵn sàng": "SAN_SANG",
                 "chưa sẵn sàng": "CHUA_SAN_SANG",
+                "đang vận chuyển": "DANG_VAN_CHUYEN",
             };
+
+            // 🔹 Nếu đổi trạm → trạng thái = đang vận chuyển
+            const finalTrangThai =
+                tramChanged ? "đang vận chuyển" : form.trangThaiSoHuu;
 
             const pinUpdate = {
                 loaiPin: form.loaiPin,
                 dungLuong: form.dungLuong,
                 tinhTrang: tinhTrangMap[form.tinhTrang],
-                trangThaiSoHuu: trangThaiSoHuuMap[form.trangThaiSoHuu],
+                trangThaiSoHuu: trangThaiSoHuuMap[finalTrangThai],
                 sucKhoe: Number(form.sucKhoe),
                 ngayBaoDuongGanNhat: form.ngayBaoDuongGanNhat || null,
-                ngayNhapKho: form.ngayNhapKho || null, // ✅ gửi cùng ngày nhập kho
+                ngayNhapKho: form.ngayNhapKho || null,
             };
 
             const res1 = await fetch(`/api/battery-service/pins/${pinId}`, {
@@ -162,29 +168,38 @@ export default function SettingsModal({ slot, onClose, onApply }) {
             if (!res1.ok) throw new Error("Cập nhật pin thất bại");
 
             if (tramChanged) {
+                const now = new Date();
+                const isoNow = now.toISOString();
+
                 const historyBody = {
                     hanhDong:
-                        (form.hanhDong || "").trim() || "Di chuyển pin sang trạm khác",
+                        (form.hanhDong || "").trim() ||
+                        `Chuyển pin sang trạm khác lúc ${now.toLocaleTimeString(
+                            "vi-VN"
+                        )}`,
                     maPin: Number(pinId),
                     maTram: Number(form.maTram),
-                    ngayThayDoi: new Date().toISOString(),
+                    ngayThayDoi: isoNow, // có cả ngày + giờ
                 };
 
-                const res2 = await fetch("/api/battery-service/lichsu-pin-tram", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                    },
-                    body: JSON.stringify(historyBody),
-                });
+                const res2 = await fetch(
+                    "/api/battery-service/lichsu-pin-tram",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        },
+                        body: JSON.stringify(historyBody),
+                    }
+                );
                 if (!res2.ok) throw new Error("Ghi lịch sử thất bại");
             }
 
             setShowSuccess(true);
             setTimeout(() => {
                 setShowSuccess(false);
-                onApply?.();
+                onApply?.(tramChanged ? form.maTram : null);
             }, 1200);
         } catch (err) {
             alert("❌ " + err.message);
@@ -218,7 +233,9 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         <label>Tình trạng mới</label>
                         <select
                             value={form.tinhTrang}
-                            onChange={(e) => handleChange("tinhTrang", e.target.value)}
+                            onChange={(e) =>
+                                handleChange("tinhTrang", e.target.value)
+                            }
                             className={styles.input}
                         >
                             <option value="đầy">Đầy</option>
@@ -227,12 +244,16 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         </select>
                     </div>
 
-                    {/* 🔹 Trạng thái sở hữu (readonly, tự tính) */}
+                    {/* 🔹 Trạng thái sở hữu */}
                     <div className={styles.formGroup}>
                         <label>Trạng thái sở hữu</label>
                         <input
                             type="text"
-                            value={form.trangThaiSoHuu}
+                            value={
+                                tramChanged
+                                    ? "đang vận chuyển"
+                                    : form.trangThaiSoHuu
+                            }
                             readOnly
                             className={styles.input}
                         />
@@ -243,8 +264,12 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         <label>Đổi trạm</label>
                         <select
                             value={form.maTram}
-                            onChange={(e) => handleChange("maTram", e.target.value)}
-                            className={`${styles.input} ${errors.maTram ? styles.errorInput : ""}`}
+                            onChange={(e) =>
+                                handleChange("maTram", e.target.value)
+                            }
+                            className={`${styles.input} ${
+                                errors.maTram ? styles.errorInput : ""
+                            }`}
                         >
                             <option value={form.maTram}>
                                 Trạm hiện tại: {form.tramName}
@@ -258,7 +283,9 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                                 ))}
                         </select>
                         {errors.maTram && (
-                            <small className={styles.errorMsg}>{errors.maTram}</small>
+                            <small className={styles.errorMsg}>
+                                {errors.maTram}
+                            </small>
                         )}
                     </div>
 
@@ -270,20 +297,31 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                                 <input
                                     type="text"
                                     value={form.hanhDong}
-                                    onChange={(e) => handleChange("hanhDong", e.target.value)}
+                                    onChange={(e) =>
+                                        handleChange("hanhDong", e.target.value)
+                                    }
                                     placeholder="VD: Di chuyển pin sang trạm khác"
-                                    className={`${styles.input} ${errors.hanhDong ? styles.errorInput : ""}`}
+                                    className={`${styles.input} ${
+                                        errors.hanhDong
+                                            ? styles.errorInput
+                                            : ""
+                                    }`}
                                 />
                                 {errors.hanhDong && (
-                                    <small className={styles.errorMsg}>{errors.hanhDong}</small>
+                                    <small className={styles.errorMsg}>
+                                        {errors.hanhDong}
+                                    </small>
                                 )}
                             </div>
 
                             <div className={styles.formGroup}>
                                 <label>Ngày thay đổi</label>
+                                {/* ✅ hiện ngày + giờ */}
                                 <input
-                                    type="date"
-                                    value={new Date().toISOString().split("T")[0]}
+                                    type="datetime-local"
+                                    value={new Date()
+                                        .toISOString()
+                                        .slice(0, 16)}
                                     readOnly
                                     className={styles.input}
                                 />
@@ -291,58 +329,86 @@ export default function SettingsModal({ slot, onClose, onApply }) {
                         </>
                     )}
 
-                    {/* 🔹 % Sức khỏe (giữ validation + viền đỏ) */}
+                    {/* 🔹 % Sức khỏe */}
                     <div className={styles.formGroup}>
                         <label>% Sức khỏe</label>
                         <input
                             type="number"
                             value={form.sucKhoe}
-                            onChange={(e) => handleChange("sucKhoe", Number(e.target.value))}
-                            className={`${styles.input} ${errors.sucKhoe ? styles.errorInput : ""}`}
+                            onChange={(e) =>
+                                handleChange("sucKhoe", Number(e.target.value))
+                            }
+                            className={`${styles.input} ${
+                                errors.sucKhoe ? styles.errorInput : ""
+                            }`}
                         />
                         {errors.sucKhoe && (
-                            <small className={styles.errorMsg}>{errors.sucKhoe}</small>
+                            <small className={styles.errorMsg}>
+                                {errors.sucKhoe}
+                            </small>
                         )}
                     </div>
 
-                    {/* 🔹 Ngày bảo dưỡng gần nhất (giữ validation + viền đỏ) */}
+                    {/* 🔹 Ngày bảo dưỡng gần nhất */}
                     <div className={styles.formGroup}>
                         <label>Ngày bảo dưỡng gần nhất</label>
                         <input
                             type="date"
                             value={form.ngayBaoDuongGanNhat || ""}
-                            onChange={(e) => handleChange("ngayBaoDuongGanNhat", e.target.value)}
-                            className={`${styles.input} ${errors.ngayBaoDuongGanNhat ? styles.errorInput : ""}`}
+                            onChange={(e) =>
+                                handleChange("ngayBaoDuongGanNhat", e.target.value)
+                            }
+                            className={`${styles.input} ${
+                                errors.ngayBaoDuongGanNhat
+                                    ? styles.errorInput
+                                    : ""
+                            }`}
                         />
                         {errors.ngayBaoDuongGanNhat && (
-                            <small className={styles.errorMsg}>{errors.ngayBaoDuongGanNhat}</small>
+                            <small className={styles.errorMsg}>
+                                {errors.ngayBaoDuongGanNhat}
+                            </small>
                         )}
                     </div>
 
-                    {/* 🔹 Ngày nhập kho (khôi phục + validation + viền đỏ) */}
+                    {/* 🔹 Ngày nhập kho */}
                     <div className={styles.formGroup}>
                         <label>Ngày nhập kho</label>
                         <input
                             type="date"
                             value={form.ngayNhapKho || ""}
-                            onChange={(e) => handleChange("ngayNhapKho", e.target.value)}
-                            className={`${styles.input} ${errors.ngayNhapKho ? styles.errorInput : ""}`}
+                            onChange={(e) =>
+                                handleChange("ngayNhapKho", e.target.value)
+                            }
+                            className={`${styles.input} ${
+                                errors.ngayNhapKho ? styles.errorInput : ""
+                            }`}
                         />
                         {errors.ngayNhapKho && (
-                            <small className={styles.errorMsg}>{errors.ngayNhapKho}</small>
+                            <small className={styles.errorMsg}>
+                                {errors.ngayNhapKho}
+                            </small>
                         )}
                     </div>
 
                     {showSuccess && (
-                        <div className={styles.successMsg}>✔️ Cập nhật thành công</div>
+                        <div className={styles.successMsg}>
+                            ✔️ Cập nhật thành công
+                        </div>
                     )}
                 </div>
 
                 <div className={styles.footer}>
-                    <button className={styles.secondaryBtn} onClick={onClose}>
+                    <button
+                        className={styles.secondaryBtn}
+                        onClick={onClose}
+                    >
                         Hủy
                     </button>
-                    <button className={styles.primaryBtn} onClick={handleSubmit}>
+                    <button
+                        className={styles.primaryBtn}
+                        onClick={handleSubmit}
+                    >
                         Xác nhận
                     </button>
                 </div>
