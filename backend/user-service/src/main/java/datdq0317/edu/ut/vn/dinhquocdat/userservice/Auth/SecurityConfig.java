@@ -1,5 +1,7 @@
 package datdq0317.edu.ut.vn.dinhquocdat.userservice.Auth;
 
+import java.util.Arrays;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,10 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.Arrays;
 //@Configuration
 //public class SecurityConfig {
 //
@@ -75,6 +75,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/user-service/auth/**").permitAll()
                                             // ✅ AI ĐƯỢC TRUY CẬP API TÀI XẾ
                     // .requestMatchers("/api/user-service/taixe/**").permitAll()
+                                .requestMatchers("/api/user-service/fcm/**").permitAll()
+
 
                         .anyRequest().authenticated()
                 )
