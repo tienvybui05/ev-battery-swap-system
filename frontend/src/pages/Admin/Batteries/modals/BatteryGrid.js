@@ -1,0 +1,356 @@
+import React, { useEffect, useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faRotateRight,
+    faWrench,
+    faFileLines,
+    faPlus,
+    faFilter,
+} from "@fortawesome/free-solid-svg-icons";
+import styles from "./BatteryGrid.module.css";
+import FilterModal from "./FilterModal/FilterModal";
+import CheckModal from "./AddModal/AddModal";
+import LogsModal from "./LogsModal/LogsModal";
+import SettingsModal from "./SettingsModal/SettingsModal";
+
+/* ========= ÁNH XẠ MÀU CHO TÌNH TRẠNG KỸ THUẬT ========= */
+const STATUS_COLORS = {
+    "đầy": "#22C55E",
+    "đang sạc": "#F59E0B",
+    "bảo trì": "#EF4444",
+    "không xác định": "#6B7280",
+};
+
+function BatteryGrid({ stationId = null }) {
+    const [pins, setPins] = useState([]);
+    const [listLoading, setListLoading] = useState(true);
+    const [showFilter, setShowFilter] = useState(false);
+    const [showCheck, setShowCheck] = useState(false);
+    const [showLogs, setShowLogs] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [selectedPin, setSelectedPin] = useState(null);
+
+    const [filters, setFilters] = useState({
+        status: [],
+        model: "",
+        minCap: null,
+        maxCap: null,
+        minHealth: null,
+        maxHealth: null,
+    });
+
+    const getAuthToken = () => localStorage.getItem("token");
+
+    /* ===================== FETCH PIN LIST ===================== */
+    const fetchPinList = async () => {
+        try {
+            setListLoading(true);
+            const token = getAuthToken();
+
+            const [pinsRes, historyRes, tramRes] = await Promise.all([
+                fetch("/api/battery-service/pins", {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }),
+                fetch("/api/battery-service/lichsu-pin-tram", {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }),
+                fetch("/api/station-service/tram", {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }),
+            ]);
+
+            if (pinsRes.ok && historyRes.ok && tramRes.ok) {
+                const pinsData = await pinsRes.json();
+                const historyData = await historyRes.json();
+                const tramData = await tramRes.json();
+
+                let filteredPins = pinsData;
+
+                // 🧩 Nếu có stationId, chỉ lấy pin thuộc trạm đó (theo lịch sử mới nhất)
+                if (stationId) {
+                    const latestHistoryMap = {};
+                    for (const h of historyData) {
+                        const pinId = Number(h.maPin ?? h.ma_pin);
+                        const date = new Date(h.ngayCapNhat ?? h.ngay_cap_nhat ?? h.ngay ?? "1970-01-01");
+                        if (!latestHistoryMap[pinId] || date > latestHistoryMap[pinId].date) {
+                            latestHistoryMap[pinId] = { ...h, date };
+                        }
+                    }
+
+                    filteredPins = pinsData.filter((p) => {
+                        const pinId = Number(p.maPin ?? p.ma_pin);
+                        const hist = latestHistoryMap[pinId];
+                        return hist && Number(hist.maTram ?? hist.ma_tram) === Number(stationId);
+                    });
+                }
+
+                // 🧠 Map dữ liệu pin
+                const mapped = filteredPins.map((p, i) => {
+                    const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
+                    const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
+                    let statusLabel = "không xác định";
+                    switch (tinhTrangEnum) {
+                        case "DAY":
+                            statusLabel = "đầy";
+                            break;
+                        case "DANG_SAC":
+                            statusLabel = "đang sạc";
+                            break;
+                        case "BAO_TRI":
+                            statusLabel = "bảo trì";
+                            break;
+                        default:
+                            statusLabel = "không xác định";
+                    }
+
+                    const record = historyData.find(
+                        (h) => Number(h.maPin ?? h.ma_pin) === pinId
+                    );
+
+                    let tramName = "Chưa có lịch sử";
+                    if (record) {
+                        const tram = tramData.find(
+                            (t) =>
+                                Number(t.maTram ?? t.ma_tram) ===
+                                Number(record.maTram ?? record.ma_tram)
+                        );
+                        tramName = tram
+                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
+                            : `Trạm ${record.maTram}`;
+                    }
+
+                    return {
+                        id: pinId,
+                        title: `Pin ${pinId} – ${tramName}`,
+                        type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
+                        status: statusLabel,
+                        health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
+                        capacity: p.dungLuong ?? p.dung_luong ?? 0,
+                        lastMaintenance:
+                            p.ngayBaoDuongGanNhat ?? p.ngay_bao_duong_gan_nhat ?? "—",
+                        importDate: p.ngayNhapKho ?? p.ngay_nhap_kho ?? "—",
+                    };
+                });
+
+                setPins(mapped);
+            } else {
+                console.error("❌ Lỗi tải dữ liệu pin");
+                setPins([]);
+            }
+        } catch (err) {
+            console.error("⚠️ Lỗi kết nối:", err);
+            setPins([]);
+        } finally {
+            setListLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPinList();
+    }, [stationId]);
+
+    /* ===================== HIỂN THỊ GIAO DIỆN ===================== */
+    if (listLoading) {
+        return (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+                <p>🔄 Đang tải dữ liệu pin...</p>
+            </div>
+        );
+    }
+
+    const filteredPins = pins.filter((p) => {
+        const matchStatus =
+            filters.status.length === 0 || filters.status.includes(p.status);
+        const matchModel = !filters.model || p.type === filters.model;
+        const matchCap =
+            (!filters.minCap || p.capacity >= filters.minCap) &&
+            (!filters.maxCap || p.capacity <= filters.maxCap);
+        const matchHealth =
+            (!filters.minHealth || p.health >= filters.minHealth) &&
+            (!filters.maxHealth || p.health <= filters.maxHealth);
+
+        return matchStatus && matchModel && matchCap && matchHealth;
+    });
+
+    return (
+        <div className={styles.inventoryPage}>
+            {/* ===== Header ===== */}
+            <div className={styles.headerRow}>
+                <h2>{stationId ? "Danh sách Pin tại Trạm" : "Danh sách Pin"}</h2>
+
+                <div className={styles.headerButtons}>
+                    <button
+                        className={styles.filterBtn}
+                        onClick={() => setShowFilter(true)}
+                    >
+                        <FontAwesomeIcon icon={faFilter} /> Lọc
+                    </button>
+
+                    <button
+                        className={styles.primaryBtn}
+                        onClick={() => setShowCheck(true)}
+                    >
+                        <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
+                    </button>
+
+                    <button
+                        className={styles.primaryBtn}
+                        onClick={fetchPinList}
+                        disabled={listLoading}
+                    >
+                        <FontAwesomeIcon
+                            icon={faRotateRight}
+                            className={listLoading ? styles.spin : ""}
+                        />{" "}
+                        Làm mới
+                    </button>
+                </div>
+            </div>
+
+            {/* ===== Grid ===== */}
+            <div className={styles.grid}>
+                {filteredPins.map((pin) => {
+                    const color = STATUS_COLORS[pin.status] || "#6B7280";
+                    return (
+                        <div key={pin.id} className={styles.card}>
+                            <div className={styles.cardHeader}>
+                                <div>
+                                    <div className={styles.title}>{pin.title}</div>
+                                    <div className={styles.type}>{pin.type}</div>
+                                </div>
+                                <div className={styles.statusBadge}>
+                                    <span
+                                        className={styles.statusDot}
+                                        style={{ background: color }}
+                                    />
+                                    <span className={styles.statusText}>
+                                        {pin.status.charAt(0).toUpperCase() +
+                                            pin.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className={styles.metrics}>
+                                <div>
+                                    <div className={styles.metricLabel}>Sức khỏe:</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.health}%
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className={styles.metricLabel}>Dung lượng:</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.capacity} kWh
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.datesRow}>
+                                <div>
+                                    <div className={styles.metricLabel}>Ngày nhập kho:</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.importDate}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className={styles.metricLabel}>
+                                        Lần bảo dưỡng gần nhất:
+                                    </div>
+                                    <div className={styles.metricValue}>
+                                        {pin.lastMaintenance}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={styles.progressBar}>
+                                <div
+                                    className={styles.progressFill}
+                                    style={{
+                                        width: `${pin.health}%`,
+                                        background: color,
+                                    }}
+                                />
+                            </div>
+
+                            <div className={styles.cardActions}>
+                                <button
+                                    className={styles.action}
+                                    onClick={() => {
+                                        setSelectedPin(pin);
+                                        setShowLogs(true);
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={faFileLines} />
+                                    Lịch sử
+                                </button>
+
+                                <button
+                                    className={styles.action}
+                                    onClick={() => {
+                                        setSelectedPin(pin);
+                                        setShowSettings(true);
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={faWrench} />
+                                    Cài đặt
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+
+                {filteredPins.length === 0 && (
+                    <div className={styles.emptyState}>
+                        Không có pin nào phù hợp.
+                    </div>
+                )}
+            </div>
+
+            {/* ===== Modals ===== */}
+            {showFilter && (
+                <FilterModal
+                    current={filters}
+                    onClose={() => setShowFilter(false)}
+                    onApply={(newFilters) => {
+                        setFilters(newFilters);
+                        setShowFilter(false);
+                    }}
+                />
+            )}
+
+            {showCheck && (
+                <CheckModal
+                    open={showCheck}
+                    onClose={() => setShowCheck(false)}
+                    onDone={() => fetchPinList()}
+                />
+            )}
+
+            {showLogs && selectedPin && (
+                <LogsModal
+                    slot={selectedPin}
+                    onClose={() => {
+                        setSelectedPin(null);
+                        setShowLogs(false);
+                    }}
+                />
+            )}
+
+            {showSettings && selectedPin && (
+                <SettingsModal
+                    slot={selectedPin}
+                    onClose={() => {
+                        setSelectedPin(null);
+                        setShowSettings(false);
+                    }}
+                    onApply={() => {
+                        setShowSettings(false);
+                        fetchPinList();
+                    }}
+                />
+            )}
+        </div>
+    );
+}
+
+export default BatteryGrid;

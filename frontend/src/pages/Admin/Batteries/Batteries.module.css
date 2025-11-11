@@ -6,6 +6,31 @@
     margin-top: 20px;
 }
 
+/* ===== HEADER ===== */
+.topHeader {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+}
+
+.refreshBtn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    background: #111827;
+    color: #fff;
+    transition: background 0.2s ease;
+}
+
+.refreshBtn:hover {
+    background: #1f2937;
+}
+
 /* ===== KPI ===== */
 .kpiGrid {
     display: grid;
@@ -68,6 +93,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* ===== Fleet Stats ===== */
 .fleetStats p {
     font-size: 14px;
     color: #4b5563;
@@ -155,186 +181,13 @@
     margin-top: 18px;
     cursor: pointer;
     background: #fff;
+    font-weight: 500;
 }
 
 .optimizeBtn:hover {
     background: #111827;
     color: #fff;
 }
-
-/* ===== INVENTORY SECTION ===== */
-.inventoryPage {
-    padding: 0 20px 40px;
-}
-
-.headerRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.headerButtons {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.filterBtn,
-.primaryBtn {
-    border: none;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
-}
-
-.filterBtn {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-}
-
-.primaryBtn {
-    background: #111827;
-    color: #fff;
-}
-
-/* ===== GRID PIN LIST ===== */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 18px;
-}
-
-.card {
-    background: #fff;
-    border: 1px solid #e8e8ec;
-    border-radius: 12px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.cardHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.title {
-    font-weight: 700;
-    font-size: 16px;
-}
-
-.type {
-    color: #6b7280;
-    font-size: 13px;
-    margin-top: 2px;
-}
-
-/* ===== STATUS ===== */
-.statusBadge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.statusDot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-
-.statusText {
-    background: rgba(0, 0, 0, 0.04);
-    padding: 6px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-}
-
-/* ===== METRICS + DATES ===== */
-.metrics,
-.datesRow {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px; /* 👈 cách hàng rõ ràng */
-}
-
-.metricLabel {
-    color: #6b7280;
-    font-size: 12px;
-}
-
-.metricValue {
-    font-weight: 600;
-    font-size: 14px;
-}
-
-/* ===== THANH MÀU TÌNH TRẠNG PIN ===== */
-.pinProgressBar {
-    height: 10px;
-    background: #f3f4f6;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 12px;  /* 👈 cách ra phần bảo dưỡng */
-    margin-bottom: 8px; /* 👈 tách với dòng tình trạng */
-}
-
-.pinProgressFill {
-    height: 100%;
-    border-radius: 8px;
-    transition: width 0.4s ease, background 0.2s ease;
-}
-
-.levelNote {
-    color: #6b7280;
-    font-size: 13px;
-    margin-top: 4px;
-    margin-bottom: 10px; /* 👈 tách hàng với nút */
-}
-
-/* ===== ACTIONS ===== */
-.cardActions {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    margin-top: 6px;
-}
-
-.action {
-    flex: 1;
-    border: 1px solid #e7e7ea;
-    background: #fff;
-    border-radius: 10px;
-    padding: 10px;
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.action:hover {
-    background: #f9fafb;
-}
-
-/* ===== EMPTY STATE ===== */
-.emptyState {
-    grid-column: 1 / -1;
-    text-align: center;
-    color: #9ca3af;
-    font-style: italic;
-    padding: 30px;
-}
-
-
 
 
 

@@ -9,19 +9,9 @@ import {
     faCalendar,
     faClock,
     faRotateRight,
-    faFilter,
-    faFileLines,
-    faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Batteries.module.css";
-
-/* ========= ÁNH XẠ MÀU TRẠNG THÁI ========= */
-const STATUS_COLORS = {
-    "sẵn sàng": "#10B981",
-    "đang sạc": "#F59E0B",
-    "đang được sử dụng": "#3B82F6",
-    "bảo trì": "#EF4444",
-};
+import BatteryGrid from "./modals/BatteryGrid"; // 👈 Giao diện con hiển thị Kho Pin
 
 function Batteries() {
     const [batteryData, setBatteryData] = useState({
@@ -63,47 +53,6 @@ function Batteries() {
         ],
     });
 
-    const [pins, setPins] = useState([]);
-    const [listLoading, setListLoading] = useState(true);
-
-    const getAuthToken = () => localStorage.getItem("token");
-
-    /* 🟢 API: Lấy danh sách pin */
-    const fetchPinList = async () => {
-        try {
-            setListLoading(true);
-            const token = getAuthToken();
-
-            const response = await fetch("/api/battery-service/pins", {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const mapped = data.map((p, i) => ({
-                    id: p.maPin ?? p.ma_pin ?? i + 1,
-                    title: `Pin ${p.maPin ?? p.ma_pin ?? i + 1}`,
-                    type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
-                    status: (p.tinhTrang ?? p.tinh_trang ?? "sẵn sàng").toLowerCase(),
-                    health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
-                    capacity: p.dungLuong ?? p.dung_luong ?? 0,
-                    lastMaintenance:
-                        p.ngayBaoDuongGanNhat ?? p.ngay_bao_duong_gan_nhat ?? "—",
-                    importDate: p.ngayNhapKho ?? p.ngay_nhap_kho ?? "—",
-                }));
-                setPins(mapped);
-            } else {
-                console.error("❌ Lỗi tải danh sách pin:", response.status);
-                setPins([]);
-            }
-        } catch (err) {
-            console.error("⚠️ Lỗi kết nối API battery-service:", err);
-            setPins([]);
-        } finally {
-            setListLoading(false);
-        }
-    };
-
     /* 🟣 API: Lấy tổng quan đội pin */
     const fetchBatterySummary = async () => {
         try {
@@ -127,23 +76,13 @@ function Batteries() {
         }
     };
 
-    /* 🔄 Tải dữ liệu khi mở trang */
     useEffect(() => {
-        fetchPinList();
         fetchBatterySummary();
     }, []);
 
-    if (listLoading) {
-        return (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-                <p>🔄 Đang tải dữ liệu pin...</p>
-            </div>
-        );
-    }
-
     return (
         <div className={styles.wrapper}>
-            {/* KPI */}
+            {/* ===== KPI ===== */}
             <div className={styles.kpiGrid}>
                 {batteryData.topKpi.map((item, index) => (
                     <div key={index} className={styles.kpiCard}>
@@ -197,7 +136,6 @@ function Batteries() {
                                 <p>Cần kiểm tra ngay lập tức</p>
                             </div>
                         </div>
-
                         <div className={`${styles.maintenanceItem} ${styles.yellowBg}`}>
                             <FontAwesomeIcon icon={faCalendar} />
                             <div>
@@ -205,7 +143,6 @@ function Batteries() {
                                 <p>Bảo trì theo kế hoạch</p>
                             </div>
                         </div>
-
                         <div className={`${styles.maintenanceItem} ${styles.blueBg}`}>
                             <FontAwesomeIcon icon={faClock} />
                             <div>
@@ -232,8 +169,8 @@ function Batteries() {
                                         />
                                     </div>
                                     <span>
-                    {st.used}/{st.total}
-                  </span>
+                                        {st.used}/{st.total}
+                                    </span>
                                 </div>
                             );
                         })}
@@ -242,119 +179,8 @@ function Batteries() {
                 </div>
             </div>
 
-            {/* === DANH SÁCH PIN === */}
-            <div className={styles.inventoryPage}>
-                <div className={styles.headerRow}>
-                    <h2>Kho Pin</h2>
-                    <div className={styles.headerButtons}>
-                        <button
-                            className={styles.filterBtn}
-                            onClick={() => alert("Tính năng lọc đang phát triển")}
-                        >
-                            <FontAwesomeIcon icon={faFilter} /> Lọc
-                        </button>
-
-                        <button
-                            className={styles.primaryBtn}
-                            onClick={() => alert("Chức năng kiểm tra đang phát triển")}
-                        >
-                            <FontAwesomeIcon icon={faPlus} /> Kiểm tra
-                        </button>
-
-                        <button
-                            className={styles.primaryBtn}
-                            onClick={fetchPinList}
-                            disabled={listLoading}
-                        >
-                            <FontAwesomeIcon icon={faRotateRight} /> Làm mới
-                        </button>
-                    </div>
-                </div>
-
-                <div className={styles.grid}>
-                    {pins.map((pin) => {
-                        const color = STATUS_COLORS[pin.status] || "#6B7280";
-                        return (
-                            <div key={pin.id} className={styles.card}>
-                                <div className={styles.cardHeader}>
-                                    <div>
-                                        <div className={styles.title}>{pin.title}</div>
-                                        <div className={styles.type}>{pin.type}</div>
-                                    </div>
-                                    <div className={styles.statusBadge}>
-                    <span
-                        className={styles.statusDot}
-                        style={{ background: color }}
-                    />
-                                        <span className={styles.statusText}>
-                      {pin.status.charAt(0).toUpperCase() + pin.status.slice(1)}
-                    </span>
-                                    </div>
-                                </div>
-
-                                <div className={styles.metrics}>
-                                    <div>
-                                        <div className={styles.metricLabel}>Sức khỏe:</div>
-                                        <div className={styles.metricValue}>{pin.health}%</div>
-                                    </div>
-                                    <div>
-                                        <div className={styles.metricLabel}>Dung lượng:</div>
-                                        <div className={styles.metricValue}>
-                                            {pin.capacity} kWh
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={styles.datesRow}>
-                                    <div>
-                                        <div className={styles.metricLabel}>Ngày nhập kho:</div>
-                                        <div className={styles.metricValue}>{pin.importDate}</div>
-                                    </div>
-                                    <div>
-                                        <div className={styles.metricLabel}>Bảo dưỡng:</div>
-                                        <div className={styles.metricValue}>
-                                            {pin.lastMaintenance}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* === THANH MÀU TÌNH TRẠNG === */}
-                                <div className={styles.pinProgressBar}>
-                                    <div
-                                        className={styles.pinProgressFill}
-                                        style={{
-                                            width: `${pin.health}%`,
-                                            background: color,
-                                        }}
-                                    />
-                                </div>
-
-                                {/* ACTIONS */}
-                                <div className={styles.cardActions}>
-                                    <button
-                                        className={styles.action}
-                                        onClick={() => alert(`Làm mới ${pin.title}`)}
-                                    >
-                                        <FontAwesomeIcon icon={faRotateRight} /> Làm mới
-                                    </button>
-                                    <button
-                                        className={styles.action}
-                                        onClick={() => alert(`Chi tiết ${pin.title}`)}
-                                    >
-                                        <FontAwesomeIcon icon={faFileLines} /> Chi tiết
-                                    </button>
-                                    <button
-                                        className={styles.action}
-                                        onClick={() => alert(`Cài đặt ${pin.title}`)}
-                                    >
-                                        <FontAwesomeIcon icon={faWrench} /> Cài đặt
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* === KHO PIN (component con) === */}
+            <BatteryGrid />
         </div>
     );
 }
