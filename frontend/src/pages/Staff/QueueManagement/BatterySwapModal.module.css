@@ -77,11 +77,13 @@
 }
 
 .pinOut h4 {
-  color: #dc2626; /* đỏ nhạt */
+  color: #dc2626;
+  /* đỏ nhạt */
 }
 
 .pinIn h4 {
-  color: #16a34a; /* xanh nhạt */
+  color: #16a34a;
+  /* xanh nhạt */
 }
 
 /* === Checklist ngang === */
@@ -173,4 +175,22 @@
 .primaryBtn {
   background: #2563eb;
   color: white;
+}
+
+
+.select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 15px;
+}
+
+.note {
+  font-size: 0.95rem;
+  color: #6b7280;
+  /* xám nhẹ */
+  margin-top: -4px;
+  margin-bottom: 8px;
+  font-style: italic;
 }

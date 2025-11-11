@@ -58,35 +58,51 @@ function QueueManagement() {
 
         const rawOrders = res.data;
 
-        // 2) Enrich dữ liệu (lấy tên tài xế & loại xe)
+        // 2) Enrich dữ liệu (lấy tên tài xế, loại xe, loại pin)
         const enriched = await Promise.all(
           rawOrders.map(async (order) => {
             let taiXeName = "Không rõ";
             let xeLoai = "Không rõ";
+            let pinLoai = "Không rõ";
 
             try {
-              const txRes = await axios.get(
-                `/api/user-service/taixe/${order.maTaiXe}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
+              const txRes = await axios.get(`/api/user-service/taixe/${order.maTaiXe}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
               taiXeName = txRes.data.nguoiDung.hoTen;
             } catch { }
 
             try {
-              const xeRes = await axios.get(
-                `/api/vehicle-service/vehicles/${order.maXeGiaoDich}`
-              );
+              const xeRes = await axios.get(`/api/vehicle-service/vehicles/${order.maXeGiaoDich}`);
               xeLoai = xeRes.data.loaiXe;
+
+              if (xeRes.data.maPin) {
+                try {
+                  const pinRes = await axios.get(`/api/battery-service/pins/${xeRes.data.maPin}`);
+                  order.pinDi = {
+                    maPin: pinRes.data.maPin,
+                    loaiPin: pinRes.data.loaiPin,
+                    dungLuong: pinRes.data.dungLuong,
+                    sucKhoe: pinRes.data.sucKhoe,
+                    tinhTrang: pinRes.data.tinhTrang,
+                    ngayBaoDuong: pinRes.data.ngayBaoDuongGanNhat,
+                  };
+                } catch (err) {
+                  console.warn("Không lấy được pin đi:", err);
+                }
+              }
             } catch { }
 
             return {
               ...order,
               name: taiXeName,
               car: xeLoai,
+              pinLoai, // ✅ thêm vào đây
+              maTram,
               time: order.ngayDat ? order.ngayDat.substring(11, 16) : "--:--",
               code: `LS-${order.maLichSuDat}`,
               color: activeTab === 1 ? "#3B82F6" : "#10B981",
-              status: activeTab === 1 ? "đang chờ" : "đã xác nhận"
+              status: activeTab === 1 ? "đang chờ" : "đã xác nhận",
             };
           })
         );
@@ -207,8 +223,10 @@ function QueueManagement() {
 
       {selectedOrder && (
         <BatterySwapModal
+          mode={activeTab === 1 ? "CHO_XAC_NHAN" : "DA_XAC_NHAN"}
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          onConfirm={() => setSelectedOrder(null)}
         />
       )}
     </div>

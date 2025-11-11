@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ut.edu.batteryservice.models.LichSuPinTram;
+import ut.edu.batteryservice.models.Pin;
 import ut.edu.batteryservice.services.ILichSuPinTramService;
 
 import java.util.List;
@@ -66,5 +67,14 @@ public class LichSuPinTramController {
     public ResponseEntity<Void> deleteLichSu(@PathVariable Long id) {
         boolean deleted = lichSuPinTramService.deleteById(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{maTram}/available")
+    public ResponseEntity<List<Pin>> getAvailablePinsByTramAndLoai(
+            @PathVariable Long maTram,
+            @RequestParam String loaiPin
+    ) {
+        List<Pin> result = lichSuPinTramService.getAvailablePins(maTram, loaiPin);
+        return ResponseEntity.ok(result);
     }
 }

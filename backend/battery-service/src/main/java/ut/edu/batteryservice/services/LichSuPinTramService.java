@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ut.edu.batteryservice.models.LichSuPinTram;
+import ut.edu.batteryservice.models.Pin;
 import ut.edu.batteryservice.repositories.ILichSuPinTramRepository;
 
 import java.util.List;
@@ -45,5 +46,10 @@ public class LichSuPinTramService implements ILichSuPinTramService {
     public LichSuPinTram addLichSuPinTram(LichSuPinTram lichSuPinTram) {
         // có thể thêm logic kiểm tra trùng hoặc validate tại đây nếu cần
         return lichSuPinTramRepository.save(lichSuPinTram);
+    }
+
+    @Override
+    public List<Pin> getAvailablePins(Long maTram, String loaiPin) {
+        return lichSuPinTramRepository.findAvailablePinsByTramAndLoai(maTram, loaiPin);
     }
 }

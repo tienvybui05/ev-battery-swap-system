@@ -1,92 +1,168 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXmark,
   faCreditCard,
   faMoneyBillWave,
-  faQrcode,
+  faGift,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./BatterySwapModal.module.css";
+import axios from "axios";
+import Select from "react-select";
 
-function BatterySwapModal({ order, onClose, onConfirm }) {
-  const [checklist, setChecklist] = useState({
-    qrScanned: false,
-    pinConfirmed: false,
-    swapDone: false,
-  });
+function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) {
+  const [availablePins, setAvailablePins] = useState([]);
+  const [selectedPin, setSelectedPin] = useState("");
+  const [loadingPins, setLoadingPins] = useState(false);
 
+  // trạng thái giao dịch
+  const [transactionStatus, setTransactionStatus] = useState("chờ giao dịch");
+
+  // thanh toán
   const [payment, setPayment] = useState(null);
 
-  const toggleChecklist = (key) =>
-    setChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+  // chỉ fetch pin khi đang ở tab "chờ xác nhận"
+  useEffect(() => {
+    const fetchAvailablePins = async () => {
+      if (mode !== "CHO_XAC_NHAN" || !order?.maTram || !order?.pinDi?.loaiPin) return;
+      setLoadingPins(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          `/api/battery-service/lichsu-pin-tram/${order.maTram}/available`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { loaiPin: order.pinDi.loaiPin },
+          }
+        );
+        setAvailablePins(res.data);
+      } catch (err) {
+        console.error("❌ Lỗi lấy danh sách pin:", err);
+      } finally {
+        setLoadingPins(false);
+      }
+    };
+    fetchAvailablePins();
+  }, [mode, order?.maTram, order?.pinDi?.loaiPin]);
+
+  const handleConfirm = () => {
+    onConfirm({
+      pinDuocChon: selectedPin,
+      payment,
+      transactionStatus,
+    });
+  };
 
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         {/* HEADER */}
         <div className={styles.header}>
-          <h2>Quá Trình Thay Pin</h2>
+          <h2>
+            {mode === "CHO_XAC_NHAN" ? "Xác Nhận Đơn Đặt Pin" : "Chi Tiết Giao Dịch Thay Pin"}
+          </h2>
           <button className={styles.closeBtn} onClick={onClose}>
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
-        <p className={styles.subtitle}>
-          Hoàn thành thay pin cho khách hàng {order?.code}
-        </p>
 
-        {/* MAIN CONTENT */}
+        {/* BODY */}
         <div className={styles.main}>
+          {/* Thông tin khách hàng */}
           <div className={styles.customerCard}>
             <h3>Thông Tin Khách Hàng</h3>
             <div className={styles.infoGrid}>
               <div><strong>Tên:</strong> {order?.name}</div>
               <div><strong>Xe:</strong> {order?.car}</div>
               <div><strong>Mã Đặt Chỗ:</strong> {order?.code}</div>
-              <div><strong>Mô hình Pin:</strong> TM3-75kWh</div>
+              <div><strong>Mô hình Pin:</strong> {order?.pinDi?.loaiPin || "Không rõ"}</div>
             </div>
           </div>
 
+          {/* Pin đi + Pin đến */}
           <div className={styles.pinGrid}>
             <div className={`${styles.pinCard} ${styles.pinOut}`}>
               <h4>Pin đi</h4>
-              <p>Pin hiện: <strong>Customer’s Battery</strong></p>
-              <p>Mức sạc: <strong>15%</strong></p>
-              <p>Slot đến: <strong>A2 (Charging)</strong></p>
+              <p className={styles.note}>Pin tài xế mang đến trạm</p>
+              <p>Mã pin: <strong>{order?.pinDi?.maPin || "Không rõ"}</strong></p>
+              <p>Loại pin: <strong>{order?.pinDi?.loaiPin || "Không rõ"}</strong></p>
+              <p>Dung lượng: <strong>{order?.pinDi?.dungLuong || "--"} kWh</strong></p>
+              <p>Sức khỏe: <strong>{order?.pinDi?.sucKhoe || "--"}%</strong></p>
             </div>
 
             <div className={`${styles.pinCard} ${styles.pinIn}`}>
               <h4>Pin đến</h4>
-              <p>Pin mới: <strong>Slot B3</strong></p>
-              <p>Mức sạc: <strong>100%</strong></p>
-              <p>Sức khỏe: <strong>96%</strong></p>
+              <p className={styles.note}>Pin nhân viên giao cho tài xế</p>
+              {mode === "CHO_XAC_NHAN" ? (
+                loadingPins ? (
+                  <p>Đang tải pin...</p>
+                ) : (
+                  <>
+                    <Select
+                      options={availablePins.map(pin => ({
+                        value: pin.maPin,
+                        label: `Mã ${pin.maPin} | SK: ${pin.sucKhoe}%`
+                      }))}
+                      placeholder="Tìm pin..."
+                      onChange={(opt) => setSelectedPin(opt?.value || "")}
+                      isSearchable
+                      noOptionsMessage={() => "Không tìm thấy pin phù hợp"}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderRadius: 8,
+                          borderColor: "#ccc",
+                          boxShadow: "none",
+                          "&:hover": { borderColor: "#111827" }
+                        })
+                      }}
+                    />
+
+                    {/* 🟢 Thông tin chi tiết pin được chọn */}
+                    {selectedPin && (() => {
+                      const pin = availablePins.find(p => p.maPin === Number(selectedPin));
+                      if (!pin) return null;
+                      return (
+                        <div className={styles.pinDetails} style={{ marginTop: "8px" }}>
+                          <p>Mã pin: <strong>{pin.maPin}</strong></p>
+                          <p>Loại pin: <strong>{pin.loaiPin}</strong></p>
+                          <p>Dung lượng: <strong>{pin.dungLuong} kWh</strong></p>
+                          <p>Sức khỏe: <strong>{pin.sucKhoe}%</strong></p>
+                        </div>
+                      );
+                    })()}
+                  </>
+                )
+              ) : (
+                <>
+                  <p>Mã pin: <strong>{order?.pinDen?.maPin || "Không rõ"}</strong></p>
+                  <p>Loại pin: <strong>{order?.pinDen?.loaiPin || "Không rõ"}</strong></p>
+                  <p>Dung lượng: <strong>{order?.pinDen?.dungLuong || "--"} kWh</strong></p>
+                  <p>Sức khỏe: <strong>{order?.pinDen?.sucKhoe || "--"}%</strong></p>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Checklist */}
+          {/* Trạng thái giao dịch */}
           <div className={styles.checklistRow}>
             <label>
               <input
-                type="checkbox"
-                checked={checklist.qrScanned}
-                onChange={() => toggleChecklist("qrScanned")}
+                type="radio"
+                name="status"
+                checked={transactionStatus === "chờ giao dịch"}
+                onChange={() => setTransactionStatus("chờ giao dịch")}
               />
-              Mã QR Đã Quét
+              Chờ giao dịch
             </label>
             <label>
               <input
-                type="checkbox"
-                checked={checklist.pinConfirmed}
-                onChange={() => toggleChecklist("pinConfirmed")}
+                type="radio"
+                name="status"
+                checked={transactionStatus === "đã hoàn thành"}
+                onChange={() => setTransactionStatus("đã hoàn thành")}
               />
-              PIN Đã Xác Nhận
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={checklist.swapDone}
-                onChange={() => toggleChecklist("swapDone")}
-              />
-              Thay Pin Hoàn Thành
+              Đã hoàn thành
             </label>
           </div>
 
@@ -100,28 +176,25 @@ function BatterySwapModal({ order, onClose, onConfirm }) {
 
             <div className={styles.paymentBtns}>
               <button
-                className={`${styles.payBtn} ${
-                  payment === "card" ? styles.active : ""
-                }`}
+                className={`${styles.payBtn} ${payment === "card" ? styles.active : ""
+                  }`}
                 onClick={() => setPayment("card")}
               >
                 <FontAwesomeIcon icon={faCreditCard} /> Thẻ
               </button>
               <button
-                className={`${styles.payBtn} ${
-                  payment === "cash" ? styles.active : ""
-                }`}
+                className={`${styles.payBtn} ${payment === "cash" ? styles.active : ""
+                  }`}
                 onClick={() => setPayment("cash")}
               >
                 <FontAwesomeIcon icon={faMoneyBillWave} /> Tiền mặt
               </button>
               <button
-                className={`${styles.payBtn} ${
-                  payment === "qr" ? styles.active : ""
-                }`}
-                onClick={() => setPayment("qr")}
+                className={`${styles.payBtn} ${payment === "package" ? styles.active : ""
+                  }`}
+                onClick={() => setPayment("package")}
               >
-                <FontAwesomeIcon icon={faQrcode} /> QR
+                <FontAwesomeIcon icon={faGift} /> Sử dụng gói
               </button>
             </div>
           </div>
@@ -134,9 +207,10 @@ function BatterySwapModal({ order, onClose, onConfirm }) {
           </button>
           <button
             className={styles.primaryBtn}
-            onClick={() => onConfirm(order.id)} // ✅ Gọi về QueueManagement
+            disabled={mode === "CHO_XAC_NHAN" && !selectedPin}
+            onClick={handleConfirm}
           >
-            Xác Nhận & In Hóa Đơn
+            {mode === "CHO_XAC_NHAN" ? "Xác Nhận Đơn" : "Lưu Trạng Thái"}
           </button>
         </div>
       </div>
