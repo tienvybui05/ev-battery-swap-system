@@ -14,7 +14,7 @@ public interface ILichSuDatPinService {
 
     // Nghiệp vụ chính
     LichSuDatPin datLich(Long maTaiXe, Long maTram, Long maXeGiaoDich);     // Đặt lịch mới
-    LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin); // Cập nhật trạng thái
+    LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin, Long maGiaoDichDoiPin); // Cập nhật trạng thái
     List<LichSuDatPin> findByMaTaiXe(Long maTaiXe);      // Lọc lịch sử theo tài xế
     List<LichSuDatPin> findByMaTram(Long maTram);
     List<LichSuDatPin> findByMaTramAndTrangThai(Long maTram, String trangThaiXacNhan);

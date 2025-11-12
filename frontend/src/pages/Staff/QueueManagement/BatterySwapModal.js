@@ -45,12 +45,60 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
     fetchAvailablePins();
   }, [mode, order?.maTram, order?.pinDi?.loaiPin]);
 
-  const handleConfirm = () => {
-    onConfirm({
-      pinDuocChon: selectedPin,
-      payment,
-      transactionStatus,
-    });
+  const handleConfirm = async () => {
+    if (!selectedPin) {
+      alert("⚠️ Vui lòng chọn pin đến trước khi xác nhận!");
+      return;
+    }
+    if (!payment) {
+      alert("⚠️ Vui lòng chọn phương thức thanh toán!");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      // 🧩 1️⃣ Tạo giao dịch đổi pin
+      const payloadGiaoDich = {
+        maPinTra: String(order?.pinDi?.maPin),
+        maPinNhan: String(selectedPin),
+        ngayGiaoDich: null,
+        trangThaiGiaoDich: transactionStatus,
+        thanhtien: 1200000,
+        phuongThucThanhToan: payment,
+        maTram: order?.maTram,
+        maTaiXe: order?.maTaiXe,
+      };
+
+      const resGiaoDich = await axios.post(
+        `/api/transaction-service/giaodichdoipin`,
+        payloadGiaoDich,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const maGiaoDich = resGiaoDich.data.maGiaoDichDoiPin;
+      console.log("✅ Tạo giao dịch thành công:", resGiaoDich.data);
+
+      // 🧩 2️⃣ Cập nhật trạng thái đơn đặt pin với mã giao dịch vừa tạo
+      const payloadUpdate = {
+        trangThaiXacNhan: "Đã xác nhận",
+        trangThaiDoiPin: "Đang xử lý",
+        maGiaoDichDoiPin: maGiaoDich,
+      };
+
+      await axios.put(
+        `/api/station-service/dat-lich/${order.maLichSuDat}`,
+        payloadUpdate,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("✅ Xác nhận đơn và tạo giao dịch thành công!");
+      onConfirm(resGiaoDich.data);
+      onClose();
+    } catch (err) {
+      console.error("❌ Lỗi khi tạo giao dịch hoặc cập nhật đơn:", err);
+      alert("❌ Không thể hoàn tất xác nhận, vui lòng thử lại!");
+    }
   };
 
   return (

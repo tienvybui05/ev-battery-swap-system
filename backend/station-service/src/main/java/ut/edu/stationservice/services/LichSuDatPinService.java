@@ -61,7 +61,7 @@ public class LichSuDatPinService implements ILichSuDatPinService {
                                 "Chờ xác nhận".equalsIgnoreCase(ls.getTrangThaiXacNhan()) ||
                                         "Chưa đổi pin".equalsIgnoreCase(ls.getTrangThaiDoiPin())
                         )
-                                && ls.getTram().getMaTram().equals(maTram)
+                                && ls.getTram().getMaTram().equals(maTram) && ls.getMaXeGiaoDich().equals(maXeGiaoDich)
                 ).toList();
         if(!lichChuaXong.isEmpty()){
             throw new RuntimeException("Bạn đang có đơn đổi pin chưa hoàn thành cùng 1 trạm. Hãy hoàn tất trước khi đặt mới.");
@@ -83,12 +83,13 @@ public class LichSuDatPinService implements ILichSuDatPinService {
     // 🧩 Nghiệp vụ: Cập nhật trạng thái lịch sử đặt pin
     @Transactional
     @Override
-    public LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin) {
+    public LichSuDatPin capNhatTrangThai(Long id, String trangThaiXacNhan, String trangThaiDoiPin, Long maGiaoDichDoiPin) {
         LichSuDatPin lichSu = lichSuDatPinRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch sử đặt pin với ID: " + id));
 
         if (trangThaiXacNhan != null) lichSu.setTrangThaiXacNhan(trangThaiXacNhan);
         if (trangThaiDoiPin != null) lichSu.setTrangThaiDoiPin(trangThaiDoiPin);
+        if (trangThaiDoiPin != null) lichSu.setMaGiaoDichDoiPin(maGiaoDichDoiPin);
 
         return lichSuDatPinRepository.save(lichSu);
     }

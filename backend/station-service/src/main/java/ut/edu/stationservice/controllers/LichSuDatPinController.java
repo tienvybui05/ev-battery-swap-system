@@ -80,7 +80,8 @@ public class LichSuDatPinController {
             LichSuDatPin updated = lichSuDatPinService.capNhatTrangThai(
                     id,
                     req.getTrangThaiXacNhan(),
-                    req.getTrangThaiDoiPin()
+                    req.getTrangThaiDoiPin(),
+                    req.getMaGiaoDichDoiPin()
             );
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
