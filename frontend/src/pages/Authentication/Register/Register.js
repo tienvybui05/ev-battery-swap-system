@@ -9,9 +9,10 @@ const Register = () => {
     Sdt: "",
     Gioi_tinh: "Nam",
     Mat_Khau: "",
+    Xac_Nhan_Mat_Khau: "",
     Ngay_sinh: "",
     Dia_Chi: "",
-    Bang_Lai_Xe: "", // THÊM BẰNG LÁI XE
+    Bang_Lai_Xe: "",
     Vai_Tro: "TAIXE",
   });
   
@@ -27,12 +28,44 @@ const Register = () => {
     });
   };
 
+  // HÀM KIỂM TRA ĐỦ TUỔI LÁI XE (>= 18 TUỔI)
+  const kiemTraDuTuoi = (ngaySinh) => {
+    if (!ngaySinh) return true;
+    
+    const today = new Date();
+    const birthDate = new Date(ngaySinh);
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age >= 18;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
+      // KIỂM TRA MẬT KHẨU TỐI THIỂU 6 KÝ TỰ
+      if (formData.Mat_Khau.length < 6) {
+        throw new Error("Mật khẩu phải có ít nhất 6 ký tự!");
+      }
+
+      // KIỂM TRA XÁC NHẬN MẬT KHẨU
+      if (formData.Mat_Khau !== formData.Xac_Nhan_Mat_Khau) {
+        throw new Error("Mật khẩu và xác nhận mật khẩu không khớp!");
+      }
+
+      // KIỂM TRA ĐỦ TUỔI LÁI XE
+      if (!kiemTraDuTuoi(formData.Ngay_sinh)) {
+        throw new Error("Bạn phải đủ 18 tuổi trở lên để đăng ký lái xe!");
+      }
+
       console.log("Đang gọi API đăng ký tài xế...");
 
       // CHUẨN HÓA DATA THEO ENDPOINT register-tai-xe
@@ -44,11 +77,10 @@ const Register = () => {
         matKhau: formData.Mat_Khau,
         ngaySinh: formData.Ngay_sinh,
         diaChi: formData.Dia_Chi,
-        bangLaiXe: formData.Bang_Lai_Xe, // THÊM BẰNG LÁI XE
-        // KHÔNG CẦN vaiTro vì endpoint này mặc định là TAIXE
+        bangLaiXe: formData.Bang_Lai_Xe,
       };
 
-      // SỬA ENDPOINT THÀNH register-tai-xe
+      // GỌI API ĐĂNG KÝ
       const res = await fetch("/api/user-service/auth/register-tai-xe", {
         method: "POST",
         headers: {
@@ -81,11 +113,9 @@ const Register = () => {
 
   return (
     <div className={styles.wrapper}>
-      <h2 className={styles.title}>Đăng ký tài xế</h2> {/* SỬA TIÊU ĐỀ */}
+      <h2 className={styles.title}>Đăng ký tài xế</h2>
       <form onSubmit={handleSubmit} className={styles.form}>
         
-        {error && <div className={styles.error}>{error}</div>}
-
         <div className={styles.inputuser}>
           <div className={styles.formGroup}>
             <label className={styles.label}>Họ tên:</label>
@@ -97,6 +127,7 @@ const Register = () => {
               required
               className={styles.input}
               disabled={loading}
+              placeholder="Nhập họ và tên đầy đủ"
             />
           </div>
 
@@ -110,6 +141,7 @@ const Register = () => {
               required
               className={styles.input}
               disabled={loading}
+              placeholder="example@email.com"
             />
           </div>
 
@@ -123,6 +155,7 @@ const Register = () => {
               required
               className={styles.input}
               disabled={loading}
+              placeholder="0987654321"
             />
           </div>
 
@@ -150,6 +183,21 @@ const Register = () => {
               required
               className={styles.input}
               disabled={loading}
+              placeholder="Ít nhất 6 ký tự"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Xác nhận mật khẩu:</label>
+            <input
+              type="password"
+              name="Xac_Nhan_Mat_Khau"
+              value={formData.Xac_Nhan_Mat_Khau}
+              onChange={handleChange}
+              required
+              className={styles.input}
+              disabled={loading}
+              placeholder="Nhập lại mật khẩu"
             />
           </div>
 
@@ -162,6 +210,8 @@ const Register = () => {
               onChange={handleChange}
               className={styles.input}
               disabled={loading}
+              required
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
 
@@ -174,10 +224,10 @@ const Register = () => {
               onChange={handleChange}
               className={styles.input}
               disabled={loading}
+              placeholder="Nhập địa chỉ đầy đủ"
             />
           </div>
 
-          {/* THÊM TRƯỜNG BẰNG LÁI XE */}
           <div className={styles.formGroup}>
             <label className={styles.label}>Bằng lái xe:</label>
             <input
@@ -188,13 +238,15 @@ const Register = () => {
               required
               className={styles.input}
               disabled={loading}
-              placeholder="VD: A1-123456"
+              placeholder="VD: A1-123456, B2-789012"
             />
           </div>
 
-          {/* ẨN CHỌN VAI TRÒ VÌ MẶC ĐỊNH LÀ TAIXE */}
           <input type="hidden" name="Vai_Tro" value="TAIXE" />
         </div>
+
+        {/* HIỂN THỊ LỖI Ở ĐÂY - DƯỚI CÙNG TRƯỚC NÚT ĐĂNG KÝ */}
+        {error && <div className={styles.error}>{error}</div>}
 
         <button 
           type="submit" 

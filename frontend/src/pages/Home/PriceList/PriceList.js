@@ -8,6 +8,7 @@ import "swiper/css/pagination";
 import styles from "./PriceList.module.css";
 import Button from "../../../components/Shares/Button/Button.js";
 import { verifyUserRole } from "../../../utils/verifyUserRole.js";
+
 function PriceList() {
   const [goiDichVu, setGoiDichVu] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,12 +16,13 @@ function PriceList() {
   const [swiperKey, setSwiperKey] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [selectedGoi, setSelectedGoi] = useState(null);
+  const [maTaiXe, setMaTaiXe] = useState(null); // Thêm state lưu mã tài xế
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Chỉ lấy danh sách gói dịch vụ
+        // Lấy danh sách gói dịch vụ
         const resGoi = await fetch("/api/subscription-service/goidichvu");
         if (!resGoi.ok) throw new Error("Không thể tải danh sách gói dịch vụ");
         const dataGoi = await resGoi.json();
@@ -40,16 +42,39 @@ function PriceList() {
     fetchData();
   }, []);
 
-  // HÀM KIỂM TRA TRỰC TIẾP TRONG DATABASE
-  const kiemTraGoiConHan = async () => {
+  // HÀM LẤY MÃ TÀI XẾ THEO MÃ NGƯỜI DÙNG
+  const layMaTaiXe = async () => {
     const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
     
-    if (!token || !userId) return false;
+    if (!token || !userId) return null;
 
     try {
-      // KIỂM TRA TRỰC TIẾP TRONG DATABASE
-      const resCheck = await fetch(`/api/subscription-service/lichsudangkygoi/taixe/${userId}/kiemtra`, {
+      const res = await fetch(`/api/user-service/taixe/user/${userId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      if (res.ok) {
+        const taiXeData = await res.json();
+        return taiXeData.maTaiXe; // Lấy mã tài xế từ response
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy mã tài xế:", error);
+    }
+    
+    return null;
+  };
+
+  // HÀM KIỂM TRA TRỰC TIẾP TRONG DATABASE
+  const kiemTraGoiConHan = async (maTaiXe) => {
+    const token = localStorage.getItem("token");
+    
+    if (!token || !maTaiXe) return false;
+
+    try {
+      const resCheck = await fetch(`/api/subscription-service/lichsudangkygoi/taixe/${maTaiXe}/kiemtra`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -66,59 +91,67 @@ function PriceList() {
     return false;
   };
 
-const handleDangKy = async (goi) => {
-  const token = localStorage.getItem("token");
-  
-  // Kiểm tra token đầu tiên
-  if (!token) {
-    alert("Vui lòng đăng nhập để đăng ký gói dịch vụ!");
-    navigate("/login");
-    return;
-  }
-
-  try {
-    // VERIFY ROLE THỰC từ backend - CHỈ GỌI 1 LẦN
-    const result = await verifyUserRole();
+  const handleDangKy = async (goi) => {
+    const token = localStorage.getItem("token");
     
-    if (!result.success) {
-      alert("Phiên đăng nhập không hợp lệ!");
+    // Kiểm tra token đầu tiên
+    if (!token) {
+      alert("Vui lòng đăng nhập để đăng ký gói dịch vụ!");
       navigate("/login");
       return;
     }
 
-    const realRole = result.user.role;
-    
-    // Kiểm tra role thực từ backend
-    if (realRole !== "TAIXE") {
-      alert("Chỉ tài xế mới có thể đăng ký gói dịch vụ!");
-      return;
+    try {
+      // VERIFY ROLE THỰC từ backend
+      const result = await verifyUserRole();
+      
+      if (!result.success) {
+        alert("Phiên đăng nhập không hợp lệ!");
+        navigate("/login");
+        return;
+      }
+
+      const realRole = result.user.role;
+      
+      // Kiểm tra role thực từ backend
+      if (realRole !== "TAIXE") {
+        alert("Chỉ tài xế mới có thể đăng ký gói dịch vụ!");
+        return;
+      }
+
+      // LẤY MÃ TÀI XẾ THỰC
+      const maTaiXeThuc = await layMaTaiXe();
+      if (!maTaiXeThuc) {
+        alert("Không tìm thấy thông tin tài xế!");
+        return;
+      }
+
+      setMaTaiXe(maTaiXeThuc); // Lưu mã tài xế vào state
+
+      // KIỂM TRA TRỰC TIẾP TRONG DATABASE - DÙNG MÃ TÀI XẾ
+      const coGoiConHan = await kiemTraGoiConHan(maTaiXeThuc);
+      if (coGoiConHan) {
+        alert("Bạn đang có gói dịch vụ còn hạn. Vui lòng đợi hết hạn để đăng ký gói mới!");
+        return;
+      }
+
+      // NẾU KHÔNG CÓ GÓI CÒN HẠN, HIỆN MODAL
+      setSelectedGoi(goi);
+      setShowModal(true);
+
+    } catch (error) {
+      console.error("Lỗi trong quá trình đăng ký:", error);
+      alert("Có lỗi xảy ra, vui lòng thử lại!");
     }
-
-    // KIỂM TRA TRỰC TIẾP TRONG DATABASE - LUÔN MỚI NHẤT
-    const coGoiConHan = await kiemTraGoiConHan();
-    if (coGoiConHan) {
-      alert("Bạn đang có gói dịch vụ còn hạn. Vui lòng đợi hết hạn để đăng ký gói mới!");
-      return;
-    }
-
-    // NẾU KHÔNG CÓ GÓI CÒN HẠN, HIỆN MODAL
-    setSelectedGoi(goi);
-    setShowModal(true);
-
-  } catch (error) {
-    console.error("Lỗi trong quá trình đăng ký:", error);
-    alert("Có lỗi xảy ra, vui lòng thử lại!");
-  }
-};
+  };
 
   const handleXacNhanDangKy = async () => {
     setLoading(true);
     
     const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("userId");
 
     try {
-      // Gọi API lưu lịch sử đăng ký
+      // Gọi API lưu lịch sử đăng ký - DÙNG MÃ TÀI XẾ
       const res = await fetch("/api/subscription-service/lichsudangkygoi", {
         method: "POST",
         headers: {
@@ -126,7 +159,7 @@ const handleDangKy = async (goi) => {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          maTaiXe: parseInt(userId),
+          maTaiXe: maTaiXe, // Sử dụng mã tài xế thực
           maGoi: selectedGoi.maGoi,
           trangThai: "DANG_SU_DUNG"
         }),
@@ -169,36 +202,21 @@ const handleDangKy = async (goi) => {
         
         <div className={styles.swiperWrapper}>
           <Swiper
-  key={swiperKey}
-  modules={[Pagination]}
-  spaceBetween={24}
-  slidesPerView={3}
-  pagination={{ clickable: true }}
-  loop={goiDichVu.length > 1}
-  breakpoints={{
-    0: { 
-      slidesPerView: 1,
-      spaceBetween: 16
-    },
-    640: { 
-      slidesPerView: 1,
-      spaceBetween: 20
-    },
-    768: { 
-      slidesPerView: 2,
-      spaceBetween: 20
-    },
-    1024: { 
-      slidesPerView: 3,
-      spaceBetween: 24
-    },
-    1280: { 
-      slidesPerView: 3,
-      spaceBetween: 32 // Tăng khoảng cách trên màn hình lớn
-    }
-  }}
-  className={styles.myswiper}
->
+            key={swiperKey}
+            modules={[Pagination]}
+            spaceBetween={24}
+            slidesPerView={3}
+            pagination={{ clickable: true }}
+            loop={goiDichVu.length > 1}
+            breakpoints={{
+              0: { slidesPerView: 1, spaceBetween: 16 },
+              640: { slidesPerView: 1, spaceBetween: 20 },
+              768: { slidesPerView: 2, spaceBetween: 20 },
+              1024: { slidesPerView: 3, spaceBetween: 24 },
+              1280: { slidesPerView: 3, spaceBetween: 32 }
+            }}
+            className={styles.myswiper}
+          >
             {goiDichVu.map((item) => (
               <SwiperSlide key={item.maGoi} className={styles.card}>
                 <span className={styles.name}>{item.tenGoi}</span>
@@ -214,7 +232,6 @@ const handleDangKy = async (goi) => {
                   Thời gian: {item.thoiGianDung} ngày
                 </span>
                 
-                {/* NÚT VẪN HIỆN BÌNH THƯỜNG */}
                 <Button 
                   primary 
                   onClick={() => handleDangKy(item)}

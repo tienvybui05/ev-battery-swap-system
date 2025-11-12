@@ -7,17 +7,17 @@ import { useEffect, useState } from "react";
 function ChangeBattery() {
     const [packageList, setPackageList] = useState([]);
     const [orders, setOrders] = useState([]);
-
+    const [maTaiXe, setMaTaiXe] = useState(null); // Thêm state lưu mã tài xế
 
     useEffect(() => {
-        const fetchOrderInfo = async () => {
+        const fetchTaiXeInfo = async () => {
             try {
                 const userId = localStorage.getItem("userId");
                 const token = localStorage.getItem("token");
 
-                if (!userId || !token) return;
+                if (!userId || !token) return null;
 
-                // 1) Lấy thông tin tài xế theo userId
+                // Lấy thông tin tài xế theo userId
                 const taiXeRes = await fetch(`/api/user-service/taixe/user/${userId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -26,18 +26,25 @@ function ChangeBattery() {
 
                 if (!taiXeRes.ok) {
                     console.error("❌ Không lấy được thông tin tài xế");
-                    return;
+                    return null;
                 }
 
                 const taiXeData = await taiXeRes.json();
-                const maTaiXe = taiXeData.maTaiXe; // ✅ Lấy mã tài xế
+                return taiXeData.maTaiXe; // ✅ Lấy mã tài xế
 
-                if (!maTaiXe) {
-                    console.error("❌ Không tìm thấy mã tài xế");
-                    return;
-                }
+            } catch (err) {
+                console.error("💥 Lỗi khi lấy thông tin tài xế:", err);
+                return null;
+            }
+        };
 
-                // 2) Lấy lịch đặt pin theo mã tài xế
+        const fetchOrderInfo = async (maTaiXe) => {
+            try {
+                const token = localStorage.getItem("token");
+
+                if (!maTaiXe || !token) return;
+
+                // Lấy lịch đặt pin theo mã tài xế
                 const res = await fetch(`/api/station-service/dat-lich/tai-xe/${maTaiXe}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -69,58 +76,67 @@ function ChangeBattery() {
             }
         };
 
-        fetchOrderInfo();
-
-        const fetchPackageInfo = async () => {
+        const fetchPackageInfo = async (maTaiXe) => {
             try {
                 const token = localStorage.getItem("token");
-                const userId = localStorage.getItem("userId");
 
-                if (token && userId) {
-                    const res = await fetch(`/api/subscription-service/lichsudangkygoi/taixe/${userId}`, {
-                        headers: {
-                            "Authorization": `Bearer ${token}`
-                        }
+                if (!token || !maTaiXe) return;
+
+                // SỬA: Dùng mã tài xế thay vì userId
+                const res = await fetch(`/api/subscription-service/lichsudangkygoi/taixe/${maTaiXe}`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log("API Response:", data); // THÊM LOG ĐỂ DEBUG
+
+                    // XỬ LÝ TRẠNG THÁI ĐÚNG
+                    const allPackages = data.map(goi => {
+                        // SỬA: Kiểm tra cả "CON_HAN" và "HET_HAN"
+                        const isActive = goi.trangThai === "CON_HAN";
+                        console.log(goi.trangThai)
+                        const statusText = isActive ? "Hoạt động" : "Hết hạn";
+                        console.log(statusText)
+                        const statusClass = isActive ? styles.statusActive : styles.statusExpired;
+
+                        return {
+                            packageName: goi.goiDichVu?.tenGoi || "Gói dịch vụ",
+                            used: (goi.goiDichVu?.soLanDoi || 0) - goi.soLanConLai,
+                            total: goi.goiDichVu?.soLanDoi || 0,
+                            remaining: goi.soLanConLai,
+                            nextBillDate: new Date(goi.ngayKetThuc).toLocaleDateString('vi-VN'),
+                            isActive: isActive,
+                            statusText: statusText,
+                            statusClass: statusClass,
+                            rawStatus: goi.trangThai // THÊM ĐỂ DEBUG
+                        };
                     });
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        console.log("API Response:", data); // THÊM LOG ĐỂ DEBUG
-
-                        // XỬ LÝ TRẠNG THÁI ĐÚNG
-                        const allPackages = data.map(goi => {
-                            // SỬA: Kiểm tra cả "CON_HAN" và "HET_HAN"
-                            const isActive = goi.trangThai === "CON_HAN";
-                            console.log(goi.trangThai)
-                            const statusText = isActive ? "Hoạt động" : "Hết hạn";
-                            console.log(statusText)
-                            const statusClass = isActive ? styles.statusActive : styles.statusExpired;
-
-                            return {
-                                packageName: goi.goiDichVu?.tenGoi || "Gói dịch vụ",
-                                used: (goi.goiDichVu?.soLanDoi || 0) - goi.soLanConLai,
-                                total: goi.goiDichVu?.soLanDoi || 0,
-                                remaining: goi.soLanConLai,
-                                nextBillDate: new Date(goi.ngayKetThuc).toLocaleDateString('vi-VN'),
-                                isActive: isActive,
-                                statusText: statusText,
-                                statusClass: statusClass,
-                                rawStatus: goi.trangThai // THÊM ĐỂ DEBUG
-                            };
-                        });
-
-                        setPackageList(allPackages);
-                    }
+                    setPackageList(allPackages);
                 }
             } catch (error) {
                 console.error("Fetch package error:", error);
             }
         };
 
-        fetchPackageInfo();
+        // Hàm chính để chạy tất cả
+        const fetchAllData = async () => {
+            const maTaiXeThuc = await fetchTaiXeInfo();
+            
+            if (maTaiXeThuc) {
+                setMaTaiXe(maTaiXeThuc); // Lưu mã tài xế vào state
+                await Promise.all([
+                    fetchOrderInfo(maTaiXeThuc),
+                    fetchPackageInfo(maTaiXeThuc)
+                ]);
+            }
+        };
+
+        fetchAllData();
     }, []);
-
-
 
     return (
         <nav className={styles.wrapper}>
