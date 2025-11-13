@@ -36,6 +36,11 @@ public class LichSuDangKyGoiController {
         return ResponseEntity.ok(lichSuDangKyGoiService.suaDangKyGoi(id, dto));
     }
 
+    @PutMapping("/giaodich/{id}")
+    public ResponseEntity<LichSuDangKyGoi> suaSoLanConLai(@PathVariable Long id, @RequestBody LichSuDangKyGoiDTO dto) {
+        return ResponseEntity.ok(lichSuDangKyGoiService.suaSoLanConLai(id, dto));
+    }
+
     @GetMapping
     public ResponseEntity<List<LichSuDangKyGoi>> danhSach() {
         return ResponseEntity.ok(lichSuDangKyGoiService.danhSachDangKyGoi());

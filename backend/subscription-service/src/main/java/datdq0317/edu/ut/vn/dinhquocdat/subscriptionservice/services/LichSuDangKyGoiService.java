@@ -69,6 +69,50 @@ public class LichSuDangKyGoiService implements ILichSuDangKyGoiService {
     }
 
     @Override
+    @Transactional
+    public LichSuDangKyGoi suaSoLanConLai(Long maTaiXe, LichSuDangKyGoiDTO dto) {
+
+        // Lấy danh sách gói của tài xế
+        List<LichSuDangKyGoi> list = lichSuDangKyGoiRepository.findByMaTaiXe(maTaiXe);
+
+        if (list.isEmpty()) {
+            throw new RuntimeException("Tài xế chưa đăng ký gói nào");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate ngayGiaoDich = dto.getNgayGiaoDich() != null ? dto.getNgayGiaoDich() : today;
+
+        // Lọc gói còn hạn
+        List<LichSuDangKyGoi> goiValid = list.stream()
+                .filter(ls -> ls.getNgayKetThuc() != null
+                        && !ngayGiaoDich.isAfter(ls.getNgayKetThuc()) // giao dịch <= hạn
+                        && ls.getSoLanConLai() != null
+                        && ls.getSoLanConLai() > 0
+                        && xacDinhTrangThai(ls.getNgayKetThuc(), ls.getSoLanConLai()).equals("CON_HAN")
+                )
+                .sorted((a, b) -> b.getNgayBatDau().compareTo(a.getNgayBatDau())) // ưu tiên gói mới nhất
+                .toList();
+
+        if (goiValid.isEmpty()) {
+            throw new RuntimeException("Không có gói hợp lệ để trừ lượt");
+        }
+
+        // Lấy gói mới nhất
+        LichSuDangKyGoi goi = goiValid.get(0);
+
+        // Trừ lượt
+        goi.setSoLanConLai(goi.getSoLanConLai() - 1);
+
+        // Cập nhật trạng thái
+        goi.setTrangThai(
+                xacDinhTrangThai(goi.getNgayKetThuc(), goi.getSoLanConLai())
+        );
+
+        // Lưu vào DB
+        return lichSuDangKyGoiRepository.save(goi);
+    }
+
+    @Override
     public List<LichSuDangKyGoi> danhSachDangKyGoi() {
         List<LichSuDangKyGoi> list = lichSuDangKyGoiRepository.findAll();
         // Cập nhật trạng thái tự động khi lấy danh sách

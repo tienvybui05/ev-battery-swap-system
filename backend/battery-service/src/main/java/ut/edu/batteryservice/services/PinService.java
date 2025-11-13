@@ -47,6 +47,29 @@ public class PinService implements IPinService {
         }).orElseThrow(() -> new RuntimeException("Không tìm thấy Pin cần cập nhật!"));
     }
 
+    @Override
+    @Transactional
+    public Pin updatePinState(Long id, String newState) {
+        return pinRepository.findById(id)
+                .map(existing -> {
+
+                    // Validate ENUM hợp lệ
+                    Pin.TrangThaiSoHuu trangThai;
+                    try {
+                        trangThai = Pin.TrangThaiSoHuu.valueOf(newState);
+                    } catch (IllegalArgumentException e) {
+                        throw new RuntimeException("Trạng thái sở hữu không hợp lệ!");
+                    }
+
+                    // Cập nhật trạng thái
+                    existing.setTrangThaiSoHuu(trangThai);
+
+                    return pinRepository.save(existing);
+                })
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Pin!"));
+    }
+
+
     @Transactional
     @Override
     public boolean deletePinType(Long id) {

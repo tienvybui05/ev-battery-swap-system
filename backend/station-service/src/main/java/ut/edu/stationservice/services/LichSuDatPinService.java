@@ -107,7 +107,7 @@ public class LichSuDatPinService implements ILichSuDatPinService {
 
     @Override
     public List<LichSuDatPin> findByMaTramAndTrangThai(Long maTram, String trangThaiXacNhan) {
-        return lichSuDatPinRepository.findByTram_MaTramAndTrangThaiXacNhan(maTram, trangThaiXacNhan);
+        return lichSuDatPinRepository.findActiveQueueByTramAndStatus(maTram, trangThaiXacNhan);
     }
 
 }

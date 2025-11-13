@@ -47,7 +47,8 @@ public class GiaoDichDoiPinService implements IGiaoDichDoiPinService {
 
         suaGiaoDich.setTrangThaiGiaoDich(giaoDichDoiPin.getTrangThaiGiaoDich());
         suaGiaoDich.setPhuongThucThanhToan(giaoDichDoiPin.getPhuongThucThanhToan());
-        suaGiaoDich.setThanhtien(giaoDichDoiPin.getThanhtien()); // ✅ fix
+        suaGiaoDich.setThanhtien(giaoDichDoiPin.getThanhtien());
+        suaGiaoDich.setNgayGiaoDich(giaoDichDoiPin.getNgayGiaoDich());
 
         return giaoDichDoiPinRepository.save(suaGiaoDich);
     }

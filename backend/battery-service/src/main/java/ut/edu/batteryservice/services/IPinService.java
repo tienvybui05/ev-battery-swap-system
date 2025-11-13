@@ -11,4 +11,5 @@ public interface IPinService {
     Pin updatePinType(Long id, Pin pin);
     boolean deletePinType(Long id);
     Pin addPin(Pin pin);
+    Pin updatePinState(Long id, String newState);
 }

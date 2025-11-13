@@ -46,58 +46,134 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
   }, [mode, order?.maTram, order?.pinDi?.loaiPin]);
 
   const handleConfirm = async () => {
-    if (!selectedPin) {
-      alert("⚠️ Vui lòng chọn pin đến trước khi xác nhận!");
-      return;
-    }
-    if (!payment) {
-      alert("⚠️ Vui lòng chọn phương thức thanh toán!");
+    const token = localStorage.getItem("token");
+
+    // 🟢 MODE 1 — CHỜ XÁC NHẬN (tạo giao dịch + gán vào đơn)
+    if (mode === "CHO_XAC_NHAN") {
+
+      if (!selectedPin) {
+        alert("⚠️ Vui lòng chọn pin đến!");
+        return;
+      }
+
+      try {
+
+        // 0️⃣ Giữ chỗ pin đến
+        await axios.patch(
+          `/api/battery-service/pins/${selectedPin}/state`,
+          { trangThaiSoHuu: "DUOC_GIU_CHO" },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // 1️⃣ Tạo giao dịch
+        const payloadGiaoDich = {
+          maPinTra: String(order?.pinDi?.maPin),
+          maPinNhan: String(selectedPin),
+          ngayGiaoDich: null,
+          trangThaiGiaoDich: "Đang xử lý",
+          thanhtien: 1200000,
+          phuongThucThanhToan: payment,
+          maTram: order?.maTram,
+          maTaiXe: order?.maTaiXe,
+        };
+
+
+        const res = await axios.post(
+          `/api/transaction-service/giaodichdoipin`,
+          payloadGiaoDich,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const maGiaoDich = res.data.maGiaoDichDoiPin;
+
+        // 2️⃣ Cập nhật đặt lịch
+        await axios.put(
+          `/api/station-service/dat-lich/${order.maLichSuDat}`,
+          {
+            trangThaiXacNhan: "Đã xác nhận",
+            trangThaiDoiPin: "Đang xử lý",
+            maGiaoDichDoiPin: maGiaoDich,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        alert("✅ Đơn đã được xác nhận!");
+        onConfirm();
+        onClose();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Lỗi khi xác nhận đơn!");
+      }
+
       return;
     }
 
-    try {
+    // 🟢 MODE 2 — ĐÃ XÁC NHẬN (cập nhật giao dịch + trừ gói nếu cần)
+    if (mode === "DA_XAC_NHAN") {
+
+      if (!payment) {
+        alert("⚠️ Vui lòng chọn phương thức thanh toán!");
+        return;
+      }
+
       const token = localStorage.getItem("token");
+      const maGiaoDich = order.maGiaoDichDoiPin;
 
-      // 🧩 1️⃣ Tạo giao dịch đổi pin
-      const payloadGiaoDich = {
-        maPinTra: String(order?.pinDi?.maPin),
-        maPinNhan: String(selectedPin),
-        ngayGiaoDich: null,
-        trangThaiGiaoDich: transactionStatus,
-        thanhtien: 1200000,
-        phuongThucThanhToan: payment,
-        maTram: order?.maTram,
-        maTaiXe: order?.maTaiXe,
-      };
+      try {
+        const isUsingPackage = payment === "package";
 
-      const resGiaoDich = await axios.post(
-        `/api/transaction-service/giaodichdoipin`,
-        payloadGiaoDich,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        // 🟢 1️⃣ Nếu dùng gói → kiểm tra & trừ lượt gói TRƯỚC
+        if (isUsingPackage) {
+          try {
+            await axios.put(
+              `/api/subscription-service/lichsudangkygoi/giaodich/${order.maTaiXe}`,
+              {
+                maTaiXe: order.maTaiXe,
+                ngayGiaoDich: new Date().toISOString().split("T")[0]
+              },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          } catch (err) {
+            alert("❌ Gói dịch vụ không hợp lệ hoặc đã hết lượt! Không thể hoàn thành giao dịch.");
+            return;
+          }
+        }
 
-      const maGiaoDich = resGiaoDich.data.maGiaoDichDoiPin;
-      console.log("✅ Tạo giao dịch thành công:", resGiaoDich.data);
+        // 🟢 2️⃣ Cập nhật giao dịch
+        const payloadUpdate = {
+          maPinTra: String(order?.pinDi?.maPin),
+          maPinNhan: String(order?.pinDen?.maPin || order.maPinNhan),
+          ngayGiaoDich: new Date().toISOString(),
+          trangThaiGiaoDich: transactionStatus,
+          thanhtien: isUsingPackage ? 0 : 1200000,
+          phuongThucThanhToan: payment,
+          maTram: order?.maTram,
+          maTaiXe: order?.maTaiXe,
+        };
 
-      // 🧩 2️⃣ Cập nhật trạng thái đơn đặt pin với mã giao dịch vừa tạo
-      const payloadUpdate = {
-        trangThaiXacNhan: "Đã xác nhận",
-        trangThaiDoiPin: "Đang xử lý",
-        maGiaoDichDoiPin: maGiaoDich,
-      };
+        await axios.put(
+          `/api/transaction-service/giaodichdoipin/${maGiaoDich}`,
+          payloadUpdate,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      await axios.put(
-        `/api/station-service/dat-lich/${order.maLichSuDat}`,
-        payloadUpdate,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        // 🟢 3️⃣ Cập nhật trạng thái đặt lịch
+        await axios.put(
+          `/api/station-service/dat-lich/${order.maLichSuDat}`,
+          {
+            trangThaiDoiPin: "Hoàn thành",
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      alert("✅ Xác nhận đơn và tạo giao dịch thành công!");
-      onConfirm(resGiaoDich.data);
-      onClose();
-    } catch (err) {
-      console.error("❌ Lỗi khi tạo giao dịch hoặc cập nhật đơn:", err);
-      alert("❌ Không thể hoàn tất xác nhận, vui lòng thử lại!");
+        alert("✅ Đã hoàn thành giao dịch!");
+        onConfirm();
+        onClose();
+
+      } catch (err) {
+        console.error(err);
+        alert("❌ Cập nhật giao dịch thất bại!");
+      }
     }
   };
 
@@ -215,37 +291,39 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
           </div>
 
           {/* Thanh toán */}
-          <div className={styles.paymentBox}>
-            <h4>Thanh Toán Dịch Vụ</h4>
-            <div className={styles.priceRow}>
-              <span>Tổng tiền:</span>
-              <strong>1.200.000₫</strong>
-            </div>
+          {/* Chỉ hiện payment khi ở trạng thái đã xác nhận */}
+          {mode === "DA_XAC_NHAN" && (
+            <div className={styles.paymentBox}>
+              <h4>Thanh Toán Dịch Vụ</h4>
+              <div className={styles.priceRow}>
+                <span>Tổng tiền:</span>
+                <strong>{payment === "package" ? "0₫" : "1.200.000₫"}</strong>
+              </div>
 
-            <div className={styles.paymentBtns}>
-              <button
-                className={`${styles.payBtn} ${payment === "card" ? styles.active : ""
-                  }`}
-                onClick={() => setPayment("card")}
-              >
-                <FontAwesomeIcon icon={faCreditCard} /> Thẻ
-              </button>
-              <button
-                className={`${styles.payBtn} ${payment === "cash" ? styles.active : ""
-                  }`}
-                onClick={() => setPayment("cash")}
-              >
-                <FontAwesomeIcon icon={faMoneyBillWave} /> Tiền mặt
-              </button>
-              <button
-                className={`${styles.payBtn} ${payment === "package" ? styles.active : ""
-                  }`}
-                onClick={() => setPayment("package")}
-              >
-                <FontAwesomeIcon icon={faGift} /> Sử dụng gói
-              </button>
+              <div className={styles.paymentBtns}>
+                <button
+                  className={`${styles.payBtn} ${payment === "card" ? styles.active : ""}`}
+                  onClick={() => setPayment("card")}
+                >
+                  <FontAwesomeIcon icon={faCreditCard} /> Thẻ
+                </button>
+
+                <button
+                  className={`${styles.payBtn} ${payment === "cash" ? styles.active : ""}`}
+                  onClick={() => setPayment("cash")}
+                >
+                  <FontAwesomeIcon icon={faMoneyBillWave} /> Tiền mặt
+                </button>
+
+                <button
+                  className={`${styles.payBtn} ${payment === "package" ? styles.active : ""}`}
+                  onClick={() => setPayment("package")}
+                >
+                  <FontAwesomeIcon icon={faGift} /> Sử dụng gói
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* FOOTER */}

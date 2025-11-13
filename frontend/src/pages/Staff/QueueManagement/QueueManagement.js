@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClock, faCheck, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./QueueManagement.module.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import BatterySwapModal from "./BatterySwapModal";
 import axios from "axios";
 
@@ -39,84 +39,108 @@ function QueueManagement() {
   }, []);
 
   // Lấy danh sách đơn theo trạm + enrich dữ liệu
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!maTram) return;
+  const fetchOrders = useCallback(async () => {
+    if (!maTram) return;
 
-      const token = localStorage.getItem("token");
-      setLoading(true);
+    const token = localStorage.getItem("token");
+    setLoading(true);
 
-      try {
-        // 1) Lấy danh sách đơn theo trạm và trạng thái
-        const res = await axios.get(
-          `/api/station-service/dat-lich/tram/${maTram}/trang-thai`,
-          {
-            params: { trangThai: activeTab === 1 ? "Chờ xác nhận" : "Đã xác nhận" },
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
+    try {
+      // 1) Lấy danh sách đơn theo trạm và trạng thái
+      const res = await axios.get(
+        `/api/station-service/dat-lich/tram/${maTram}/trang-thai`,
+        {
+          params: { trangThai: activeTab === 1 ? "Chờ xác nhận" : "Đã xác nhận" },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-        const rawOrders = res.data;
+      const rawOrders = res.data;
 
-        // 2) Enrich dữ liệu (lấy tên tài xế, loại xe, loại pin)
-        const enriched = await Promise.all(
-          rawOrders.map(async (order) => {
-            let taiXeName = "Không rõ";
-            let xeLoai = "Không rõ";
-            let pinLoai = "Không rõ";
+      // 2) Enrich dữ liệu (lấy tên tài xế, loại xe, loại pin)
+      const enriched = await Promise.all(
+        rawOrders.map(async (order) => {
+          let taiXeName = "Không rõ";
+          let xeLoai = "Không rõ";
+          let pinLoai = "Không rõ";
 
-            try {
-              const txRes = await axios.get(`/api/user-service/taixe/${order.maTaiXe}`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              taiXeName = txRes.data.nguoiDung.hoTen;
-            } catch { }
+          try {
+            const txRes = await axios.get(`/api/user-service/taixe/${order.maTaiXe}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            taiXeName = txRes.data.nguoiDung.hoTen;
+          } catch { }
 
-            try {
-              const xeRes = await axios.get(`/api/vehicle-service/vehicles/${order.maXeGiaoDich}`);
-              xeLoai = xeRes.data.loaiXe;
+          try {
+            const xeRes = await axios.get(`/api/vehicle-service/vehicles/${order.maXeGiaoDich}`);
+            xeLoai = xeRes.data.loaiXe;
 
-              if (xeRes.data.maPin) {
-                try {
-                  const pinRes = await axios.get(`/api/battery-service/pins/${xeRes.data.maPin}`);
-                  order.pinDi = {
-                    maPin: pinRes.data.maPin,
-                    loaiPin: pinRes.data.loaiPin,
-                    dungLuong: pinRes.data.dungLuong,
-                    sucKhoe: pinRes.data.sucKhoe,
-                    tinhTrang: pinRes.data.tinhTrang,
-                    ngayBaoDuong: pinRes.data.ngayBaoDuongGanNhat,
-                  };
-                } catch (err) {
-                  console.warn("Không lấy được pin đi:", err);
-                }
+            if (xeRes.data.maPin) {
+              try {
+                const pinRes = await axios.get(`/api/battery-service/pins/${xeRes.data.maPin}`);
+                order.pinDi = {
+                  maPin: pinRes.data.maPin,
+                  loaiPin: pinRes.data.loaiPin,
+                  dungLuong: pinRes.data.dungLuong,
+                  sucKhoe: pinRes.data.sucKhoe,
+                  tinhTrang: pinRes.data.tinhTrang,
+                  ngayBaoDuong: pinRes.data.ngayBaoDuongGanNhat,
+                };
+              } catch (err) {
+                console.warn("Không lấy được pin đi:", err);
               }
-            } catch { }
+            }
+            // 🟢 Nếu đơn đã xác nhận & có mã giao dịch → lấy thông tin pin đến
+            if (order.maGiaoDichDoiPin) {
+              try {
+                const giaoDichRes = await axios.get(
+                  `/api/transaction-service/giaodichdoipin/${order.maGiaoDichDoiPin}`,
+                  { headers: { Authorization: `Bearer ${token}` } }
+                );
 
-            return {
-              ...order,
-              name: taiXeName,
-              car: xeLoai,
-              pinLoai, // ✅ thêm vào đây
-              maTram,
-              time: order.ngayDat ? order.ngayDat.substring(11, 16) : "--:--",
-              code: `LS-${order.maLichSuDat}`,
-              color: activeTab === 1 ? "#3B82F6" : "#10B981",
-              status: activeTab === 1 ? "đang chờ" : "đã xác nhận",
-            };
-          })
-        );
+                const maPinNhan = giaoDichRes.data.maPinNhan;
 
-        setOrders(enriched);
-      } catch (err) {
-        console.error("❌ Lỗi lấy đơn theo trạm:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+                if (maPinNhan) {
+                  const pinDenRes = await axios.get(`/api/battery-service/pins/${maPinNhan}`);
+                  order.pinDen = {
+                    maPin: pinDenRes.data.maPin,
+                    loaiPin: pinDenRes.data.loaiPin,
+                    dungLuong: pinDenRes.data.dungLuong,
+                    sucKhoe: pinDenRes.data.sucKhoe,
+                    tinhTrang: pinDenRes.data.tinhTrang,
+                  };
+                }
+              } catch (err) {
+                console.warn("⚠️ Không lấy được pin đến:", err);
+              }
+            }
+          } catch { }
 
-    fetchOrders();
+          return {
+            ...order,
+            name: taiXeName,
+            car: xeLoai,
+            pinLoai, // ✅ thêm vào đây
+            maTram,
+            time: order.ngayDat ? order.ngayDat.substring(11, 16) : "--:--",
+            code: `LS-${order.maLichSuDat}`,
+            color: activeTab === 1 ? "#3B82F6" : "#10B981",
+            status: activeTab === 1 ? "đang chờ" : "đã xác nhận",
+          };
+        })
+      );
+
+      setOrders(enriched);
+    } catch (err) {
+      console.error("❌ Lỗi lấy đơn theo trạm:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [maTram, activeTab]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   return (
     <div className={styles.queuePage}>
@@ -226,7 +250,10 @@ function QueueManagement() {
           mode={activeTab === 1 ? "CHO_XAC_NHAN" : "DA_XAC_NHAN"}
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
-          onConfirm={() => setSelectedOrder(null)}
+          onConfirm={() => {
+            setSelectedOrder(null);
+            fetchOrders();
+          }}
         />
       )}
     </div>

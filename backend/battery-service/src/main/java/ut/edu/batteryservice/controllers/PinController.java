@@ -7,6 +7,7 @@ import ut.edu.batteryservice.models.Pin;
 import ut.edu.batteryservice.services.IPinService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/battery-service/pins")
@@ -32,6 +33,20 @@ public class PinController {
             return ResponseEntity.ok(pinService.updatePinType(id, pin));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @PatchMapping("/{id}/state")
+    public ResponseEntity<?> updatePinState(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body
+    ) {
+        try {
+            String newState = body.get("trangThaiSoHuu");
+            Pin updated = pinService.updatePinState(id, newState);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
