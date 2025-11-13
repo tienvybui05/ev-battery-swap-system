@@ -42,103 +42,115 @@ function Inventory() {
 
     const getAuthToken = () => localStorage.getItem("token");
 
-    // 🟢 Lấy danh sách pin, chỉ lấy pin còn trong kho
+    /* ========================== LẤY DANH SÁCH PIN ========================== */
     const fetchPinList = async () => {
         try {
             setListLoading(true);
             const token = getAuthToken();
+            const userId = localStorage.getItem("userId");
 
+            if (!userId) {
+                console.error("❌ Không tìm thấy userId");
+                setPins([]);
+                return;
+            }
+
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+            /* =================== 1) Lấy mã trạm của nhân viên =================== */
+            const nvRes = await fetch(`/api/user-service/nhanvien/user/${userId}`, {
+                headers,
+            });
+
+            if (!nvRes.ok) {
+                console.error("❌ Không lấy được thông tin nhân viên");
+                setPins([]);
+                return;
+            }
+
+            const nhanVien = await nvRes.json();
+            const maTramNhanVien = Number(nhanVien.maTram ?? nhanVien.ma_tram);
+
+            /* =================== 2) Fetch pin, lịch sử, trạm =================== */
             const [pinsRes, historyRes, tramRes] = await Promise.all([
-                fetch("/api/battery-service/pins", {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }),
-                fetch("/api/battery-service/lichsu-pin-tram", {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }),
-                fetch("/api/station-service/tram", {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                }),
+                fetch("/api/battery-service/pins", { headers }),
+                fetch("/api/battery-service/lichsu-pin-tram", { headers }),
+                fetch("/api/station-service/tram", { headers }),
             ]);
 
-            if (pinsRes.ok && historyRes.ok && tramRes.ok) {
-                const pinsData = await pinsRes.json();
-                const historyData = await historyRes.json();
-                const tramData = await tramRes.json();
-
-                // 🎯 Lọc chỉ lấy pin KHÔNG ở trạng thái "ĐANG SỬ DỤNG" hoặc "ĐANG VẬN CHUYỂN"
-                const pinsInStock = pinsData.filter((p) => {
-                    const own = (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "").toUpperCase();
-                    return own !== "DANG_SU_DUNG" && own !== "DANG_VAN_CHUYEN";
-                });
-
-                const mapped = pinsInStock.map((p, i) => {
-                    const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
-
-                    // 🔹 Map tinhTrang enum → label tiếng Việt
-                    const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
-                    let statusLabel = "không xác định";
-                    switch (tinhTrangEnum) {
-                        case "DAY":
-                            statusLabel = "đầy";
-                            break;
-                        case "DANG_SAC":
-                            statusLabel = "đang sạc";
-                            break;
-                        case "BAO_TRI":
-                            statusLabel = "bảo trì";
-                            break;
-                        default:
-                            statusLabel = "không xác định";
-                    }
-
-                    // ✅ Lấy bản ghi mới nhất theo ngày thay đổi
-                    const latestRecord = historyData
-                        .filter((h) => Number(h.maPin ?? h.ma_pin) === pinId)
-                        .sort((a, b) =>
-                            new Date(b.ngayThayDoi ?? b.ngay_thay_doi ?? 0) -
-                            new Date(a.ngayThayDoi ?? a.ngay_thay_doi ?? 0)
-                        )[0];
-
-                    const record = latestRecord;
-
-
-                    let tramName = "Chưa có lịch sử";
-                    if (record) {
-                        const tram = tramData.find(
-                            (t) =>
-                                Number(t.maTram ?? t.ma_tram) ===
-                                Number(record.maTram ?? record.ma_tram)
-                        );
-                        tramName = tram
-                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${record.maTram}`
-                            : `Trạm ${record.maTram}`;
-                    }
-
-                    return {
-                        id: pinId,
-                        title: `Pin ${pinId} – ${tramName}`,
-                        type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
-                        status: statusLabel,
-                        health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
-                        capacity: p.dungLuong ?? p.dung_luong ?? 0,
-                        lastMaintenance:
-                            p.ngayBaoDuongGanNhat ?? p.ngay_bao_duong_gan_nhat ?? "—",
-                        importDate: p.ngayNhapKho ?? p.ngay_nhap_kho ?? "—",
-                    };
-                });
-
-                setPins(mapped);
-            } else {
-                console.error(
-                    "❌ Lỗi tải dữ liệu:",
-                    pinsRes.status,
-                    historyRes.status,
-                    tramRes.status
-                );
+            if (!pinsRes.ok || !historyRes.ok || !tramRes.ok) {
+                console.error("❌ Lỗi tải dữ liệu");
                 setPins([]);
+                return;
             }
+
+            const pinsData = await pinsRes.json();
+            const historyData = await historyRes.json();
+            const tramData = await tramRes.json();
+
+            /* =================== 3) Lấy lịch sử mới nhất của từng pin =================== */
+            const latestHistoryMap = {};
+
+            for (const h of historyData) {
+                const pinId = Number(h.maPin ?? h.ma_pin);
+                const date = new Date(h.ngayThayDoi ?? h.ngay_thay_doi ?? "1970-01-01");
+
+                if (!latestHistoryMap[pinId] || date > latestHistoryMap[pinId].date) {
+                    latestHistoryMap[pinId] = { ...h, date };
+                }
+            }
+
+            /* =================== 4) Lọc pin theo đúng trạm nhân viên =================== */
+            const filteredPins = pinsData.filter((p) => {
+                const pinId = Number(p.maPin ?? p.ma_pin);
+                const hist = latestHistoryMap[pinId];
+                return hist && Number(hist.maTram ?? hist.ma_tram) === maTramNhanVien;
+            });
+
+            /* =================== 5) Map dữ liệu pin =================== */
+            const mapped = filteredPins.map((p, index) => {
+                const pinId = Number(p.maPin ?? p.ma_pin ?? index + 1);
+
+                const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
+                let statusLabel =
+                    tinhTrangEnum === "DAY"
+                        ? "đầy"
+                        : tinhTrangEnum === "DANG_SAC"
+                            ? "đang sạc"
+                            : tinhTrangEnum === "BAO_TRI"
+                                ? "bảo trì"
+                                : "không xác định";
+
+                const record = latestHistoryMap[pinId];
+
+                let tramName = "Chưa có lịch sử";
+                if (record) {
+                    const tram = tramData.find(
+                        (t) =>
+                            Number(t.maTram ?? t.ma_tram) ===
+                            Number(record.maTram ?? record.ma_tram)
+                    );
+                    tramName = tram
+                        ? tram.tenTram ?? tram.ten_tram
+                        : `Trạm ${record.maTram}`;
+                }
+
+                return {
+                    id: pinId,
+                    title: `Pin ${pinId} – ${tramName}`,
+                    type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
+                    status: statusLabel,
+                    health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
+                    capacity: p.dungLuong ?? p.dung_luong ?? 0,
+                    lastMaintenance:
+                        p.ngayBaoDuongGanNhat ?? p.ngay_bao_duong_gan_nhat ?? "—",
+                    importDate: p.ngayNhapKho ?? p.ngay_nhap_kho ?? "—",
+                };
+            });
+
+            setPins(mapped);
         } catch (err) {
-            console.error("⚠️ Lỗi kết nối:", err);
+            console.error("⚠️ Lỗi:", err);
             setPins([]);
         } finally {
             setListLoading(false);
@@ -149,15 +161,7 @@ function Inventory() {
         fetchPinList();
     }, []);
 
-    if (listLoading) {
-        return (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-                <p>🔄 Đang tải dữ liệu pin...</p>
-            </div>
-        );
-    }
-
-    // 🔹 Lọc thêm theo bộ lọc frontend
+    /* =================== Lọc phía frontend =================== */
     const filteredPins = pins.filter((p) => {
         const matchStatus =
             filters.status.length === 0 || filters.status.includes(p.status);
@@ -172,6 +176,15 @@ function Inventory() {
         return matchStatus && matchModel && matchCap && matchHealth;
     });
 
+    if (listLoading) {
+        return (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+                <p>🔄 Đang tải dữ liệu pin...</p>
+            </div>
+        );
+    }
+
+    /* =================== UI =================== */
     return (
         <div className={styles.inventoryPage}>
             <StatsHeader />
@@ -180,7 +193,6 @@ function Inventory() {
                 <h2>Kho Pin</h2>
 
                 <div className={styles.headerButtons}>
-                    {/* Bộ lọc */}
                     <button
                         className={styles.filterBtn}
                         onClick={() => setShowFilter(true)}
@@ -188,7 +200,6 @@ function Inventory() {
                         <FontAwesomeIcon icon={faFilter} /> Lọc
                     </button>
 
-                    {/* Ghi nhận trả pin */}
                     <button
                         className={styles.primaryBtn}
                         onClick={() => setShowCheck(true)}
@@ -196,7 +207,6 @@ function Inventory() {
                         <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
                     </button>
 
-                    {/* Làm mới */}
                     <button
                         className={styles.primaryBtn}
                         onClick={fetchPinList}
@@ -211,7 +221,6 @@ function Inventory() {
                 </div>
             </div>
 
-            {/* Lưới hiển thị pin */}
             <div className={styles.grid}>
                 {filteredPins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
@@ -237,9 +246,7 @@ function Inventory() {
                             <div className={styles.metrics}>
                                 <div>
                                     <div className={styles.metricLabel}>Sức khỏe:</div>
-                                    <div className={styles.metricValue}>
-                                        {pin.health}%
-                                    </div>
+                                    <div className={styles.metricValue}>{pin.health}%</div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>Dung lượng:</div>
@@ -252,9 +259,7 @@ function Inventory() {
                             <div className={styles.datesRow}>
                                 <div>
                                     <div className={styles.metricLabel}>Ngày nhập kho:</div>
-                                    <div className={styles.metricValue}>
-                                        {pin.importDate}
-                                    </div>
+                                    <div className={styles.metricValue}>{pin.importDate}</div>
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>
@@ -304,13 +309,10 @@ function Inventory() {
                 })}
 
                 {filteredPins.length === 0 && (
-                    <div className={styles.emptyState}>
-                        Không có pin nào trong kho.
-                    </div>
+                    <div className={styles.emptyState}>Không có pin nào trong kho.</div>
                 )}
             </div>
 
-            {/* Modal */}
             {showFilter && (
                 <FilterModal
                     current={filters}
