@@ -1,14 +1,14 @@
 package ngocvct0133.ut.edu.feedbackservice.config;
 
+import java.io.InputStream;
 
+import org.springframework.stereotype.Component;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+
 import jakarta.annotation.PostConstruct;
-import org.springframework.stereotype.Component;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 @Component
 public class FirebaseConfig {
@@ -16,8 +16,14 @@ public class FirebaseConfig {
     @PostConstruct
     public void initialize() {
         try {
-            FileInputStream serviceAccount =
-                    new FileInputStream("src/main/resources/firebase-service-account.json");
+            // ✅ Load file từ classpath (resources/firebase/…)
+            InputStream serviceAccount = getClass()
+                    .getClassLoader()
+                    .getResourceAsStream("firebase/ev-battery-swap-system-firebase-adminsdk-fbsvc-7a516a4c96.json");
+
+            if (serviceAccount == null) {
+                throw new RuntimeException("❌ Firebase config file NOT FOUND in classpath!");
+            }
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -25,9 +31,9 @@ public class FirebaseConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase initialized successfully.");
+                System.out.println("✅ Firebase initialized successfully (classpath)");
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("❌ Error initializing Firebase: " + e.getMessage());
         }
     }
