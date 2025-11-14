@@ -61,7 +61,10 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
         // 0️⃣ Giữ chỗ pin đến
         await axios.patch(
           `/api/battery-service/pins/${selectedPin}/state`,
-          { trangThaiSoHuu: "DUOC_GIU_CHO" },
+          {
+            tinhTrang: "DAY",
+            trangThaiSoHuu: "DUOC_GIU_CHO"
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -150,6 +153,34 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
           maTram: order?.maTram,
           maTaiXe: order?.maTaiXe,
         };
+
+        // 🔵 1️⃣ Cập nhật pin đi → đưa vào sạc
+        await axios.patch(
+          `/api/battery-service/pins/${order.pinDi.maPin}/state`,
+          {
+            tinhTrang: "DANG_SAC",
+            trangThaiSoHuu: "CHUA_SAN_SANG"
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // 🟢 2️⃣ Cập nhật pin đến → thuộc sở hữu tài xế
+        const pinNhanId = order?.pinDen?.maPin || order.maPinNhan;
+        await axios.patch(
+          `/api/battery-service/pins/${pinNhanId}/state`,
+          {
+            tinhTrang: "DAY",
+            trangThaiSoHuu: "DANG_SU_DUNG"
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // 🟣 3️⃣ Cập nhật xe để gắn pin mới
+        await axios.post(
+          `/api/vehicle-service/vehicles/${order.maXeGiaoDich}/link-pin/${pinNhanId}`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
         await axios.put(
           `/api/transaction-service/giaodichdoipin/${maGiaoDich}`,

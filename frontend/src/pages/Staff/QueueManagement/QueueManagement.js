@@ -4,6 +4,7 @@ import StatsHeader from "../components/StatsHeader/StatsHeader";
 import styles from "./QueueManagement.module.css";
 import { useState, useEffect, useCallback } from "react";
 import BatterySwapModal from "./BatterySwapModal";
+import DirectSwapModal from "./DirectSwapModal";
 import axios from "axios";
 
 function QueueManagement() {
@@ -12,6 +13,7 @@ function QueueManagement() {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showDirectSwap, setShowDirectSwap] = useState(false);
 
 
   // Lấy mã trạm của nhân viên đang đăng nhập
@@ -147,29 +149,57 @@ function QueueManagement() {
       <StatsHeader />
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "16px",
+        }}
+      >
+        {/* LEFT: Tabs */}
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button
+            onClick={() => setActiveTab(1)}
+            className={styles.actionBtn}
+            style={{
+              backgroundColor: activeTab === 1 ? "#111827" : "#e5e7eb",
+              color: activeTab === 1 ? "#fff" : "#111827",
+            }}
+          >
+            Chờ Xác Nhận
+          </button>
+
+          <button
+            onClick={() => setActiveTab(2)}
+            className={styles.actionBtn}
+            style={{
+              backgroundColor: activeTab === 2 ? "#111827" : "#e5e7eb",
+              color: activeTab === 2 ? "#fff" : "#111827",
+            }}
+          >
+            Đã Xác Nhận
+          </button>
+        </div>
+
+        {/* RIGHT: Direct swap */}
         <button
-          onClick={() => setActiveTab(1)}
           className={styles.actionBtn}
-          style={{
-            backgroundColor: activeTab === 1 ? "#111827" : "#e5e7eb",
-            color: activeTab === 1 ? "#fff" : "#111827",
-          }}
+          style={{ backgroundColor: "#111827" }}
+          onClick={() => setShowDirectSwap(true)}
         >
-          Chờ Xác Nhận
+          Đổi pin trực tiếp
         </button>
 
-        <button
-          onClick={() => setActiveTab(2)}
-          className={styles.actionBtn}
-          style={{
-            backgroundColor: activeTab === 2 ? "#111827" : "#e5e7eb",
-            color: activeTab === 2 ? "#fff" : "#111827",
-          }}
-        >
-          Đã Xác Nhận
-        </button>
+        {showDirectSwap && (
+          <DirectSwapModal
+            maTram={maTram}
+            onClose={() => setShowDirectSwap(false)}
+            onConfirm={fetchOrders}
+          />
+        )}
       </div>
+
 
       {/* Danh sách */}
       <div className={styles.ordersSection}>

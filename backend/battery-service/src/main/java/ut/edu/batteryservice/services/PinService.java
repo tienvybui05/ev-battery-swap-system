@@ -49,25 +49,35 @@ public class PinService implements IPinService {
 
     @Override
     @Transactional
-    public Pin updatePinState(Long id, String newState) {
+    public Pin updatePinState(Long id, String tinhTrang, String trangThaiSoHuu) {
         return pinRepository.findById(id)
-                .map(existing -> {
+                .map(pin -> {
 
-                    // Validate ENUM hợp lệ
-                    Pin.TrangThaiSoHuu trangThai;
-                    try {
-                        trangThai = Pin.TrangThaiSoHuu.valueOf(newState);
-                    } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Trạng thái sở hữu không hợp lệ!");
+                    // Cập nhật tinhTrang nếu có
+                    if (tinhTrang != null) {
+                        try {
+                            Pin.TinhTrang tt = Pin.TinhTrang.valueOf(tinhTrang);
+                            pin.setTinhTrang(tt);
+                        } catch (IllegalArgumentException e) {
+                            throw new RuntimeException("Tinh trạng không hợp lệ!");
+                        }
                     }
 
-                    // Cập nhật trạng thái
-                    existing.setTrangThaiSoHuu(trangThai);
+                    // Cập nhật trạng thái sở hữu nếu có
+                    if (trangThaiSoHuu != null) {
+                        try {
+                            Pin.TrangThaiSoHuu ts = Pin.TrangThaiSoHuu.valueOf(trangThaiSoHuu);
+                            pin.setTrangThaiSoHuu(ts);
+                        } catch (IllegalArgumentException e) {
+                            throw new RuntimeException("Trạng thái sở hữu không hợp lệ!");
+                        }
+                    }
 
-                    return pinRepository.save(existing);
+                    return pinRepository.save(pin);
                 })
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Pin!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy pin!"));
     }
+
 
 
     @Transactional

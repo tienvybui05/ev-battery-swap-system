@@ -42,13 +42,17 @@ public class PinController {
             @RequestBody Map<String, String> body
     ) {
         try {
-            String newState = body.get("trangThaiSoHuu");
-            Pin updated = pinService.updatePinState(id, newState);
+            String tinhTrang = body.get("tinhTrang");           // 🟢 thêm dòng này
+            String trangThaiSoHuu = body.get("trangThaiSoHuu"); // 🟢 thêm dòng này
+
+            Pin updated = pinService.updatePinState(id, tinhTrang, trangThaiSoHuu);
             return ResponseEntity.ok(updated);
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     // 🔵 Lấy danh sách toàn bộ Pin
     @GetMapping
