@@ -13,7 +13,7 @@ import FilterModal from "./FilterModal/FilterModal";
 import CheckModal from "./AddModal/AddModal";
 import LogsModal from "./LogsModal/LogsModal";
 import SettingsModal from "./SettingsModal/SettingsModal";
-import DeleteModal from "./DeleteModal/DeleteModal";   // ✅ THÊM MỚI
+import DeleteModal from "./DeleteModal/DeleteModal";
 
 /* ========= ÁNH XẠ MÀU CHO TÌNH TRẠNG KỸ THUẬT ========= */
 const STATUS_COLORS = {
@@ -30,7 +30,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
     const [showCheck, setShowCheck] = useState(false);
     const [showLogs, setShowLogs] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    const [showDelete, setShowDelete] = useState(false);   // ✅ MODAL XÓA
+    const [showDelete, setShowDelete] = useState(false);
     const [selectedPin, setSelectedPin] = useState(null);
 
     const [filters, setFilters] = useState({
@@ -73,9 +73,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                     const latestHistoryMap = {};
                     for (const h of historyData) {
                         const pinId = Number(h.maPin ?? h.ma_pin);
-                        const date = new Date(
-                            h.ngayThayDoi ?? h.ngay_thay_doi ?? "1970-01-01"
-                        );
+                        const date = new Date(h.ngayThayDoi ?? h.ngay_thay_doi ?? "1970-01-01");
                         if (!latestHistoryMap[pinId] || date > latestHistoryMap[pinId].date) {
                             latestHistoryMap[pinId] = { ...h, date };
                         }
@@ -88,23 +86,31 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                     });
                 }
 
-                const mapped = filteredPins.map((p, i) => {
-                    const pinId = Number(p.maPin ?? p.ma_pin ?? i + 1);
+                const mapped = filteredPins.map((p) => {
+                    const pinId = Number(p.maPin ?? p.ma_pin);
+
                     const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
                     let statusLabel = "không xác định";
                     switch (tinhTrangEnum) {
                         case "DAY": statusLabel = "đầy"; break;
                         case "DANG_SAC": statusLabel = "đang sạc"; break;
                         case "BAO_TRI": statusLabel = "bảo trì"; break;
-                        default: statusLabel = "không xác định";
+                    }
+
+                    const ownEnum = (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "").toUpperCase();
+                    let ownStatusLabel = "Không xác định";
+                    switch (ownEnum) {
+                        case "SAN_SANG": ownStatusLabel = "Sẵn sàng"; break;
+                        case "CHUA_SAN_SANG": ownStatusLabel = "Chưa sẵn sàng"; break;
+                        case "DANG_SU_DUNG": ownStatusLabel = "Đang sử dụng"; break;
+                        case "DANG_VAN_CHUYEN": ownStatusLabel = "Đang vận chuyển"; break;
                     }
 
                     const latestRecord = historyData
                         .filter((h) => Number(h.maPin ?? h.ma_pin) === pinId)
-                        .sort(
-                            (a, b) =>
-                                new Date(b.ngayThayDoi ?? b.ngay_thay_doi ?? 0) -
-                                new Date(a.ngayThayDoi ?? a.ngay_thay_doi ?? 0)
+                        .sort((a, b) =>
+                            new Date(b.ngayThayDoi ?? b.ngay_thay_doi ?? 0) -
+                            new Date(a.ngayThayDoi ?? a.ngay_thay_doi ?? 0)
                         )[0];
 
                     let tramName = "Chưa có lịch sử";
@@ -115,7 +121,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                 Number(latestRecord.maTram ?? latestRecord.ma_tram)
                         );
                         tramName = tram
-                            ? tram.tenTram ?? tram.ten_tram ?? `Trạm ${latestRecord.maTram}`
+                            ? tram.tenTram ?? tram.ten_tram
                             : `Trạm ${latestRecord.maTram}`;
                     }
 
@@ -124,6 +130,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                         title: `Pin ${pinId} – ${tramName}`,
                         type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
                         status: statusLabel,
+                        ownStatus: ownStatusLabel,
                         health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
                         capacity: p.dungLuong ?? p.dung_luong ?? 0,
                         lastMaintenance:
@@ -149,7 +156,6 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
         fetchPinList();
     }, [stationId]);
 
-    /* ===================== HIỂN THỊ ===================== */
     if (listLoading) {
         return (
             <div style={{ textAlign: "center", padding: "40px" }}>
@@ -175,21 +181,15 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
     return (
         <div className={styles.inventoryPage}>
             <div className={styles.headerRow}>
-                <h2>{stationId ? "Danh sách Pin tại Trạm" : "Danh sách Pin"}</h2>
+                <h2>{stationId ? "Danh sách Pin" : "Danh sách Pin"}</h2>
 
                 <div className={styles.headerButtons}>
-                    <button
-                        className={styles.filterBtn}
-                        onClick={() => setShowFilter(true)}
-                    >
+                    <button className={styles.filterBtn} onClick={() => setShowFilter(true)}>
                         <FontAwesomeIcon icon={faFilter} /> Lọc
                     </button>
 
-                    <button
-                        className={styles.primaryBtn}
-                        onClick={() => setShowCheck(true)}
-                    >
-                        <FontAwesomeIcon icon={faPlus} /> Ghi nhận trả pin
+                    <button className={styles.primaryBtn} onClick={() => setShowCheck(true)}>
+                        <FontAwesomeIcon icon={faPlus} /> Thêm pin mới
                     </button>
 
                     <button
@@ -210,13 +210,17 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
             <div className={styles.grid}>
                 {filteredPins.map((pin) => {
                     const color = STATUS_COLORS[pin.status] || "#6B7280";
+
                     return (
                         <div key={pin.id} className={styles.card}>
+
+                            {/* ===== HEADER ===== */}
                             <div className={styles.cardHeader}>
                                 <div>
                                     <div className={styles.title}>{pin.title}</div>
                                     <div className={styles.type}>{pin.type}</div>
                                 </div>
+
                                 <div className={styles.statusBadge}>
                                     <span className={styles.statusDot} style={{ background: color }} />
                                     <span className={styles.statusText}>
@@ -225,6 +229,16 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                 </div>
                             </div>
 
+                            {/* ⭐ ===== TRẠNG THÁI SỞ HỮU (giống layout sức khỏe – dung lượng) ===== */}
+                            <div className={styles.metrics}>
+                                <div>
+                                    <div className={styles.metricLabel}>Trạng thái sở hữu:</div>
+                                    <div className={styles.metricValue}>{pin.ownStatus}</div>
+                                </div>
+                                <div />
+                            </div>
+
+                            {/* ===== METRICS ===== */}
                             <div className={styles.metrics}>
                                 <div>
                                     <div className={styles.metricLabel}>Sức khỏe:</div>
@@ -236,6 +250,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                 </div>
                             </div>
 
+                            {/* ===== DATES ===== */}
                             <div className={styles.datesRow}>
                                 <div>
                                     <div className={styles.metricLabel}>Ngày nhập kho:</div>
@@ -243,10 +258,13 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                 </div>
                                 <div>
                                     <div className={styles.metricLabel}>Lần bảo dưỡng gần nhất:</div>
-                                    <div className={styles.metricValue}>{pin.lastMaintenance}</div>
+                                    <div className={styles.metricValue}>
+                                        {pin.lastMaintenance}
+                                    </div>
                                 </div>
                             </div>
 
+                            {/* ===== PROGRESS ===== */}
                             <div className={styles.progressBar}>
                                 <div
                                     className={styles.progressFill}
@@ -265,7 +283,6 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                     <FontAwesomeIcon icon={faFileLines} /> Lịch sử
                                 </button>
 
-                                {/* ⭐ BUTTON XÓA PIN — ở giữa lịch sử và cài đặt */}
                                 <button
                                     className={styles.action}
                                     onClick={() => {
@@ -273,7 +290,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                         setShowDelete(true);
                                     }}
                                 >
-                                    <FontAwesomeIcon icon={faTrash} /> Xóa
+                                    <FontAwesomeIcon icon={faTrash} /> Xóa pin
                                 </button>
 
                                 <button
@@ -283,7 +300,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                                         setShowSettings(true);
                                     }}
                                 >
-                                    <FontAwesomeIcon icon={faWrench} /> Cài đặt
+                                    <FontAwesomeIcon icon={faWrench} /> Điều phối
                                 </button>
                             </div>
                         </div>
@@ -295,7 +312,6 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                 )}
             </div>
 
-            {/* ===== MODALS ===== */}
             {showFilter && (
                 <FilterModal
                     current={filters}

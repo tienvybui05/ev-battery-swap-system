@@ -111,6 +111,7 @@ function Inventory() {
             const mapped = filteredPins.map((p, index) => {
                 const pinId = Number(p.maPin ?? p.ma_pin ?? index + 1);
 
+                // 🔹 Tình trạng kỹ thuật
                 const tinhTrangEnum = p.tinhTrang ?? p.tinh_trang ?? "DAY";
                 let statusLabel =
                     tinhTrangEnum === "DAY"
@@ -120,6 +121,26 @@ function Inventory() {
                             : tinhTrangEnum === "BAO_TRI"
                                 ? "bảo trì"
                                 : "không xác định";
+
+                // 🔹 Trạng thái sở hữu
+                const ownEnum = (p.trangThaiSoHuu ?? p.trang_thai_so_huu ?? "").toUpperCase();
+                let ownStatusLabel = "Không xác định";
+                switch (ownEnum) {
+                    case "SAN_SANG":
+                        ownStatusLabel = "Sẵn sàng";
+                        break;
+                    case "CHUA_SAN_SANG":
+                        ownStatusLabel = "Chưa sẵn sàng";
+                        break;
+                    case "DANG_SU_DUNG":
+                        ownStatusLabel = "Đang sử dụng";
+                        break;
+                    case "DANG_VAN_CHUYEN":
+                        ownStatusLabel = "Đang vận chuyển";
+                        break;
+                    default:
+                        ownStatusLabel = "Không xác định";
+                }
 
                 const record = latestHistoryMap[pinId];
 
@@ -140,6 +161,7 @@ function Inventory() {
                     title: `Pin ${pinId} – ${tramName}`,
                     type: p.loaiPin ?? p.loai_pin ?? "Không rõ",
                     status: statusLabel,
+                    ownStatus: ownStatusLabel,
                     health: Number(p.sucKhoe ?? p.suc_khoe ?? 0),
                     capacity: p.dungLuong ?? p.dung_luong ?? 0,
                     lastMaintenance:
@@ -241,6 +263,15 @@ function Inventory() {
                                             pin.status.slice(1)}
                                     </span>
                                 </div>
+                            </div>
+
+                            {/* ⭐ Hàng TRẠNG THÁI SỞ HỮU (giống sức khỏe / dung lượng) */}
+                            <div className={styles.metrics}>
+                                <div>
+                                    <div className={styles.metricLabel}>Trạng thái sở hữu:</div>
+                                    <div className={styles.metricValue}>{pin.ownStatus}</div>
+                                </div>
+                                <div />
                             </div>
 
                             <div className={styles.metrics}>
