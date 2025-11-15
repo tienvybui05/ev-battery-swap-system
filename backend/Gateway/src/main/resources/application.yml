@@ -33,3 +33,7 @@ spring:
           uri: http://vehicle-service:8088
           predicates:
             - Path=/api/vehicle-service/**
+        - id: report-service
+          uri: http://report-service:8089
+          predicates:
+            - Path=/api/report-service/**
