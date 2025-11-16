@@ -52,5 +52,21 @@ public class GiaoDichDoiPinService implements IGiaoDichDoiPinService {
 
         return giaoDichDoiPinRepository.save(suaGiaoDich);
     }
+    @Override
+    public List<GiaoDichDoiPin> layTheoTaiXe(Long maTaiXe) {
+        return giaoDichDoiPinRepository.findByMaTaiXe(maTaiXe)
+                .stream()
+                .filter(gd -> "Đã hoàn thành".equalsIgnoreCase(gd.getTrangThaiGiaoDich()))
+                .toList();
+    }
+
+    @Override
+    public List<GiaoDichDoiPin> layTheoTram(Long maTram) {
+        return giaoDichDoiPinRepository.findByMaTram(maTram)
+                .stream()
+                .filter(gd -> "Đã hoàn thành".equalsIgnoreCase(gd.getTrangThaiGiaoDich()))
+                .toList();
+    }
+
 }
 

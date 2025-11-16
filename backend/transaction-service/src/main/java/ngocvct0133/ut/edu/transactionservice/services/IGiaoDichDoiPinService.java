@@ -10,4 +10,6 @@ public interface IGiaoDichDoiPinService {
     GiaoDichDoiPin layGiaoDichDoiPinTheoId(Long id);
     boolean xoaGiaoDichDoiPinTheoId(Long id);
     GiaoDichDoiPin suaGiaoDichDoiPinTheoId(Long id, GiaoDichDoiPin giaoDichDoiPin);
+    List<GiaoDichDoiPin> layTheoTaiXe(Long maTaiXe);
+    List<GiaoDichDoiPin> layTheoTram(Long maTram);
 }

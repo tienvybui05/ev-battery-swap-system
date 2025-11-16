@@ -97,7 +97,13 @@ public class LichSuDatPinService implements ILichSuDatPinService {
     // 🧩 Nghiệp vụ: Lấy tất cả lịch sử đặt pin theo mã tài xế
     @Override
     public List<LichSuDatPin> findByMaTaiXe(Long maTaiXe) {
-        return lichSuDatPinRepository.findByMaTaiXe(maTaiXe);
+        List<LichSuDatPin> ds = lichSuDatPinRepository.findByMaTaiXe(maTaiXe);
+
+        // Lọc bỏ những đơn đã hoàn thành
+        return ds.stream()
+                .filter(l -> l.getTrangThaiDoiPin() == null
+                        || !l.getTrangThaiDoiPin().equalsIgnoreCase("Hoàn thành"))
+                .toList();
     }
 
     @Override

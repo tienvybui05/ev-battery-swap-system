@@ -53,5 +53,18 @@ public class GiaoDichDoiPinController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    // 🟢 Lấy danh sách giao dịch theo mã tài xế
+    @GetMapping("/tai-xe/{maTaiXe}")
+    public ResponseEntity<List<GiaoDichDoiPin>> getByTaiXe(@PathVariable Long maTaiXe) {
+        List<GiaoDichDoiPin> list = giaoDichDoiPinService.layTheoTaiXe(maTaiXe);
+        return ResponseEntity.ok(list);
+    }
+
+    // 🟢 Lấy giao dịch theo trạm
+    @GetMapping("/tram/{maTram}")
+    public ResponseEntity<List<GiaoDichDoiPin>> getByTram(@PathVariable Long maTram) {
+        return ResponseEntity.ok(giaoDichDoiPinService.layTheoTram(maTram));
+    }
 }
 
