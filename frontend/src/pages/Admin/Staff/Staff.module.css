@@ -175,13 +175,13 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   transition: all 0.3s ease;
   opacity: 0;
   transform: translateY(8px);
   animation: fadeUp 0.45s ease forwards;
   width: 100%;
-  min-height: 80px;
+  min-height: 100px;
 }
 
 .staffCard:nth-child(1) { animation-delay: 0.05s; }
@@ -196,40 +196,58 @@
 /* Staff Left Section */
 .staffLeft {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
   flex: 1;
   min-width: 0;
 }
 
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #f3f4f6;
+/* Staff Header với mã nhân viên */
+.staffHeader {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.staffId {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8f9fa;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  font-size: 12px;
   font-weight: 600;
-  color: #111827;
+  color: #495057;
+}
+
+.idIcon {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.idText {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #495057;
 }
 
 .staffInfo {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
 
-.staffInfo h4 {
-  font-size: 16px;
-  font-weight: 600;
+.staffName {
+  font-size: 18px;
+  font-weight: 700;
   color: #111827;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 /* Station Display */
@@ -237,82 +255,50 @@
   font-size: 14px;
   color: #111827;
   font-weight: 600;
-  margin: 2px 0 0;
+  margin: 0;
   line-height: 1.4;
   background: #f3f4f6;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
+  border: 1px solid #e5e7eb;
 }
 
 /* Contact Information */
 .contactInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   margin-top: 8px;
 }
 
 .contactItem {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
+  gap: 8px;
+  font-size: 14px;
   color: #6b7280;
+  line-height: 1.4;
 }
 
 .contactIcon {
-  font-size: 12px;
+  font-size: 13px;
   color: #9ca3af;
   width: 14px;
+  text-align: center;
 }
 
 /* Staff Right Section */
 .staffRight {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
   margin-left: 20px;
-}
-
-.performance {
-  text-align: right;
-}
-
-.performance span {
-  font-weight: 600;
-  color: #16a34a;
-  font-size: 16px;
-}
-
-.performance p {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* Staff Status */
-.status {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 8px;
-  color: #fff;
-  text-transform: lowercase;
-  transition: all 0.25s ease;
-}
-
-.status.active {
-  background: #111827;
-}
-
-.status.onLeave {
-  background: #9ca3af;
 }
 
 /* ========== ACTION BUTTONS ========== */
@@ -325,11 +311,14 @@
 .iconBtn {
   border: none;
   background: #f9fafb;
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.25s ease;
   color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .iconBtn:hover {
@@ -628,106 +617,27 @@
   font-weight: 600;
 }
 
-/* ========== PASSWORD STYLES ========== */
-.passwordSection {
-  padding: 10px 0;
-}
-
-.passwordInputContainer {
-  position: relative;
-}
-
-.passwordToggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  padding: 5px;
-}
-
-.passwordToggle:hover {
-  color: #007bff;
-}
-
-.passwordHint {
-  font-size: 0.875rem;
-  color: #666;
-  margin-top: 4px;
-}
-
-.passwordNote {
-  background-color: #f8f9fa;
-  border-left: 4px solid #007bff;
-  padding: 12px 16px;
-  margin: 16px 0;
-  border-radius: 4px;
-}
-
-.passwordNote p {
-  margin: 0 0 8px 0;
-  font-weight: 500;
-}
-
-.passwordNote ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.passwordNote li {
-  margin-bottom: 4px;
-  font-size: 0.875rem;
-  color: #666;
-}
-
-/* ========== TAB NAVIGATION ========== */
-.tabNavigation {
-  display: flex;
-  border-bottom: 1px solid #e5e5e5;
-  margin-bottom: 20px;
-}
-
-.tabButton {
-  flex: 1;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.3s ease;
-}
-
-.tabButton:hover {
-  color: #007bff;
-  background-color: #f8f9fa;
-}
-
-.activeTab {
-  color: #007bff;
-  border-bottom-color: #007bff;
-  background-color: #f8f9fa;
-}
-
 /* ========== LOADING & ERROR STATES ========== */
 .loadingState {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 1rem;
+  justify-content: center;
+  padding: 3rem;
   background-color: #f8fafc;
   border-radius: 0.5rem;
   color: #6b7280;
   font-size: 0.875rem;
+  gap: 1rem;
 }
 
 .spinner {
   animation: spin 1s linear infinite;
-  margin-right: 0.5rem;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
 }
 
 .errorState {
@@ -761,39 +671,17 @@
 }
 
 .emptyState {
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
   text-align: center;
   background-color: #f8fafc;
   border-radius: 0.5rem;
   color: #6b7280;
-  font-size: 0.875rem;
-}
-
-/* ========== ERROR STYLES ========== */
-.errorInput {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-}
-
-.errorText {
-  color: #dc2626;
-  font-size: 0.75rem;
-  margin-top: 4px;
-  display: block;
-}
-
-/* ========== UTILITY CLASSES ========== */
-.textTruncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.textTruncateMulti {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 1rem;
+  gap: 1rem;
 }
 
 /* ========== ANIMATIONS ========== */
@@ -820,25 +708,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ========== SCROLLBAR STYLING ========== */
-.staffList::-webkit-scrollbar {
-  width: 6px;
-}
-
-.staffList::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.staffList::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.staffList::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
 /* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 1200px) {
   .wrapper {
@@ -854,13 +723,17 @@
   .staffCard {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
     padding: 16px 20px;
+  }
+  
+  .staffLeft {
+    width: 100%;
   }
   
   .staffRight {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-left: 0;
     margin-top: 8px;
   }
@@ -880,26 +753,36 @@
   }
   
   .station {
-    max-width: 200px;
+    max-width: 250px;
   }
   
   .actionButtons {
-    gap: 6px;
+    gap: 8px;
   }
   
   .iconBtn {
-    padding: 6px 8px;
+    padding: 8px 10px;
   }
   
   .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
   }
 
   .headerActions {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .staffHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .staffId {
+    align-self: flex-start;
   }
 }
 
@@ -926,20 +809,64 @@
   .headerActions {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   
   .station {
-    max-width: 150px;
+    max-width: 200px;
     font-size: 13px;
   }
   
   .actionButtons {
     width: 100%;
-    justify-content: space-around;
+    justify-content: space-between;
   }
   
   .iconBtn {
     flex: 1;
     text-align: center;
+    padding: 10px;
   }
+  
+  .staffName {
+    font-size: 16px;
+  }
+  
+  .contactItem {
+    font-size: 13px;
+  }
+}
+
+/* ========== UTILITY CLASSES ========== */
+.textTruncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.textTruncateMulti {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ========== SCROLLBAR STYLING ========== */
+.staffList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.staffList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.staffList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.staffList::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

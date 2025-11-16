@@ -1,19 +1,21 @@
 package datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.services;
 
-import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.modules.GoiDichVu;
-import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.repositories.IGoiDichVuRepository;
-import jakarta.transaction.Transactional;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.modules.GoiDichVu;
+import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.repositories.IGoiDichVuRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class GoiDichVuService implements IGoiDichVuService {
 
     @Autowired
     private IGoiDichVuRepository goiDichVuRepository;
-
+    @Autowired
+    private ILichSuDangKyGoiService lichSuDangKyGoiService;
     @Transactional
     @Override
     public GoiDichVu themGoi(GoiDichVu goi) {
@@ -41,12 +43,19 @@ public class GoiDichVuService implements IGoiDichVuService {
         }).orElseThrow(() -> new RuntimeException("Không tìm thấy gói dịch vụ!"));
     }
 
-    @Override
-    public boolean xoaGoi(Long id) {
-        if (!goiDichVuRepository.existsById(id)) return false;
-        goiDichVuRepository.deleteById(id);
-        return true;
+  @Override
+public boolean xoaGoi(Long id) {
+    if (!goiDichVuRepository.existsById(id)) 
+        return false;
+    
+    // Kiểm tra xem gói có đang được sử dụng không
+    if (lichSuDangKyGoiService.kiemTraGoiDangDuocSuDung(id)) {
+        throw new RuntimeException("Không thể xóa gói dịch vụ đang có người sử dụng còn hạn!");
     }
+    
+    goiDichVuRepository.deleteById(id);
+    return true;
+}
 
     @Override
     public List<GoiDichVu> danhSachGoi() {

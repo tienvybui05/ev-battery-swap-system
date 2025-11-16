@@ -1,17 +1,19 @@
 package datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.services;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.dtos.LichSuDangKyGoiDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.modules.GoiDichVu;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.modules.LichSuDangKyGoi;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.repositories.IGoiDichVuRepository;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.repositories.ILichSuDangKyGoiRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
-
 @Service
 public class LichSuDangKyGoiService implements ILichSuDangKyGoiService {
 
@@ -195,4 +197,48 @@ public class LichSuDangKyGoiService implements ILichSuDangKyGoiService {
 
         return "CON_HAN";
     }
+    @Override
+public Map<Long, Map<String, Long>> demSoLuongDangKyTheoGoi() {
+    List<LichSuDangKyGoi> allRecords = lichSuDangKyGoiRepository.findAll();
+    
+    // Cập nhật trạng thái cho tất cả records trước khi đếm
+    allRecords.forEach(ls -> {
+        String trangThaiMoi = xacDinhTrangThai(ls.getNgayKetThuc(), ls.getSoLanConLai());
+        if (!trangThaiMoi.equals(ls.getTrangThai())) {
+            ls.setTrangThai(trangThaiMoi);
+            lichSuDangKyGoiRepository.save(ls);
+        }
+    });
+    
+    // Nhóm theo mã gói và đếm theo trạng thái
+    return allRecords.stream()
+            .collect(Collectors.groupingBy(
+                ls -> ls.getGoiDichVu().getMaGoi(),
+                Collectors.groupingBy(
+                    LichSuDangKyGoi::getTrangThai,
+                    Collectors.counting()
+                )
+            ));
+}
+
+
+@Override
+public boolean kiemTraGoiDangDuocSuDung(Long maGoi) {
+    List<LichSuDangKyGoi> dangKyCuaGoi = lichSuDangKyGoiRepository.findAll().stream()
+            .filter(ls -> ls.getGoiDichVu().getMaGoi().equals(maGoi))
+            .collect(Collectors.toList());
+    
+    // Cập nhật trạng thái
+    dangKyCuaGoi.forEach(ls -> {
+        String trangThaiMoi = xacDinhTrangThai(ls.getNgayKetThuc(), ls.getSoLanConLai());
+        if (!trangThaiMoi.equals(ls.getTrangThai())) {
+            ls.setTrangThai(trangThaiMoi);
+            lichSuDangKyGoiRepository.save(ls);
+        }
+    });
+    
+    // Kiểm tra nếu có ít nhất 1 đăng ký còn hạn
+    return dangKyCuaGoi.stream()
+            .anyMatch(ls -> "CON_HAN".equals(ls.getTrangThai()));
+}
 }

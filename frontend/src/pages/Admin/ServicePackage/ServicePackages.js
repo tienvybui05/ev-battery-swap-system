@@ -13,6 +13,9 @@ import {
   faClock,
   faExchangeAlt,
   faBox,
+  faUsers,
+  faCheckCircle,
+  faTimesCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./ServicePackages.module.css";
 import AddPackageModal from "./AddPackageModal";
@@ -25,6 +28,7 @@ function ServicePackages() {
   const [editLoading, setEditLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
+  const [packageStats, setPackageStats] = useState({}); // Thống kê đăng ký theo gói
   const [packageData, setPackageData] = useState({
     topKpi: [
       {
@@ -64,9 +68,10 @@ function ServicePackages() {
     return localStorage.getItem("token");
   };
 
-  // Load danh sách gói dịch vụ khi component mount
+  // Load danh sách gói dịch vụ và thống kê khi component mount
   useEffect(() => {
     fetchPackagesList();
+    fetchPackageStats();
   }, []);
 
   const fetchPackagesList = async () => {
@@ -124,6 +129,28 @@ function ServicePackages() {
       alert("Lỗi kết nối server! Vui lòng kiểm tra kết nối.");
     } finally {
       setListLoading(false);
+    }
+  };
+
+  // Lấy thống kê đăng ký theo gói
+  const fetchPackageStats = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch("/api/subscription-service/lichsudangkygoi/thongke/theogoicuoc", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const stats = await response.json();
+        console.log("Thống kê đăng ký theo gói:", stats);
+        setPackageStats(stats);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy thống kê:", error);
     }
   };
 
@@ -228,6 +255,9 @@ function ServicePackages() {
           };
         });
 
+        // Refresh thống kê sau khi thêm
+        fetchPackageStats();
+        
         setShowAddModal(false);
         alert("Thêm gói dịch vụ thành công!");
       } else {
@@ -313,6 +343,9 @@ function ServicePackages() {
           };
         });
 
+        // Refresh thống kê sau khi sửa
+        fetchPackageStats();
+        
         setShowEditModal(false);
         setSelectedPackage(null);
         alert("Cập nhật thông tin gói dịch vụ thành công!");
@@ -375,6 +408,8 @@ function ServicePackages() {
             packagesList: updatedList,
           }));
 
+          // Cập nhật thống kê sau khi xóa
+          fetchPackageStats();
           updateKpiData(updatedList);
           alert("Xóa gói dịch vụ thành công!");
         } else {
@@ -383,7 +418,13 @@ function ServicePackages() {
 
           let errorMessage = "Không thể xóa gói dịch vụ";
           if (errorText) {
-            errorMessage = errorText;
+            // Hiển thị thông báo lỗi từ server
+            try {
+              const errorJson = JSON.parse(errorText);
+              errorMessage = errorJson.message || errorJson.error || errorMessage;
+            } catch {
+              errorMessage = errorText || errorMessage;
+            }
           }
 
           alert(`Lỗi: ${errorMessage}`);
@@ -409,8 +450,23 @@ function ServicePackages() {
     }).format(amount);
   };
 
+  // Lấy thống kê cho một gói cụ thể
+  const getPackageStats = (packageId) => {
+    const stats = packageStats[packageId];
+    if (!stats) {
+      return { conHan: 0, hetHan: 0, total: 0 };
+    }
+    
+    return {
+      conHan: stats.CON_HAN || 0,
+      hetHan: stats.HET_HAN || 0,
+      total: (stats.CON_HAN || 0) + (stats.HET_HAN || 0)
+    };
+  };
+
   const refreshPackagesList = () => {
     fetchPackagesList();
+    fetchPackageStats();
   };
 
   return (
@@ -461,7 +517,7 @@ function ServicePackages() {
         </div>
       </div>
 
-      {/* Packages Grid - Layout mới */}
+      {/* Packages Grid */}
       <div className={styles.packagesGridWrapper}>
         {listLoading ? (
           <div className={styles.loadingState}>
@@ -481,79 +537,116 @@ function ServicePackages() {
           </div>
         ) : (
           <div className={styles.packagesGrid}>
-            {packageData.packagesList.map((pkg) => (
-              // Tìm phần card trong return và sửa lại phần hiển thị giá
-              <div className={styles.packageCard}>
-                <div className={styles.cardHeader}>
-                  <div className={styles.packageIcon}>
-                    <FontAwesomeIcon icon={faBox} />
-                  </div>
-                  <div className={styles.packageTitle}>
-                    <h3>{pkg.tenGoi}</h3>
-                    <div className={styles.priceTag}>
-                      {formatCurrency(pkg.gia)}
+            {packageData.packagesList.map((pkg) => {
+              const stats = getPackageStats(pkg.id);
+              
+              return (
+                <div key={pkg.id} className={styles.packageCard}>
+                  <div className={styles.cardHeader}>
+                    
+                    <div className={styles.packageTitle}>
+                      <div className={styles.packageIcon}>
+                      <FontAwesomeIcon icon={faBox} />
+                    </div>
+                      <h3>{pkg.tenGoi}</h3>
+                      
                     </div>
                   </div>
-                </div>
 
-                <div className={styles.cardBody}>
-                  <p className={styles.packageDescription}>{pkg.moTa}</p>
+                  <div className={styles.cardBody}>
+                    <p className={styles.packageDescription}>{pkg.moTa}</p>
 
-                  <div className={styles.features}>
-                    <div className={styles.feature}>
-                      <FontAwesomeIcon
-                        icon={faCalendarDays}
-                        className={styles.featureIcon}
-                      />
-                      <span className={styles.featureLabel}>Thời gian:</span>
-                      <span className={styles.featureValue}>
-                        {pkg.thoiGianDung} ngày
-                      </span>
+                    <div className={styles.features}>
+                      <div className={styles.feature}>
+                        <FontAwesomeIcon
+                          icon={faCalendarDays}
+                          className={styles.featureIcon}
+                        />
+                        <span className={styles.featureLabel}>Thời gian:</span>
+                        <span className={styles.featureValue}>
+                          {pkg.thoiGianDung} ngày
+                        </span>
+                      </div>
+                      <div className={styles.feature}>
+                        <FontAwesomeIcon
+                          icon={faExchangeAlt}
+                          className={styles.featureIcon}
+                        />
+                        <span className={styles.featureLabel}>Số lần đổi:</span>
+                        <span className={styles.featureValue}>
+                          {pkg.soLanDoi} lần
+                        </span>
+                      </div>
+                      <div className={styles.feature}>
+                        <FontAwesomeIcon
+                          icon={faDollarSign}
+                          className={styles.featureIcon}
+                        />
+                        <span className={styles.featureLabel}>Giá:</span>
+                        <span className={styles.featureValue}>
+                          {formatCurrency(pkg.gia)}
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.feature}>
-                      <FontAwesomeIcon
-                        icon={faExchangeAlt}
-                        className={styles.featureIcon}
-                      />
-                      <span className={styles.featureLabel}>Số lần đổi:</span>
-                      <span className={styles.featureValue}>
-                        {pkg.soLanDoi} lần
-                      </span>
-                    </div>
-                    {/* THÊM DÒNG HIỂN THỊ GIÁ VÀO ĐÂY */}
-                    <div className={styles.feature}>
-                      <FontAwesomeIcon
-                        icon={faDollarSign}
-                        className={styles.featureIcon}
-                      />
-                      <span className={styles.featureLabel}>Giá:</span>
-                      <span className={styles.featureValue}>
-                        {formatCurrency(pkg.gia)}
-                      </span>
+
+                    {/* Thống kê đăng ký */}
+                    <div className={styles.usageStats}>
+                      <div className={styles.statItem}>
+                        <FontAwesomeIcon 
+                          icon={faUsers} 
+                          className={styles.statIcon} 
+                        />
+                        <span className={styles.statLabel}>Tổng đăng ký:</span>
+                        <span className={styles.statValue}>{stats.total}</span>
+                      </div>
+                      <div className={styles.statItem}>
+                        <FontAwesomeIcon 
+                          icon={faCheckCircle} 
+                          className={`${styles.statIcon} ${styles.activeStat}`} 
+                        />
+                        <span className={styles.statLabel}>Còn hạn:</span>
+                        <span className={styles.statValue}>{stats.conHan}</span>
+                      </div>
+                      <div className={styles.statItem}>
+                        <FontAwesomeIcon 
+                          icon={faTimesCircle} 
+                          className={`${styles.statIcon} ${styles.expiredStat}`} 
+                        />
+                        <span className={styles.statLabel}>Hết hạn:</span>
+                        <span className={styles.statValue}>{stats.hetHan}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className={styles.cardActions}>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => handleOpenEditModal(pkg)}
-                    title="Chỉnh sửa gói dịch vụ"
-                  >
-                    <FontAwesomeIcon icon={faEdit} />
-                    <span>Sửa</span>
-                  </button>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => handleDeletePackage(pkg.id)}
-                    title="Xóa gói dịch vụ"
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                    <span>Xóa</span>
-                  </button>
+                  <div className={styles.cardActions}>
+                    <button
+                      className={styles.editBtn}
+                      onClick={() => handleOpenEditModal(pkg)}
+                      title="Chỉnh sửa gói dịch vụ"
+                    >
+                      <FontAwesomeIcon icon={faEdit} />
+                      <span>Sửa</span>
+                    </button>
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDeletePackage(pkg.id)}
+                      title="Xóa gói dịch vụ"
+                      disabled={stats.conHan > 0} // Vô hiệu hóa nếu có người dùng còn hạn
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                      <span>Xóa</span>
+                    </button>
+                  </div>
+
+                  {/* Hiển thị cảnh báo nếu có người dùng còn hạn */}
+                  {/* {stats.conHan > 0 && (
+                    <div className={styles.usageWarning}>
+                      ⚠️ Đang có {stats.conHan} người sử dụng gói này
+                    </div>
+                  )} */}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

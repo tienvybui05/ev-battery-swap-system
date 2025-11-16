@@ -1,14 +1,22 @@
 package datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.controllers;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.dtos.LichSuDangKyGoiDTO;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.modules.LichSuDangKyGoi;
 import datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.services.ILichSuDangKyGoiService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/subscription-service/lichsudangkygoi")
@@ -69,4 +77,23 @@ public class LichSuDangKyGoiController {
         List<LichSuDangKyGoi> lichSu = lichSuDangKyGoiService.layLichSuTheoTaiXe(maTaiXe);
         return ResponseEntity.ok(lichSu);
     }
+    @GetMapping("/thongke/theogoicuoc")
+public ResponseEntity<Map<Long, Map<String, Long>>> thongKeDangKyTheoGoi() {
+    try {
+        Map<Long, Map<String, Long>> thongKe = lichSuDangKyGoiService.demSoLuongDangKyTheoGoi();
+        return ResponseEntity.ok(thongKe);
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().build();
+    }
+}
+
+@GetMapping("/kiemtrasudung/{maGoi}")
+public ResponseEntity<Map<String, Boolean>> kiemTraGoiDangDuocSuDung(@PathVariable Long maGoi) {
+    try {
+        boolean dangDuocSuDung = lichSuDangKyGoiService.kiemTraGoiDangDuocSuDung(maGoi);
+        return ResponseEntity.ok(Map.of("dangDuocSuDung", dangDuocSuDung));
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().build();
+    }
+}
 }

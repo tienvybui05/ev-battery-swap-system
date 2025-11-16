@@ -120,7 +120,7 @@
   background-color: #f3f4f6;
 }
 
-/* ========== Packages Grid Layout Mới ========== */
+/* ========== Packages Grid Layout ========== */
 .packagesGridWrapper {
   background: #fff;
   border-radius: 14px;
@@ -131,115 +131,167 @@
 
 .packagesGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .packageCard {
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
   overflow: hidden;
-  position: relative;
-  border-top: 4px solid #3b82f6;
 }
 
 .packageCard:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-  border-color: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cardHeader {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 24px 24px 16px;
-}
-
-.packageIcon {
-  font-size: 28px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  flex-shrink: 0;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
 .packageTitle {
-  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .packageTitle h3 {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   color: #111827;
   line-height: 1.3;
+  flex: 1;
 }
 
 .priceTag {
-  background: linear(135deg, #667eea 0%, #764ba2 100%);
+  background: #000000;
   color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 700;
-  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .cardBody {
-  padding: 0 24px 20px;
+  padding: 16px 20px;
 }
 
 .packageDescription {
   color: #6b7280;
   font-size: 14px;
   line-height: 1.5;
-  margin-bottom: 20px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin-bottom: 16px;
 }
 
 .features {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .feature {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 8px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 .featureIcon {
-  width: 16px;
+  width: 14px;
   color: #6b7280;
   flex-shrink: 0;
 }
 
 .featureLabel {
-  font-size: 14px;
+  font-size: 12px;
   color: #6b7280;
-  min-width: 80px;
+  font-weight: 500;
 }
 
 .featureValue {
   font-weight: 600;
   color: #111827;
-  font-size: 14px;
+  font-size: 13px;
+  margin-left: auto;
 }
 
+/* Thống kê sử dụng - đơn giản */
+.usageStats {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.statsRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statItem {
+
+  display: flex;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.statValue {
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.statLabel {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statItem:nth-child(1) .statValue {
+  color: #374151;
+}
+
+.statItem:nth-child(2) .statValue {
+  color: #10b981;
+}
+
+.statItem:nth-child(3) .statValue {
+  color: #ef4444;
+}
+.statIcon{
+  font-size: 13px;
+   color: #374151;
+}
+.activeStat{
+ color: #10b981;
+}
+.expiredStat{
+  color: #e66b6b;
+}
 .cardActions {
   display: flex;
   gap: 8px;
-  padding: 16px 24px;
+  padding: 16px 20px;
   border-top: 1px solid #f3f4f6;
   background: #fafbfc;
 }
@@ -247,38 +299,67 @@
 .editBtn, .deleteBtn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   flex: 1;
-  justify-content: center;
 }
 
 .editBtn {
-  background: #f3f4f6;
-  color: #374151;
+  background: #000000;
+  color: white;
 }
 
-.editBtn:hover {
-  background: #e5e7eb;
-  color: #111827;
+.editBtn:hover:not(:disabled) {
+  background: #26292f;
   transform: translateY(-1px);
 }
 
 .deleteBtn {
-  background: #fef2f2;
-  color: #dc2626;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
 }
 
-.deleteBtn:hover {
-  background: #fee2e2;
-  color: #b91c1c;
+.deleteBtn:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
   transform: translateY(-1px);
+}
+
+/* Cảnh báo sử dụng */
+.usageWarning {
+  margin: 12px 20px 0;
+  padding: 8px 12px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Vô hiệu hóa nút xóa */
+.deleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.deleteBtn:disabled:hover {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  transform: none;
 }
 
 /* ========== Animation ========== */
@@ -574,6 +655,32 @@
     width: 95%;
     margin: 20px;
   }
+
+  .features {
+    grid-template-columns: 1fr;
+  }
+
+  .statsRow {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .statItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+
+  .statValue {
+    margin-bottom: 0;
+    font-size: 13px;
+  }
+
+  .statLabel {
+    font-size: 12px;
+    text-transform: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -585,12 +692,34 @@
     padding: 16px;
   }
   
-  .feature {
-    flex-wrap: wrap;
+  .packageTitle {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
   }
   
-  .featureLabel {
-    min-width: 70px;
+  .priceTag {
+    align-self: flex-start;
   }
 }
+
+/* Animation cho card */
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.packageCard {
+  animation: cardAppear 0.3s ease-out;
+}
+
+.packageCard:nth-child(1) { animation-delay: 0.05s; }
+.packageCard:nth-child(2) { animation-delay: 0.1s; }
+.packageCard:nth-child(3) { animation-delay: 0.15s; }
+.packageCard:nth-child(4) { animation-delay: 0.2s; }

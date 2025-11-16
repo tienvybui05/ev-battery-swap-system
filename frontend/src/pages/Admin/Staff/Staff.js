@@ -12,7 +12,8 @@ import {
   faTrash,
   faPhone,
   faExchangeAlt,
-  faTimes
+  faTimes,
+  faHashtag
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Staff.module.css";
 import AddStaffModal from "./AddStaffModal";
@@ -172,6 +173,7 @@ function Staff() {
           
           return {
             id: nv.maNhanVien,
+            maNhanVien: nv.maNhanVien, // Thêm mã nhân viên
             name: nv.nguoiDung?.hoTen || "Chưa có tên",
             role: getRoleFromData(nv),
             station: stationInfo.fullInfo, // Chỉ hiển thị tên trạm
@@ -291,6 +293,7 @@ function Staff() {
         const stationInfo = getStationInfo(addedStaff.maTram);
         const newStaffItem = {
           id: addedStaff.maNhanVien,
+          maNhanVien: addedStaff.maNhanVien, // Thêm mã nhân viên
           name: addedStaff.nguoiDung?.hoTen || addedStaff.hoTen,
           role: "Nhân viên",
           station: stationInfo.fullInfo,
@@ -342,7 +345,7 @@ function Staff() {
     }
   };
 
-  // Hàm xử lý sửa nhân viên
+  // Hàm xử lý sửa nhân viên - GIỮ NGUYÊN MÃ TRẠM
   const handleEditStaff = async (id, staffData) => {
     setEditLoading(true);
     
@@ -355,6 +358,7 @@ function Staff() {
 
       console.log("Dữ liệu cập nhật:", staffData);
 
+      // Tạo request data với mã trạm từ selectedStaff
       const requestData = {
         hoTen: staffData.hoTen,
         email: staffData.email,
@@ -363,8 +367,13 @@ function Staff() {
         ngaySinh: staffData.ngaySinh || null,
         bangCap: staffData.bangCap || "",
         kinhNghiem: staffData.kinhNghiem || "",
-        maTram: staffData.maTram
+        maTram: selectedStaff?.maTram // QUAN TRỌNG: Giữ nguyên mã trạm cũ
       };
+
+      // Nếu có mật khẩu mới, thêm vào request
+      if (staffData.matKhau) {
+        requestData.matKhau = staffData.matKhau;
+      }
 
       console.log("Đang gửi request cập nhật nhân viên...");
       const response = await fetch(`/api/user-service/nhanvien/${id}`, {
@@ -663,8 +672,14 @@ function Staff() {
           staffData.staffList.map((staff) => (
             <div key={staff.id} className={styles.staffCard}>
               <div className={styles.staffLeft}>
+                <div className={styles.staffHeader}>
+                  <div className={styles.staffId}>
+        
+                    <span className={styles.idText}>{staff.maNhanVien}</span>
+                  </div>
+                </div>
                 <div className={styles.staffInfo}>
-                  <h4>{staff.name}</h4>
+                    <h4 className={styles.staffName}>{staff.name}</h4>
                   <p className={styles.station}>{staff.station}</p>
                   <div className={styles.contactInfo}>
                     <div className={styles.contactItem}>
@@ -751,6 +766,7 @@ function Staff() {
             <div className={styles.modalForm}>
               <div className={styles.staffInfoSection}>
                 <h4>Nhân viên: {selectedStaff?.name}</h4>
+                <p>Mã nhân viên: {selectedStaff?.maNhanVien}</p>
                 <p>Trạm hiện tại: {selectedStaff?.station}</p>
               </div>
 

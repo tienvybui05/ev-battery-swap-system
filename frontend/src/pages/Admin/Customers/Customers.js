@@ -12,7 +12,8 @@ import {
   faTrash,
   faPhone,
   faIdCard,
-  faEnvelope
+  faEnvelope,
+  faHashtag
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Customers.module.css";
 import AddDriverModal from "./AddDriverModal";
@@ -95,6 +96,7 @@ function Customers() {
         // Transform data từ API sang format hiển thị
         const transformedList = taiXeList.map(tx => ({
           id: tx.maTaiXe,
+          maTaiXe: tx.maTaiXe,
           name: tx.nguoiDung?.hoTen || "Chưa có tên",
           email: tx.nguoiDung?.email || "Chưa có email",
           soDienThoai: tx.nguoiDung?.soDienThoai || "Chưa có SĐT",
@@ -201,6 +203,7 @@ function Customers() {
         
         const newDriverItem = {
           id: addedDriver.maTaiXe,
+          maTaiXe: addedDriver.maTaiXe,
           name: addedDriver.nguoiDung?.hoTen || addedDriver.hoTen,
           email: addedDriver.nguoiDung?.email || addedDriver.email,
           soDienThoai: addedDriver.nguoiDung?.soDienThoai || addedDriver.soDienThoai,
@@ -326,57 +329,55 @@ function Customers() {
     }
   };
 
-const handleDeleteDriver = async (id) => {
-  if (window.confirm("Bạn có chắc chắn muốn xóa tài xế này?")) {
-    try {
-      const token = getAuthToken();
-      if (!token) {
-        alert("Vui lòng đăng nhập lại!");
-        return;
-      }
-
-      console.log("Đang xóa tài xế ID:", id);
-      
-      const response = await fetch(`/api/user-service/taixe/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+  const handleDeleteDriver = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa tài xế này?")) {
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          alert("Vui lòng đăng nhập lại!");
+          return;
         }
-      });
 
-      console.log("Response status:", response.status);
-
-      if (response.ok) {
-        // Thành công - có thể có message trong body
-        const result = await response.text();
-        console.log("Kết quả xóa:", result);
+        console.log("Đang xóa tài xế ID:", id);
         
-        const updatedList = driverData.driversList.filter(driver => driver.id !== id);
-        setDriverData(prev => ({
-          ...prev,
-          driversList: updatedList
-        }));
+        const response = await fetch(`/api/user-service/taixe/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-        updateKpiData(updatedList);
-        alert("Xóa tài xế thành công!");
-      } else {
-        // Lỗi - lấy thông báo từ server
-        const errorText = await response.text();
-        console.error("Lỗi chi tiết:", errorText);
-        
-        let errorMessage = "Không thể xóa tài xế";
-        if (errorText) {
-          errorMessage = errorText;
+        console.log("Response status:", response.status);
+
+        if (response.ok) {
+          const result = await response.text();
+          console.log("Kết quả xóa:", result);
+          
+          const updatedList = driverData.driversList.filter(driver => driver.id !== id);
+          setDriverData(prev => ({
+            ...prev,
+            driversList: updatedList
+          }));
+
+          updateKpiData(updatedList);
+          alert("Xóa tài xế thành công!");
+        } else {
+          const errorText = await response.text();
+          console.error("Lỗi chi tiết:", errorText);
+          
+          let errorMessage = "Không thể xóa tài xế";
+          if (errorText) {
+            errorMessage = errorText;
+          }
+          
+          alert(`Lỗi: ${errorMessage}`);
         }
-        
-        alert(`Lỗi: ${errorMessage}`);
+      } catch (error) {
+        console.error("Lỗi kết nối:", error);
+        alert("Lỗi kết nối server! Vui lòng thử lại.");
       }
-    } catch (error) {
-      console.error("Lỗi kết nối:", error);
-      alert("Lỗi kết nối server! Vui lòng thử lại.");
     }
-  }
-};
+  };
 
   // Hàm mở modal sửa
   const handleOpenEditModal = (driver) => {
@@ -463,6 +464,7 @@ const handleDeleteDriver = async (id) => {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th>Mã Tài Xế</th>
                 <th>Tài Xế</th>
                 <th>Thông Tin Liên Hệ</th>
                 <th>Bằng Lái Xe</th>
@@ -472,6 +474,12 @@ const handleDeleteDriver = async (id) => {
             <tbody>
               {driverData.driversList.map((driver) => (
                 <tr key={driver.id}>
+                  <td>
+                    <div className={styles.driverId}>
+                    
+                      <span className={styles.idText}>{driver.maTaiXe}</span>
+                    </div>
+                  </td>
                   <td>
                     <div className={styles.customerInfo}>
                       <span className={styles.customerName}>{driver.name}</span>
