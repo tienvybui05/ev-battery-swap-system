@@ -1,75 +1,143 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faDollarSign,
   faBatteryFull,
   faLocationDot,
-  faUsers,
   faBrain,
   faLightbulb,
   faBolt,
-  faWrench,
+  faChartLine,
+  faClock,
+  faSync
 } from "@fortawesome/free-solid-svg-icons";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
 } from "recharts";
 import styles from "./AIInsights.module.css";
 
 function AIInsights() {
-  const [chartData, setChartData] = useState([]);
+  const [predictions, setPredictions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 🔹 Dữ liệu mock cho biểu đồ AI
-    setChartData([
-      { time: "6AM", predicted: 10, actual: 8 },
-      { time: "9AM", predicted: 40, actual: 38 },
-      { time: "12PM", predicted: 70, actual: 68 },
-      { time: "3PM", predicted: 95, actual: 92 },
-      { time: "6PM", predicted: 140, actual: 130 },
-      { time: "9PM", predicted: 85, actual: 80 },
-    ]);
+    fetchPredictions();
   }, []);
+
+  const fetchPredictions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:8080/api/report-service/predictions');
+      if (!response.ok) throw new Error('Failed to fetch predictions');
+      const data = await response.json();
+      setPredictions(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 TÍNH TOÁN TỪ DATA THỰC - KHÔNG GÁN CỨNG
+
+  // 1. Tổng quan từ predictions
+  const totalStations = predictions.length;
+  const totalPredictedDemand = predictions.reduce((sum, pred) => sum + pred.predicted_demand, 0);
+  const avgConfidence = predictions.length > 0 
+    ? (predictions.reduce((sum, pred) => sum + pred.confidence_score, 0) / predictions.length * 100).toFixed(1)
+    : 0;
+
+  // 2. Trạm có nhu cầu cao nhất
+  const topStation = predictions.length > 0 
+    ? predictions.reduce((max, pred) => pred.predicted_demand > max.predicted_demand ? pred : max)
+    : null;
+
+  // 3. Dữ liệu biểu đồ cột - TOP 5 trạm thực tế
+  const topStationsData = predictions
+    .sort((a, b) => b.predicted_demand - a.predicted_demand) // Sắp xếp giảm dần
+    .slice(0, 5) // Lấy 5 trạm đầu
+    .map(pred => ({
+      name: `Trạm ${pred.ma_tram}`,
+      demand: pred.predicted_demand,
+      confidence: pred.confidence_score
+    }));
+
+  // 4. Dữ liệu biểu đồ tròn - phân bổ thực tế
+  const demandDistribution = predictions.map(pred => ({
+    name: `Trạm ${pred.ma_tram}`,
+    value: pred.predicted_demand,
+    stationId: pred.ma_tram
+  }));
+
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 
   const kpiData = [
     {
-      title: "Tổng Doanh Thu",
-      value: "$267.000",
-      sub: "+12.5%",
-      color: "#16a34a",
-      icon: faDollarSign,
-    },
-    {
-      title: "Tổng Lần Thay Pin",
-      value: "12.847",
-      sub: "+8.3%",
+      title: "Tổng Lượt Đổi Pin",
+      value: totalPredictedDemand.toString(),
+      sub: "Dự báo ngày mai",
       color: "#3b82f6",
       icon: faBatteryFull,
     },
     {
-      title: "Trạm Hoạt Động",
-      value: "24",
-      sub: "Tất Cả Trực Tuyến",
-      color: "#a855f7",
+      title: "Số Trạm",
+      value: totalStations.toString(),
+      sub: "Được dự báo",
+      color: "#10b981",
       icon: faLocationDot,
     },
     {
-      title: "Khách Hàng",
-      value: "8.547",
-      sub: "+156 mới",
-      color: "#f97316",
-      icon: faUsers,
+      title: "Độ Tin Cậy",
+      value: `${avgConfidence}%`,
+      sub: "Trung bình",
+      color: "#f59e0b",
+      icon: faBrain,
+    },
+    {
+      title: "Trạm Cao Nhất",
+      value: topStation ? `Trạm ${topStation.ma_tram}` : "N/A",
+      sub: topStation ? `${topStation.predicted_demand} lượt` : "Không có data",
+      color: "#ef4444",
+      icon: faChartLine,
     },
   ];
 
+  if (loading) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.loading}>
+          <FontAwesomeIcon icon={faBrain} spin />
+          <p>Đang tải dự báo AI...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.error}>
+          <p>Lỗi khi tải dữ liệu: {error}</p>
+          <button onClick={fetchPredictions} className={styles.retryButton}>
+            <FontAwesomeIcon icon={faSync} /> Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrapper}>
-      {/* 🔹 KPI */}
+      {/* KPI Cards - HIỂN THỊ DATA THỰC */}
       <div className={styles.kpiGrid}>
         {kpiData.map((item, i) => (
           <div key={i} className={styles.kpiCard}>
@@ -88,98 +156,146 @@ function AIInsights() {
         ))}
       </div>
 
-      {/* 🔹 Tiêu đề */}
+      {/* Header */}
       <div className={styles.header}>
         <h2 className={styles.title}>
-          <FontAwesomeIcon icon={faBrain} /> AI-Powered Insights
+          <FontAwesomeIcon icon={faBrain} /> Dự Báo AI - Dữ Liệu Thực
         </h2>
-        <span className={styles.tag}>AI Powered</span>
+        <div className={styles.headerInfo}>
+          <span className={styles.lastUpdated}>
+            Cập nhật: {new Date().toLocaleTimeString()}
+          </span>
+          <button onClick={fetchPredictions} className={styles.refreshButton}>
+            <FontAwesomeIcon icon={faSync} /> Cập nhật
+          </button>
+        </div>
       </div>
 
-      {/* 🔹 2 khối chính */}
+      {/* Charts - DÙNG DATA THỰC TỪ API */}
       <div className={styles.insightsGrid}>
-        {/* Dự báo nhu cầu */}
+        {/* Biểu đồ cột - Top 5 trạm thực tế */}
         <div className={styles.card}>
-          <h3>Dự Báo Nhu Cầu</h3>
-          <p>Dự đoán của AI so với sử dụng thực tế</p>
-
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={chartData}>
-              <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" />
-              <XAxis dataKey="time" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="predicted" stroke="#3b82f6" strokeWidth={2} />
-              <Line
-                type="monotone"
-                dataKey="actual"
-                stroke="#10b981"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-
-          <p className={styles.chartAccuracy}>
-            Độ chính xác trung bình: <span>91.2%</span>
-          </p>
+          <h3>Top 5 Trạm Có Nhu Cầu Cao Nhất</h3>
+          <p>Dựa trên dự báo AI thực tế</p>
+          
+          {topStationsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={topStationsData}>
+                <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value) => [`${value} lượt`, 'Dự báo']}
+                  labelFormatter={(label) => `Trạm: ${label}`}
+                />
+                <Bar 
+                  dataKey="demand" 
+                  fill="#3b82f6" 
+                  radius={[4, 4, 0, 0]}
+                  name="Số lượt dự báo"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.noData}>
+              <p>Không có dữ liệu để hiển thị</p>
+            </div>
+          )}
         </div>
 
-        {/* Gợi ý AI */}
+        {/* Biểu đồ tròn - Phân bổ thực tế */}
         <div className={styles.card}>
-          <h3>Gợi Ý Từ AI</h3>
-          <p>Đề xuất tối ưu hóa dựa trên dữ liệu</p>
-
-          <div className={styles.recommendList}>
-            <div className={`${styles.recommendItem} ${styles.recommendBlue}`}>
-              <FontAwesomeIcon icon={faBolt} />{" "}
-              <strong>Tối Ưu Giờ Cao Điểm</strong>
-              <p>Thêm 3 pin vào Downtown Hub 17h–19h để giảm 40% thời gian chờ.</p>
+          <h3>Phân Bổ Nhu Cầu Giữa Các Trạm</h3>
+          <p>Tỷ lệ % dựa trên dự báo thực</p>
+          
+          {demandDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={demandDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${(percent * 100).toFixed(1)}%`}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {demandDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value, name, props) => [
+                    `${value} lượt (${((value / totalPredictedDemand) * 100).toFixed(1)}%)`,
+                    props.payload.name
+                  ]}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.noData}>
+              <p>Không có dữ liệu để hiển thị</p>
             </div>
-
-            <div className={`${styles.recommendItem} ${styles.recommendGreen}`}>
-              <FontAwesomeIcon icon={faLightbulb} />{" "}
-              <strong>Cơ Hội Doanh Thu</strong>
-              <p>Khu Đại học có thể tăng 23% doanh thu nếu triển khai gói sinh viên.</p>
-            </div>
-
-            <div className={`${styles.recommendItem} ${styles.recommendOrange}`}>
-              <FontAwesomeIcon icon={faWrench} />{" "}
-              <strong>Dự Đoán Bảo Trì</strong>
-              <p>Pin BAT-2024-156 có nguy cơ hỏng trong 2 tuần tới.</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* 🔹 Phân tích dự báo */}
-      <div className={styles.analyticsSection}>
-        <h3 className={styles.analyticsTitle}>Phân Tích Dự Báo (Predictive Analytics)</h3>
-        <p className={styles.analyticsSub}>Dự đoán trong 30 / 60 / 90 ngày tới</p>
+      {/* Recommendations - ĐỀ XUẤT THỰC TỪ AI */}
+      <div className={styles.recommendationsSection}>
+        <h3 className={styles.sectionTitle}>
+          <FontAwesomeIcon icon={faLightbulb} /> Đề Xuất Phân Bổ Pin Từ AI
+        </h3>
+        {predictions.length > 0 ? (
+          <div className={styles.recommendationsGrid}>
+            {predictions.map((pred) => (
+              <div key={pred.ma_tram} className={styles.recommendationCard}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.stationInfo}>
+                    <FontAwesomeIcon icon={faLocationDot} />
+                    <h4>Trạm {pred.ma_tram}</h4>
+                  </div>
+                  <span 
+                    className={styles.confidence}
+                    style={{
+                      backgroundColor: pred.confidence_score > 0.8 ? '#10b98120' : 
+                                     pred.confidence_score > 0.6 ? '#f59e0b20' : '#ef444420',
+                      color: pred.confidence_score > 0.8 ? '#10b981' : 
+                           pred.confidence_score > 0.6 ? '#f59e0b' : '#ef4444'
+                    }}
+                  >
+                    {Math.round(pred.confidence_score * 100)}% tin cậy
+                  </span>
+                </div>
+                
+                <div className={styles.prediction}>
+                  <div className={styles.demand}>
+                    <strong>{pred.predicted_demand}</strong>
+                    <span>lượt dự báo</span>
+                  </div>
+                  <p className={styles.analysis}>{pred.analysis_summary}</p>
+                </div>
 
-        <div className={styles.analyticsGrid}>
-          <div className={styles.analyticsBlock}>
-            <h4>30 Ngày</h4>
-            <p>Doanh thu: <strong>$89.500</strong></p>
-            <p>Lần thay pin: 3.580</p>
-            <p className={styles.growth}>+15.2%</p>
-          </div>
+                <div className={styles.recommendation}>
+                  <FontAwesomeIcon icon={faBolt} className={styles.faBolt} />
+                  <p>{pred.recommendation}</p>
+                </div>
 
-          <div className={styles.analyticsBlock}>
-            <h4>60 Ngày</h4>
-            <p>Doanh thu: <strong>$186.200</strong></p>
-            <p>Lần thay pin: 7.448</p>
-            <p className={styles.growth}>+18.7%</p>
+                <div className={styles.predictionDate}>
+            
+                  <span>Dự báo cho: {pred.predict_date}</span>
+                </div>
+              </div>
+            ))}
           </div>
-
-          <div className={styles.analyticsBlock}>
-            <h4>90 Ngày</h4>
-            <p>Doanh thu: <strong>$294.700</strong></p>
-            <p>Lần thay pin: 11.788</p>
-            <p className={styles.growth}>+22.1%</p>
+        ) : (
+          <div className={styles.noData}>
+            <p>Không có đề xuất nào từ AI</p>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Thống kê tổng quan */}
+      
     </div>
   );
 }
