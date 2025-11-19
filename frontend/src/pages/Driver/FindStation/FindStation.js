@@ -8,7 +8,6 @@ import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faBatteryEmpty } from "@fortawesome/free-solid-svg-icons";
 import { faClock } from "@fortawesome/free-regular-svg-icons";
 import { faStar } from "@fortawesome/free-regular-svg-icons";
-import LinkButton from "../../../components/Shares/LinkButton/LinkButton";
 import Button from "../../../components/Shares/Button/Button";
 import styles from "./FindStation.module.css";
 function FindStation() {
@@ -19,9 +18,10 @@ function FindStation() {
     const [loading, setLoading] = useState(true);
 
     // Lưu xe đã chọn
-    const [showVehiclePopup, setShowVehiclePopup] = useState(false);
     const [vehicles, setVehicles] = useState([]);
     const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+    const [selectedPinType, setSelectedPinType] = useState(null);
+    const [pinAvailableByStation, setPinAvailableByStation] = useState({});
 
 
     const getDistances = async (userLat, userLng, stationList) => {
@@ -134,16 +134,21 @@ function FindStation() {
 
     const fetchVehicles = async () => {
         const userId = localStorage.getItem("userId");
+        const token = localStorage.getItem("token");
         if (!userId) return;
 
         try {
-            const vehicleRes = await axios.get(`/api/vehicle-service/vehicles/by-driver/${userId}`);
+            const vehicleRes = await axios.get(`/api/vehicle-service/vehicles/by-driver/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             const rawVehicles = vehicleRes.data || [];
 
             const enrichedVehicles = await Promise.all(
                 rawVehicles.map(async (v) => {
                     try {
-                        const pinRes = await axios.get(`/api/battery-service/pins/${v.maPin}`);
+                        const pinRes = await axios.get(`/api/battery-service/pins/${v.maPin}`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
                         return { ...v, pinInfo: pinRes.data };
                     } catch {
                         return { ...v, pinInfo: { loaiPin: "Không rõ", dungLuong: "?" } };
@@ -158,6 +163,43 @@ function FindStation() {
             setVehicles([]);
         }
     };
+
+    useEffect(() => {
+        if (!selectedVehicleId) return;
+
+        const vehicle = vehicles.find(v => v.maPhuongTien === Number(selectedVehicleId));
+        setSelectedPinType(vehicle?.pinInfo?.loaiPin || null);
+
+    }, [selectedVehicleId, vehicles]);
+
+    useEffect(() => {
+        const fetchPinCounts = async () => {
+            if (!selectedPinType || stations.length === 0) return;
+
+            const token = localStorage.getItem("token");
+
+            const promises = stations.map(st =>
+                axios.get(
+                    `/api/battery-service/lichsu-pin-tram/${st.id}/available`,
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                        params: { loaiPin: selectedPinType }
+                    }
+                ).then(res => ({ id: st.id, count: res.data.length }))
+                    .catch(() => ({ id: st.id, count: 0 }))
+            );
+
+            const results = await Promise.all(promises);
+
+            const mapping = {};
+            results.forEach(r => { mapping[r.id] = r.count });
+
+            setPinAvailableByStation(mapping);
+        };
+
+        fetchPinCounts();
+    }, [selectedPinType, stations]);
+
 
     useEffect(() => {
         const fetchStations = async () => {
@@ -311,7 +353,13 @@ function FindStation() {
                         <div className={styles.information}>
                             <div className={styles.iconinfo}>
                                 <FontAwesomeIcon icon={faBatteryEmpty} className={styles.faBatteryEmpty} />
-                                <p>{stations.battery} pin</p>
+
+                                <p>
+                                    {!selectedVehicleId
+                                        ? `${stations.battery} pin`
+                                        : `${pinAvailableByStation[stations.id] ?? '...'} pin phù hợp`
+                                    }
+                                </p>
                             </div>
                             <div className={styles.iconinfo}>
                                 <FontAwesomeIcon icon={faClock} className={styles.faClock} />
