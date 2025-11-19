@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import styles from "./History.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBatteryEmpty, faStar } from "@fortawesome/free-solid-svg-icons";
-import Button from "../../../components/Shares/Button/Button";
 import axios from "axios";
+import FeedbackModal from "../History/Feedback/FeedbackModal"; // Import modal
 
 function History() {
-
     const [historyList, setHistoryList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const formatMoney = (value) =>
         value.toLocaleString("vi-VN") + "₫";
@@ -19,9 +20,22 @@ function History() {
         return d.toLocaleDateString("vi-VN") + " lúc " + d.toLocaleTimeString("vi-VN");
     };
 
-    const handleReview = (transactionId) => {
-        alert(`⭐ Bạn muốn đánh giá giao dịch #${transactionId}`);
-        // TODO: mở modal đánh giá
+    const handleReview = (transaction) => {
+        setSelectedTransaction({
+            id: transaction.id,
+            stationName: transaction.stationName
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleFeedbackSubmitted = () => {
+        // Có thể refresh danh sách lịch sử nếu cần
+        console.log("Feedback submitted successfully");
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedTransaction(null);
     };
 
     useEffect(() => {
@@ -86,7 +100,6 @@ function History() {
                 <div className={styles.list}>
                     {historyList.map((item) => (
                         <div key={item.id} className={styles.card}>
-
                             {/* LEFT: Icon + station */}
                             <div className={styles.left}>
                                 <div className={styles.iconBox}>
@@ -107,7 +120,7 @@ function History() {
                                 {item.status === "Đã hoàn thành" && (
                                     <button
                                         className={styles.reviewBtn}
-                                        onClick={() => handleReview(item.id)}
+                                        onClick={() => handleReview(item)}
                                     >
                                         <FontAwesomeIcon icon={faStar} />
                                         <span>Đánh giá</span>
@@ -118,6 +131,15 @@ function History() {
                     ))}
                 </div>
             )}
+
+            {/* Feedback Modal */}
+            <FeedbackModal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                transactionId={selectedTransaction?.id}
+                stationName={selectedTransaction?.stationName}
+                onFeedbackSubmitted={handleFeedbackSubmitted}
+            />
         </nav>
     );
 }
