@@ -1,4 +1,4 @@
-package datdq0317.edu.ut.vn.dinhquocdat.subscriptionservice.auth;
+package luonght0366.edu.ut.vn.huynhtuanluong.vehicleservice.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,20 +19,17 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            // Chỉ cho phép lấy danh sách gói không cần đăng nhập
-            .requestMatchers("/api/subscription-service/goidichvu").permitAll()
-            // Các API khác cần token
-            .requestMatchers("/api/subscription-service/**").authenticated()
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Tất cả endpoint đều yêu cầu đăng nhập
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
-}
+        return http.build();
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
