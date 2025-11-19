@@ -74,12 +74,16 @@ function QueueManagement() {
           } catch { }
 
           try {
-            const xeRes = await axios.get(`/api/vehicle-service/vehicles/${order.maXeGiaoDich}`);
+            const xeRes = await axios.get(`/api/vehicle-service/vehicles/${order.maXeGiaoDich}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
             xeLoai = xeRes.data.loaiXe;
 
             if (xeRes.data.maPin) {
               try {
-                const pinRes = await axios.get(`/api/battery-service/pins/${xeRes.data.maPin}`);
+                const pinRes = await axios.get(`/api/battery-service/pins/${xeRes.data.maPin}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
                 order.pinDi = {
                   maPin: pinRes.data.maPin,
                   loaiPin: pinRes.data.loaiPin,
