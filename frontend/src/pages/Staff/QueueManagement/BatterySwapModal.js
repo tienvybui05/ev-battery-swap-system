@@ -314,7 +314,7 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
               <input
                 type="radio"
                 name="status"
-                checked={transactionStatus === "đã hoàn thành"}
+                checked={transactionStatus === "Đã hoàn thành"}
                 onChange={() => setTransactionStatus("Đã hoàn thành")}
               />
               Đã hoàn thành
