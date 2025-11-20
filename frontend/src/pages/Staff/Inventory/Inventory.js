@@ -138,6 +138,7 @@ function Inventory() {
                     case "DANG_VAN_CHUYEN":
                         ownStatusLabel = "Đang vận chuyển";
                         break;
+                    case "DUOC_GIU_CHO": ownStatusLabel = "Đã được đặt trước"; break;
                     default:
                         ownStatusLabel = "Không xác định";
                 }

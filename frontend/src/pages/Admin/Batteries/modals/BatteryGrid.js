@@ -104,6 +104,7 @@ function BatteryGrid({ stationId = null, onPinMoved }) {
                         case "CHUA_SAN_SANG": ownStatusLabel = "Chưa sẵn sàng"; break;
                         case "DANG_SU_DUNG": ownStatusLabel = "Đang sử dụng"; break;
                         case "DANG_VAN_CHUYEN": ownStatusLabel = "Đang vận chuyển"; break;
+                        case "DUOC_GIU_CHO": ownStatusLabel = "Đã được đặt trước"; break;
                     }
 
                     const latestRecord = historyData

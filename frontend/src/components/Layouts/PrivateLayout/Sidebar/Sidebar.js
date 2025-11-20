@@ -31,7 +31,7 @@ function Sidebar() {
           <div className={styles.logo}>
             <img src={logo} alt="logo" />
           </div>
-          <span>VinNhot</span>
+          <span>EVStation</span>
         </Link>
       </div>
       <div className={styles.content}>
