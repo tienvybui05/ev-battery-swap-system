@@ -11,9 +11,7 @@ import axios from "axios";
 import Select from "react-select";
 
 function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) {
-  const [availablePins, setAvailablePins] = useState([]);
-  const [selectedPin, setSelectedPin] = useState("");
-  const [loadingPins, setLoadingPins] = useState(false);
+  const [pinDenInfo, setPinDenInfo] = useState(null);
 
   // trạng thái giao dịch
   const [transactionStatus, setTransactionStatus] = useState("chờ giao dịch");
@@ -21,57 +19,81 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
   // thanh toán
   const [payment, setPayment] = useState(null);
 
-  // chỉ fetch pin khi đang ở tab "chờ xác nhận"
   useEffect(() => {
-    const fetchAvailablePins = async () => {
-      if (mode !== "CHO_XAC_NHAN" || !order?.maTram || !order?.pinDi?.loaiPin) return;
-      setLoadingPins(true);
+    const fetchPinDen = async () => {
+      if (!order) return;
+
+      const token = localStorage.getItem("token");
+      let pinId = null;
+
+      if (mode === "CHO_XAC_NHAN") {
+        pinId = order.maPinDuocGiu;
+      } else {
+        pinId = order?.pinDen?.maPin || order?.maPinNhan;
+      }
+
+      if (!pinId) return;
+
       try {
-        const token = localStorage.getItem("token");
         const res = await axios.get(
-          `/api/battery-service/lichsu-pin-tram/${order.maTram}/available`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { loaiPin: order.pinDi.loaiPin },
-          }
+          `/api/battery-service/pins/${pinId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        setAvailablePins(res.data);
+
+        setPinDenInfo(res.data);
       } catch (err) {
-        console.error("❌ Lỗi lấy danh sách pin:", err);
-      } finally {
-        setLoadingPins(false);
+        console.error("❌ Không lấy được pin đến:", err);
       }
     };
-    fetchAvailablePins();
-  }, [mode, order?.maTram, order?.pinDi?.loaiPin]);
+
+    fetchPinDen();
+  }, [order, mode]);
+
+  // hủy đơn
+  const handleCancelBooking = async () => {
+    if (!window.confirm("Bạn có chắc muốn hủy đơn này không?")) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      // 1️⃣ Trả Pin về trạng thái ban đầu
+      await axios.patch(
+        `/api/battery-service/pins/${order.maPinDuocGiu}/state`,
+        {
+          tinhTrang: "DAY",
+          trangThaiSoHuu: "SAN_SANG"
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 2️⃣ Hủy đơn trong station-service
+      await axios.put(
+        `/api/station-service/dat-lich/${order.maLichSuDat}/huy`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Đơn đã được hủy!");
+      onConfirm();
+      onClose();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Không thể hủy đơn");
+    }
+  };
 
   const handleConfirm = async () => {
     const token = localStorage.getItem("token");
 
     // 🟢 MODE 1 — CHỜ XÁC NHẬN (tạo giao dịch + gán vào đơn)
     if (mode === "CHO_XAC_NHAN") {
-
-      if (!selectedPin) {
-        alert("⚠️ Vui lòng chọn pin đến!");
-        return;
-      }
-
       try {
+        const pinNhan = order.maPinDuocGiu;
 
-        // 0️⃣ Giữ chỗ pin đến
-        await axios.patch(
-          `/api/battery-service/pins/${selectedPin}/state`,
-          {
-            tinhTrang: "DAY",
-            trangThaiSoHuu: "DUOC_GIU_CHO"
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        // 1️⃣ Tạo giao dịch
         const payloadGiaoDich = {
           maPinTra: String(order?.pinDi?.maPin),
-          maPinNhan: String(selectedPin),
+          maPinNhan: String(pinNhan),
           ngayGiaoDich: null,
           trangThaiGiaoDich: "Đang xử lý",
           thanhtien: 1200000,
@@ -79,7 +101,6 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
           maTram: order?.maTram,
           maTaiXe: order?.maTaiXe,
         };
-
 
         const res = await axios.post(
           `/api/transaction-service/giaodichdoipin`,
@@ -89,7 +110,6 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
 
         const maGiaoDich = res.data.maGiaoDichDoiPin;
 
-        // 2️⃣ Cập nhật đặt lịch
         await axios.put(
           `/api/station-service/dat-lich/${order.maLichSuDat}`,
           {
@@ -103,11 +123,11 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
         alert("✅ Đơn đã được xác nhận!");
         onConfirm();
         onClose();
+
       } catch (err) {
         console.error(err);
         alert("❌ Lỗi khi xác nhận đơn!");
       }
-
       return;
     }
 
@@ -248,53 +268,21 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
             <div className={`${styles.pinCard} ${styles.pinIn}`}>
               <h4>Pin đến</h4>
               <p className={styles.note}>Pin nhân viên giao cho tài xế</p>
-              {mode === "CHO_XAC_NHAN" ? (
-                loadingPins ? (
-                  <p>Đang tải pin...</p>
-                ) : (
-                  <>
-                    <Select
-                      options={availablePins.map(pin => ({
-                        value: pin.maPin,
-                        label: `Mã ${pin.maPin} | SK: ${pin.sucKhoe}%`
-                      }))}
-                      placeholder="Tìm pin..."
-                      onChange={(opt) => setSelectedPin(opt?.value || "")}
-                      isSearchable
-                      noOptionsMessage={() => "Không tìm thấy pin phù hợp"}
-                      styles={{
-                        control: (base) => ({
-                          ...base,
-                          borderRadius: 8,
-                          borderColor: "#ccc",
-                          boxShadow: "none",
-                          "&:hover": { borderColor: "#111827" }
-                        })
-                      }}
-                    />
-
-                    {/* 🟢 Thông tin chi tiết pin được chọn */}
-                    {selectedPin && (() => {
-                      const pin = availablePins.find(p => p.maPin === Number(selectedPin));
-                      if (!pin) return null;
-                      return (
-                        <div className={styles.pinDetails} style={{ marginTop: "8px" }}>
-                          <p>Mã pin: <strong>{pin.maPin}</strong></p>
-                          <p>Loại pin: <strong>{pin.loaiPin}</strong></p>
-                          <p>Dung lượng: <strong>{pin.dungLuong} kWh</strong></p>
-                          <p>Sức khỏe: <strong>{pin.sucKhoe}%</strong></p>
-                        </div>
-                      );
-                    })()}
-                  </>
-                )
-              ) : (
+              {pinDenInfo ? (
                 <>
-                  <p>Mã pin: <strong>{order?.pinDen?.maPin || "Không rõ"}</strong></p>
-                  <p>Loại pin: <strong>{order?.pinDen?.loaiPin || "Không rõ"}</strong></p>
-                  <p>Dung lượng: <strong>{order?.pinDen?.dungLuong || "--"} kWh</strong></p>
-                  <p>Sức khỏe: <strong>{order?.pinDen?.sucKhoe || "--"}%</strong></p>
+                  <p>Mã pin: <strong>{pinDenInfo.maPin}</strong></p>
+                  <p>Loại pin: <strong>{pinDenInfo.loaiPin}</strong></p>
+                  <p>Dung lượng: <strong>{pinDenInfo.dungLuong} kWh</strong></p>
+                  <p>Sức khỏe: <strong>{pinDenInfo.sucKhoe}%</strong></p>
+
+                  {mode === "CHO_XAC_NHAN" && (
+                    <p style={{ fontStyle: "italic", color: "#555" }}>
+                      (Pin được hệ thống chọn ngẫu nhiên khi tài xế đặt lịch)
+                    </p>
+                  )}
                 </>
+              ) : (
+                <p>Đang tải thông tin pin...</p>
               )}
             </div>
           </div>
@@ -359,12 +347,25 @@ function BatterySwapModal({ order, mode = "CHO_XAC_NHAN", onClose, onConfirm }) 
 
         {/* FOOTER */}
         <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={onClose}>
-            Hủy
-          </button>
+
+          {mode === "CHO_XAC_NHAN" ? (
+            <button
+              className={styles.cancelBtn}
+              onClick={handleCancelBooking}   // 🔥 hàm mới
+            >
+              Hủy đơn đặt lịch
+            </button>
+          ) : (
+            <button
+              className={styles.cancelBtn}
+              onClick={onClose}
+            >
+              Đóng
+            </button>
+          )}
+
           <button
             className={styles.primaryBtn}
-            disabled={mode === "CHO_XAC_NHAN" && !selectedPin}
             onClick={handleConfirm}
           >
             {mode === "CHO_XAC_NHAN" ? "Xác Nhận Đơn" : "Lưu Trạng Thái"}

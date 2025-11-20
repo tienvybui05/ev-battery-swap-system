@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ut.edu.stationservice.models.LichSuDatPin;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ILichSuDatPinRepository extends JpaRepository<LichSuDatPin,Long> {
@@ -20,5 +21,9 @@ public interface ILichSuDatPinRepository extends JpaRepository<LichSuDatPin,Long
             @Param("maTram") Long maTram,
             @Param("trangThaiXacNhan") String trangThaiXacNhan
     );
+    List<LichSuDatPin> findByTrangThaiXacNhanAndNgayDatBefore(
+            String trangThaiXacNhan,
+            LocalDateTime before);
+
 
 }

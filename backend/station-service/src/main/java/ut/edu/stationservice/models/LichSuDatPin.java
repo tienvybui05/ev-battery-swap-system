@@ -34,6 +34,10 @@ public class LichSuDatPin {
     @Column(name = "ma_tai_xe")
     private Long maTaiXe;
 
+    @Column(name = "ma_pin_duoc_giu")
+    private Long maPinDuocGiu;
+
+
     public Long getMaGiaoDichDoiPin() {
         return maGiaoDichDoiPin;
     }
@@ -123,5 +127,13 @@ public class LichSuDatPin {
 
     public void setMaXeGiaoDich(Long maXeGiaoDich) {
         this.maXeGiaoDich = maXeGiaoDich;
+    }
+
+    public Long getMaPinDuocGiu() {
+        return maPinDuocGiu;
+    }
+
+    public void setMaPinDuocGiu(Long maPinDuocGiu) {
+        this.maPinDuocGiu = maPinDuocGiu;
     }
 }

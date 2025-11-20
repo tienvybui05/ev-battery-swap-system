@@ -3,12 +3,48 @@ import styles from "./ChangeBattery.module.css";
 import LinkButton from "../../../components/Shares/LinkButton/LinkButton";
 import { faMapLocationDot } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 function ChangeBattery() {
     const [packageList, setPackageList] = useState([]);
     const [orders, setOrders] = useState([]);
     const [maTaiXe, setMaTaiXe] = useState(null); // Thêm state lưu mã tài xế
 
+    const handleCancelOrder = async (order) => {
+        if (!window.confirm("Bạn có chắc muốn hủy đơn đặt pin này?")) return;
+
+        try {
+            const token = localStorage.getItem("token");
+
+            // 1️⃣ Trả Pin được giữ về trạng thái SAN_SANG
+            if (order.maPinDuocGiu) {
+                await axios.patch(
+                    `/api/battery-service/pins/${order.maPinDuocGiu}/state`,
+                    {
+                        tinhTrang: "DAY",
+                        trangThaiSoHuu: "SAN_SANG"
+                    },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            }
+
+            // 2️⃣ Gọi station-service để cập nhật trạng thái đơn → Hủy
+            await axios.put(
+                `/api/station-service/dat-lich/${order.id}/huy`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            alert("❌ Bạn đã hủy đơn thành công!");
+
+            // 3️⃣ Cập nhật lại danh sách đơn
+            setOrders(prev => prev.filter(o => o.id !== order.id));
+
+        } catch (err) {
+            console.error("Lỗi hủy đơn:", err);
+            alert("❌ Không thể hủy đơn!");
+        }
+    };
     useEffect(() => {
         const fetchTaiXeInfo = async () => {
             try {
@@ -60,10 +96,12 @@ function ChangeBattery() {
 
                 if (data.length > 0) {
                     const allOrders = data.map(item => ({
-                        status: item.trangThaiXacNhan || "Không xác định",
-                        stationName: item.tram?.tenTram || "Không rõ trạm",
+                        id: item.maLichSuDat,
+                        status: item.trangThaiXacNhan,
+                        stationName: item.tram?.tenTram,
                         time: new Date(item.ngayDat).toLocaleString("vi-VN"),
                         orderCode: "ORD-" + String(item.maLichSuDat).padStart(4, "0"),
+                        maPinDuocGiu: item.maPinDuocGiu
                     }));
 
                     setOrders(allOrders.reverse()); // Mới nhất lên đầu
@@ -125,7 +163,7 @@ function ChangeBattery() {
         // Hàm chính để chạy tất cả
         const fetchAllData = async () => {
             const maTaiXeThuc = await fetchTaiXeInfo();
-            
+
             if (maTaiXeThuc) {
                 setMaTaiXe(maTaiXeThuc); // Lưu mã tài xế vào state
                 await Promise.all([
@@ -151,13 +189,25 @@ function ChangeBattery() {
                     <div className={styles.orderList}>
                         {orders.map((order, index) => (
                             <div key={index} className={styles.orderItem}>
+
                                 {/* Cột trái */}
                                 <div className={styles.info}>
-                                    <p className={`${styles.status} ${order.status === "Chờ xác nhận" ? styles.pending : ""}`}>
+                                    <p className={`${styles.status} ${order.status === "Chờ xác nhận" ? styles.pending : ""
+                                        }`}>
                                         {order.status}
                                     </p>
                                     <h3>{order.stationName}</h3>
                                     <p className={styles.time}>{order.time}</p>
+
+                                    {/* 🔥 NÚT HỦY CHỈ HIỆN KHI CHỜ XÁC NHẬN */}
+                                    {order.status === "Chờ xác nhận" && (
+                                        <button
+                                            className={styles.cancelButton}
+                                            onClick={() => handleCancelOrder(order)}
+                                        >
+                                            Hủy đơn
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Cột phải */}
@@ -166,8 +216,11 @@ function ChangeBattery() {
                                         <FontAwesomeIcon icon={faMapLocationDot} className={styles.faMapLocationDot} />
                                         <p>{order.orderCode}</p>
                                     </div>
+
+                                    {/* Nút điều hướng */}
                                     <LinkButton to="/dashboard" black>Đường đi</LinkButton>
                                 </div>
+
                             </div>
                         ))}
                     </div>

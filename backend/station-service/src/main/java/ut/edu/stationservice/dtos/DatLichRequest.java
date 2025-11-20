@@ -4,6 +4,7 @@ public class DatLichRequest {
     private Long maTaiXe;
     private Long maTram;
     private Long maXeGiaoDich;
+    private Long maPinDuocGiu;
 
     public Long getMaTaiXe() { return maTaiXe; }
     public void setMaTaiXe(Long maTaiXe) { this.maTaiXe = maTaiXe; }
@@ -16,5 +17,13 @@ public class DatLichRequest {
 
     public void setMaXeGiaoDich(Long maXeGiaoDich) {
         this.maXeGiaoDich = maXeGiaoDich;
+    }
+
+    public Long getMaPinDuocGiu() {
+        return maPinDuocGiu;
+    }
+
+    public void setMaPinDuocGiu(Long maPinDuocGiu) {
+        this.maPinDuocGiu = maPinDuocGiu;
     }
 }

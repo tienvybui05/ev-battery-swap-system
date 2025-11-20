@@ -58,7 +58,7 @@ function FindStation() {
                             Authorization: apiKey,
                             "Content-Type": "application/json",
                         },
-                        timeout: 8000, // ⏱ giới hạn 8s để tránh “chờ vô tận”
+                        timeout: 30000, // ⏱ giới hạn 8s để tránh “chờ vô tận”
                     }
                 );
 
@@ -137,8 +137,21 @@ function FindStation() {
         const token = localStorage.getItem("token");
         if (!userId) return;
 
+        // 1) Lấy thông tin tài xế dựa trên userId
+        const taiXeRes = await axios.get(`/api/user-service/taixe/user/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const taiXe = taiXeRes.data;
+        if (!taiXe || !taiXe.maTaiXe) {
+            alert("❌ Tài khoản này chưa đăng ký tài xế!");
+            return;
+        }
+
+        const maTaiXe = taiXe.maTaiXe;
+
         try {
-            const vehicleRes = await axios.get(`/api/vehicle-service/vehicles/by-driver/${userId}`, {
+            const vehicleRes = await axios.get(`/api/vehicle-service/vehicles/by-driver/${maTaiXe}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const rawVehicles = vehicleRes.data || [];
@@ -231,6 +244,7 @@ function FindStation() {
 
 
     // 🔹 Hàm xử lý khi người dùng bấm "Đặt chỗ"
+    // 🔹 Hàm xử lý khi người dùng bấm "Đặt chỗ"
     const handleBooking = async (stationId) => {
         if (!selectedVehicleId) return alert("⚠️ Vui lòng chọn xe!");
 
@@ -243,9 +257,9 @@ function FindStation() {
                 return;
             }
 
-            // 1) Lấy thông tin tài xế dựa trên userId
+            // 1️⃣ Lấy thông tin tài xế
             const taiXeRes = await axios.get(`/api/user-service/taixe/user/${userId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             const taiXe = taiXeRes.data;
@@ -254,22 +268,60 @@ function FindStation() {
                 return;
             }
 
-            const maTaiXe = taiXe.maTaiXe; // ✅ Đây mới là mã tài xế thật
+            const maTaiXe = taiXe.maTaiXe;
 
-            // 2) Gửi yêu cầu đặt lịch
+            // 2️⃣ Lấy danh sách pin phù hợp ở TRẠM đang đặt
+            if (!selectedPinType) {
+                alert("⚠️ Không xác định được loại pin của xe, vui lòng chọn lại xe!");
+                return;
+            }
+
+            const pinsRes = await axios.get(
+                `/api/battery-service/lichsu-pin-tram/${stationId}/available`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { loaiPin: selectedPinType },
+                }
+            );
+
+            const availablePins = pinsRes.data || [];
+
+            if (availablePins.length === 0) {
+                alert("❌ Trạm này hiện không còn pin phù hợp, vui lòng chọn trạm khác!");
+                return;
+            }
+
+            // 3️⃣ Random 1 cục pin trong danh sách
+            const randomIndex = Math.floor(Math.random() * availablePins.length);
+            const randomPin = availablePins[randomIndex];
+            const randomPinId = randomPin.maPin;
+
+            console.log("🎲 Pin được chọn ngẫu nhiên:", randomPin);
+
+            // 4️⃣ Giữ chỗ pin đó (đổi trạng thái)
+            await axios.patch(
+                `/api/battery-service/pins/${randomPinId}/state`,
+                {
+                    tinhTrang: "DAY",
+                    trangThaiSoHuu: "DUOC_GIU_CHO",
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            // 5️⃣ Gửi yêu cầu đặt lịch (thêm maPinDuocGiu)
             const body = {
                 maTaiXe: maTaiXe,
                 maTram: Number(stationId),
-                maXeGiaoDich: Number(selectedVehicleId)
+                maXeGiaoDich: Number(selectedVehicleId),
+                maPinDuocGiu: randomPinId, // 🔥 NEW
             };
 
             const response = await axios.post("/api/station-service/dat-lich", body, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
 
             alert("✅ Đặt lịch thành công!");
             console.log("Kết quả:", response.data);
-
         } catch (error) {
             console.error("❌ Lỗi khi đặt lịch:", error);
             alert(error.response?.data || error.message);

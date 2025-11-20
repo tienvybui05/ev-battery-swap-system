@@ -63,12 +63,18 @@ public class LichSuDatPinController {
     @PostMapping
     public ResponseEntity<?> datLich(@RequestBody DatLichRequest req) {
         try {
-            LichSuDatPin created = lichSuDatPinService.datLich(req.getMaTaiXe(), req.getMaTram(), req.getMaXeGiaoDich());
+            LichSuDatPin created = lichSuDatPinService.datLich(
+                    req.getMaTaiXe(),
+                    req.getMaTram(),
+                    req.getMaXeGiaoDich(),
+                    req.getMaPinDuocGiu() // 🔥 NEW
+            );
             return ResponseEntity.ok(created);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("❌ Lỗi khi đặt lịch: " + e.getMessage());
         }
     }
+
 
     // 🟢 Cập nhật trạng thái (Admin / tài xế xác nhận)
     @PutMapping("/{id}")
@@ -98,5 +104,11 @@ public class LichSuDatPinController {
         } else {
             return ResponseEntity.status(404).body("❌ Không tìm thấy lịch sử đặt pin để xóa");
         }
+    }
+
+    @PutMapping("/{id}/huy")
+    public ResponseEntity<?> huyDon(@PathVariable Long id) {
+        lichSuDatPinService.huyDon(id);
+        return ResponseEntity.ok("Đã hủy");
     }
 }
