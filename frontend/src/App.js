@@ -34,33 +34,35 @@ const ProtectedLayout = ({ children }) => {
 
 function App() {
  useEffect(() => {
-  console.log("App loaded, Analytics active");
+  console.log("App loaded");
 
-  // 🧩 Gửi event để Analytics đếm user
-  logEvent(analytics, "app_open");
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user) return;
 
-  // 🔑 Khi app load, yêu cầu quyền thông báo và lấy FCM token
-  requestPermission().then((token) => {
-    if (token) {
-      console.log("FCM Token:", token);
+  // 👉 chỉ dùng 1 lần requestPermission để lấy FCM token
+  requestPermission().then((fcmToken) => {
+    console.log("FCM Token:", fcmToken);
 
-      // 👉 Nếu người dùng đã đăng nhập, gửi token này lên backend
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && user.id) {
-        fetch("http://localhost:8080/api/user/update-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id, fcmToken: token }),
-        });
-      }
-    }
+    if (!fcmToken) return;
+
+    // 👉 chỉ gọi API CHUẨN
+    fetch("http://localhost:8080/api/user-service/fcm/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        maNguoiDung: user.id,
+        vaiTro: user.role,
+        token: fcmToken
+      })
+    });
   });
 
-  // 🔔 Lắng nghe thông báo khi web đang mở
-  onMessageListener().then((payload) => {
-    console.log("📨 Nhận thông báo:", payload);
-    alert(`${payload.notification.title}\n${payload.notification.body}`);
-  });
+
+// 🔔 Lắng nghe thông báo khi web đang mở onMessageListener().then((payload) => { console.log("📨 Nhận thông báo:", payload); alert(${payload.notification.title}\n${payload.notification.body}); }); }, []);
+onMessageListener().then((payload) => {
+  console.log("📨 Nhận thông báo:", payload);
+  alert(`${payload.notification.title}\n${payload.notification.body}`);
+});
 }, []);
 
 

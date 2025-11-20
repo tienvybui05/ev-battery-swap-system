@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"; // THÊM useEffect
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router";
 import styles from "./Login.module.css";
 import loginVinfast from "../../../assets/loginVinfast.jpg";
+import { requestPermission } from "../../../firebase"; // 👈 THÊM DÒNG NÀY
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -12,23 +13,18 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // THÊM: Kiểm tra nếu đã login thì redirect ra trang chủ
+  // 🔄 Kiểm tra nếu đã login thì redirect
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/"); // Hoặc "/dashboard" tùy bạn muốn
-    }
+    if (token) navigate("/");
   }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Hàm điều hướng theo role
+  // 🎯 Điều hướng theo role
   const redirectByRole = (role) => {
     switch (role) {
       case "ADMIN":
@@ -44,7 +40,7 @@ function Login() {
         navigate("/dashboard");
         break;
       default:
-        navigate("/"); // VỀ TRANG CHỦ
+        navigate("/");
         break;
     }
   };
@@ -55,42 +51,60 @@ function Login() {
     setLoading(true);
 
     try {
-      console.log("Đang gọi API...");
+      console.log("Đang gọi API đăng nhập...");
 
       const res = await fetch("/api/user-service/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           soDienThoai: formData.phone,
           matKhau: formData.password,
         }),
       });
 
-      console.log("Response status:", res.status);
-
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(
-          errorData.error || `HTTP ${res.status}: Đăng nhập thất bại`
-        );
+        throw new Error(errorData.error || `HTTP ${res.status}`);
       }
 
       const data = await res.json();
-      console.log("Login success:", data);
+      console.log("✅ Đăng nhập thành công:", data);
 
-      // Lưu thông tin user
+      // 🧠 Lưu thông tin người dùng
       localStorage.setItem("token", data.token);
       localStorage.setItem("userRole", data.role);
       localStorage.setItem("userEmail", data.email);
       localStorage.setItem("userId", data.userId);
       localStorage.setItem("hoTen", data.hoTen);
 
+      // 🔥 Gọi Firebase để lấy FCM Token
+      const fcmToken = await requestPermission();
+      if (fcmToken) {
+        console.log("📩 FCM token:", fcmToken);
+
+        // Gửi FCM token lên backend để lưu
+        await fetch("/api/user-service/fcm/update", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + data.token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            maNguoiDung: data.userId,
+            vaiTro: data.role,
+            token: fcmToken,
+          }),
+        });
+
+        console.log("✅ FCM token đã được lưu thành công!");
+      } else {
+        console.warn("⚠️ Không lấy được FCM token");
+      }
+
       setLoading(false);
       redirectByRole(data.role);
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("❌ Lỗi đăng nhập:", err);
       setError(err.message || "Có lỗi xảy ra, vui lòng thử lại!");
       setLoading(false);
     }
@@ -148,7 +162,7 @@ function Login() {
       <div className={styles.imagesLogin}>
         <img
           src={loginVinfast}
-          title="Giao diện ảnh đăng nhập"
+          alt="Giao diện đăng nhập"
           className={styles.longinVin}
         />
       </div>
