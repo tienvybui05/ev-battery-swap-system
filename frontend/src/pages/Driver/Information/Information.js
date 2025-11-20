@@ -24,63 +24,115 @@ function Information() {
     const [userInfo, setUserInfo] = useState(null);
     const [editUserInfo, setEditUserInfo] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [maTaiXe, setMaTaiXe] = useState(null);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const userId = localStorage.getItem('userId');
-        if (!token || !userId) {
-            window.location.href = "/login";
-            return;
-        }
-        fetch(`/api/user-service/taixe/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-            setUserInfo(data);
-            setEditUserInfo({
-                hoTen: data.hoTen || data.nguoiDung?.hoTen || "",
-                email: data.email || data.nguoiDung?.email || "",
-                soDienThoai: data.soDienThoai || data.nguoiDung?.soDienThoai || "",
-                gioiTinh: data.gioiTinh || data.nguoiDung?.gioiTinh || "",
-                ngaySinh: (data.ngaySinh || data.nguoiDung?.ngaySinh || "").substring(0, 10),
-                bangLaiXe: data.bangLaiXe || "",
-                matKhau: data.matKhau || "",
-            });
-            setLoading(false);
-        });
+        const fetchUserInfo = async () => {
+            const token = localStorage.getItem('token');
+            const userId = localStorage.getItem('userId');
+            
+            if (!token || !userId) {
+                window.location.href = "/login";
+                return;
+            }
+
+            try {
+                // Sử dụng endpoint /user/{userId} để lấy thông tin tài xế theo mã người dùng
+                const response = await fetch(`/api/user-service/taixe/user/${userId}`, {
+                    headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("User data received:", data);
+                
+                // Data trả về là đối tượng TaiXe, có chứa thông tin NguoiDung
+                setMaTaiXe(data.maTaiXe);
+                setUserInfo(data);
+
+                // Tách thông tin từ TaiXe và NguoiDung
+                const nguoiDung = data.nguoiDung;
+                setEditUserInfo({
+                    hoTen: nguoiDung?.hoTen || "",
+                    email: nguoiDung?.email || "",
+                    soDienThoai: nguoiDung?.soDienThoai || "",
+                    gioiTinh: nguoiDung?.gioiTinh || "",
+                    ngaySinh: (nguoiDung?.ngaySinh || "").substring(0, 10),
+                    bangLaiXe: data.bangLaiXe || ""
+                });
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                alert("Lỗi tải thông tin người dùng: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserInfo();
     }, []);
 
     // Hàm Lưu thay đổi (PUT lên API)
-    const handleSaveUser = () => {
+    const handleSaveUser = async () => {
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
+        
+        if (!token || !userId || !maTaiXe) {
+            alert("Vui lòng đăng nhập lại!");
+            return;
+        }
+
         const payload = {
             hoTen: editUserInfo.hoTen,
             email: editUserInfo.email,
             soDienThoai: editUserInfo.soDienThoai,
             gioiTinh: editUserInfo.gioiTinh,
-            matKhau: editUserInfo.matKhau || userInfo?.matKhau || "123456",
             ngaySinh: formatDate(editUserInfo.ngaySinh),
             bangLaiXe: editUserInfo.bangLaiXe
+            // Không gửi mật khẩu - backend sẽ giữ nguyên mật khẩu cũ
         };
-        fetch(`/api/user-service/taixe/${userId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(async res => {
-            const msg = await res.text();
-            if (res.ok) {
-                alert("Cập nhật thành công!");
-                setUserInfo(prev => ({ ...prev, ...payload }));
-            } else {
-                alert("Cập nhật thất bại!\n" + msg);
+
+        try {
+            // Sử dụng mã tài xế để update (endpoint /{id} với id là maTaiXe)
+            const response = await fetch(`/api/user-service/taixe/${maTaiXe}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
             }
-        });
+
+            const result = await response.json();
+            alert("Cập nhật thành công!");
+            
+            // Cập nhật lại state userInfo
+            setUserInfo(prev => ({
+                ...prev,
+                bangLaiXe: payload.bangLaiXe,
+                nguoiDung: {
+                    ...prev.nguoiDung,
+                    hoTen: payload.hoTen,
+                    email: payload.email,
+                    soDienThoai: payload.soDienThoai,
+                    gioiTinh: payload.gioiTinh,
+                    ngaySinh: payload.ngaySinh
+                }
+            }));
+        } catch (error) {
+            console.error("Error updating user data:", error);
+            alert("Cập nhật thất bại!\n" + error.message);
+        }
     };
 
     return (
@@ -159,7 +211,8 @@ function Information() {
             </div>
 
             {/* ====== Component Quản lý Xe riêng ====== */}
-            <CarManagement />
+            {/* Truyền maTaiXe xuống CarManagement để sử dụng trong các API call */}
+            <CarManagement maTaiXe={maTaiXe} />
         </nav>
     );
 }
