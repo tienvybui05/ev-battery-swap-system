@@ -8,7 +8,8 @@ import ut.edu.batteryservice.models.Pin;
 
 import java.util.List;
 
-public interface ILichSuPinTramRepository extends JpaRepository<LichSuPinTram,Long> {
+public interface ILichSuPinTramRepository extends JpaRepository<LichSuPinTram, Long> {
+
     @Query("""
         SELECT p 
         FROM Pin p 
@@ -25,8 +26,7 @@ public interface ILichSuPinTramRepository extends JpaRepository<LichSuPinTram,Lo
             @Param("maTram") Long maTram,
             @Param("loaiPin") String loaiPin
     );
-    LichSuPinTram findTopByMaPinOrderByNgayThayDoiDesc(Long maPin);
 
-    // 🔥 Lấy toàn bộ lịch sử của pin (nếu cần)
+    // ✔ Chỉ giữ 1 hàm — không duplicate
     LichSuPinTram findTopByMaPinOrderByNgayThayDoiDesc(Long maPin);
 }

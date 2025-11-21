@@ -22,11 +22,6 @@ public class BatteryStatusService implements IBatteryStatusService {
     @Override
     public BatteryStatusDTO getBatteryStatusSummary(Long tramId) {
 
-        // ⛔ Không truyền trạm → trả 0 hết
-        if (tramId == null) {
-            return new BatteryStatusDTO(0, 0, 0, 0);
-        }
-
         List<Pin> allPins = pinRepository.findAll();
 
         long total = 0;
@@ -36,20 +31,24 @@ public class BatteryStatusService implements IBatteryStatusService {
 
         for (Pin p : allPins) {
 
-            // ❌ bỏ pin đang sử dụng hoặc vận chuyển
+            // Bỏ pin đang sử dụng hoặc vận chuyển
             if (p.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DANG_SU_DUNG ||
                     p.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DANG_VAN_CHUYEN) {
                 continue;
             }
 
-            // 🔍 lấy lịch sử mới nhất của pin
+            // lấy lịch sử mới nhất
             LichSuPinTram latest = lichSuPinTramRepository
                     .findTopByMaPinOrderByNgayThayDoiDesc(p.getMaPin());
 
             if (latest == null) continue;
-            if (!latest.getMaTram().equals(tramId)) continue;
 
-            // ✔ pin thật sự thuộc trạm được yêu cầu
+            // Nếu có tramId → chỉ lấy pin thuộc trạm đó
+            if (tramId != null && !latest.getMaTram().equals(tramId)) {
+                continue;
+            }
+
+            // Nếu không có tramId → tính toàn bộ hệ thống
             total++;
 
             switch (p.getTinhTrang()) {
