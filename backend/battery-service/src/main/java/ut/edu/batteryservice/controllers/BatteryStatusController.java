@@ -15,8 +15,11 @@ public class BatteryStatusController {
     private IBatteryStatusService batteryStatusService;
 
     @GetMapping
-    public ResponseEntity<BatteryStatusDTO> getBatteryStatusSummary() {
-        BatteryStatusDTO summary = batteryStatusService.getBatteryStatusSummary();
-        return ResponseEntity.ok(summary);
+    public ResponseEntity<BatteryStatusDTO> getBatteryStatusSummary(
+            @RequestParam(required = false) Long tram
+    ) {
+        return ResponseEntity.ok(
+                batteryStatusService.getBatteryStatusSummary(tram)
+        );
     }
 }

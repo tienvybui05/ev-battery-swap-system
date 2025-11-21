@@ -11,40 +11,83 @@ import {
 import styles from "./StatsHeader.module.css";
 
 const StatsHeader = () => {
-    const [statusData, setStatusData] = useState({
-        day: 0,        // pin đầy
-        charging: 0,   // pin đang sạc
-        maintenance: 0 // pin bảo trì
+    const [statusStation, setStatusStation] = useState({
+        day: 0,
+        charging: 0,
+        maintenance: 0,
+    });
+
+    const [statusTotal, setStatusTotal] = useState({
+        day: 0,
+        charging: 0,
+        maintenance: 0,
     });
 
     const [loading, setLoading] = useState(true);
 
-    // 🟢 Gọi API backend lấy dữ liệu thống kê pin (theo tình trạng kỹ thuật)
-    const fetchBatteryStatus = async () => {
+    const fetchData = async () => {
         try {
-            const res = await fetch("/api/battery-service/status");
-            if (!res.ok) throw new Error("Không thể tải dữ liệu trạng thái pin");
+            const token = localStorage.getItem("token");
+            const userId = localStorage.getItem("userId");
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-            const data = await res.json();
-            console.log("📊 Battery status:", data);
+            if (!userId) {
+                console.error("❌ Không tìm thấy userId");
+                setLoading(false);
+                return;
+            }
 
-            setStatusData({
-                day: data.day ?? 0,
-                charging: data.dangSac ?? 0,
-                maintenance: data.baoTri ?? 0,
+            // 🔹 Lấy mã trạm nhân viên
+            const nvRes = await fetch(`/api/user-service/nhanvien/user/${userId}`, {
+                headers,
             });
+            if (!nvRes.ok) {
+                console.error("❌ Không lấy được thông tin nhân viên");
+                setLoading(false);
+                return;
+            }
+
+            const nhanVien = await nvRes.json();
+            const maTram = Number(nhanVien.maTram ?? nhanVien.ma_tram);
+
+            // =============================
+            // 🔹 1) API tổng hệ thống
+            // =============================
+            const totalRes = await fetch(`/api/battery-service/status`, { headers });
+            const totalData = totalRes.ok ? await totalRes.json() : {};
+
+            setStatusTotal({
+                day: totalData.day ?? 0,
+                charging: totalData.dangSac ?? 0,
+                maintenance: totalData.baoTri ?? 0,
+            });
+
+            // =============================
+            // 🔹 2) API theo trạm
+            // =============================
+            const stationRes = await fetch(
+                `/api/battery-service/status?tram=${maTram}`,
+                { headers }
+            );
+            const stationData = stationRes.ok ? await stationRes.json() : {};
+
+            setStatusStation({
+                day: stationData.day ?? 0,
+                charging: stationData.dangSac ?? 0,
+                maintenance: stationData.baoTri ?? 0,
+            });
+
         } catch (err) {
-            console.error("⚠️ Lỗi khi tải dữ liệu pin:", err);
+            console.error("⚠️ Lỗi StatsHeader:", err);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchBatteryStatus();
+        fetchData();
     }, []);
 
-    // 🔹 Nếu đang loading thì hiện thông báo
     if (loading) {
         return (
             <div className={styles.statsHeader}>
@@ -53,14 +96,44 @@ const StatsHeader = () => {
         );
     }
 
-    // 🔹 Dữ liệu hiển thị
+    // =============================
+    // 🔹 Hiển thị 3 card theo trạm / toàn hệ thống
+    // =============================
+    const format = (tram, total) => (
+        <>
+            <div>{tram}</div>
+            <small style={{ fontSize: "12px", opacity: 0.8 }}>
+                pin / {total} toàn hệ thống
+            </small>
+        </>
+    );
+
     const statsData = [
         { id: 1, icon: faChartColumn, color: "#4F46E5", value: "47", label: "Thay Pin Hôm Nay" },
         { id: 2, icon: faDollarSign, color: "#10B981", value: "$1175", label: "Doanh Thu" },
         { id: 3, icon: faUser, color: "#F97316", value: "4.8", label: "Đánh Giá" },
-        { id: 4, icon: faWrench, color: "#EF4444", value: statusData.maintenance, label: "Pin Bảo Trì" },
-        { id: 5, icon: faBatteryFull, color: "#22C55E", value: statusData.day, label: "Pin Đầy" },
-        { id: 6, icon: faBolt, color: "#F59E0B", value: statusData.charging, label: "Pin Đang Sạc" },
+
+        {
+            id: 4,
+            icon: faWrench,
+            color: "#EF4444",
+            value: format(statusStation.maintenance, statusTotal.maintenance),
+            label: "Pin Bảo Trì",
+        },
+        {
+            id: 5,
+            icon: faBatteryFull,
+            color: "#22C55E",
+            value: format(statusStation.day, statusTotal.day),
+            label: "Pin Đầy",
+        },
+        {
+            id: 6,
+            icon: faBolt,
+            color: "#F59E0B",
+            value: format(statusStation.charging, statusTotal.charging),
+            label: "Pin Đang Sạc",
+        },
     ];
 
     return (

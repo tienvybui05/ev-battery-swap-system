@@ -3,8 +3,12 @@ package ut.edu.batteryservice.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ut.edu.batteryservice.dtos.BatteryStatusDTO;
+import ut.edu.batteryservice.models.LichSuPinTram;
 import ut.edu.batteryservice.models.Pin;
+import ut.edu.batteryservice.repositories.ILichSuPinTramRepository;
 import ut.edu.batteryservice.repositories.IPinRepository;
+
+import java.util.List;
 
 @Service
 public class BatteryStatusService implements IBatteryStatusService {
@@ -12,18 +16,48 @@ public class BatteryStatusService implements IBatteryStatusService {
     @Autowired
     private IPinRepository pinRepository;
 
-    @Override
-    public BatteryStatusDTO getBatteryStatusSummary() {
-        long total = pinRepository.count();
-        long day = pinRepository.countByTinhTrang(Pin.TinhTrang.DAY);
-        long dangSac = pinRepository.countByTinhTrang(Pin.TinhTrang.DANG_SAC);
-        long baoTri = pinRepository.countByTinhTrang(Pin.TinhTrang.BAO_TRI);
+    @Autowired
+    private ILichSuPinTramRepository lichSuPinTramRepository;
 
-        // Có thể thêm thống kê trạng thái sở hữu nếu muốn
-        long sanSang = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.SAN_SANG);
-        long dangVanChuyen = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DANG_VAN_CHUYEN);
-        long duocGiuCho = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DUOC_GIU_CHO);
-        long dangSuDung = pinRepository.countByTrangThaiSoHuu(Pin.TrangThaiSoHuu.DANG_SU_DUNG);
+    @Override
+    public BatteryStatusDTO getBatteryStatusSummary(Long tramId) {
+
+        // ⛔ Không truyền trạm → trả 0 hết
+        if (tramId == null) {
+            return new BatteryStatusDTO(0, 0, 0, 0);
+        }
+
+        List<Pin> allPins = pinRepository.findAll();
+
+        long total = 0;
+        long day = 0;
+        long dangSac = 0;
+        long baoTri = 0;
+
+        for (Pin p : allPins) {
+
+            // ❌ bỏ pin đang sử dụng hoặc vận chuyển
+            if (p.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DANG_SU_DUNG ||
+                    p.getTrangThaiSoHuu() == Pin.TrangThaiSoHuu.DANG_VAN_CHUYEN) {
+                continue;
+            }
+
+            // 🔍 lấy lịch sử mới nhất của pin
+            LichSuPinTram latest = lichSuPinTramRepository
+                    .findTopByMaPinOrderByNgayThayDoiDesc(p.getMaPin());
+
+            if (latest == null) continue;
+            if (!latest.getMaTram().equals(tramId)) continue;
+
+            // ✔ pin thật sự thuộc trạm được yêu cầu
+            total++;
+
+            switch (p.getTinhTrang()) {
+                case DAY -> day++;
+                case DANG_SAC -> dangSac++;
+                case BAO_TRI -> baoTri++;
+            }
+        }
 
         return new BatteryStatusDTO(total, day, dangSac, baoTri);
     }

@@ -25,4 +25,8 @@ public interface ILichSuPinTramRepository extends JpaRepository<LichSuPinTram,Lo
             @Param("maTram") Long maTram,
             @Param("loaiPin") String loaiPin
     );
+    LichSuPinTram findTopByMaPinOrderByNgayThayDoiDesc(Long maPin);
+
+    // 🔥 Lấy toàn bộ lịch sử của pin (nếu cần)
+    LichSuPinTram findTopByMaPinOrderByNgayThayDoiDesc(Long maPin);
 }
