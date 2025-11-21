@@ -2,7 +2,12 @@ import { useState } from "react";
 import styles from "./Support.module.css";
 import Button from "../../../components/Shares/Button/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhone, faCircleExclamation, faShield, faGear, faXmark } from "@fortawesome/free-solid-svg-icons";
+import {
+    faPhone,
+    faCircleExclamation,
+    faGear,
+    faXmark
+} from "@fortawesome/free-solid-svg-icons";
 
 function Support() {
     const [openReport, setOpenReport] = useState(false);
@@ -12,50 +17,7 @@ function Support() {
     const [confirmPass, setConfirmPass] = useState("");
     const [loadingChange, setLoadingChange] = useState(false);
 
-    const [report, setReport] = useState({
-        Ma_Bao_Cao: "BC-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-4),
-        Tieu_De: "",
-        Noi_Dung: "",
-        Loai_bao_cao: [],
-        Trang_Thai_Xu_Ly: "Mới",
-        Phan_Hoi: "",
-    });
-
-    const checklist = [
-        "Kiểm tra hư hỏng vật lý",
-        "Kiểm tra kết nối",
-        "Đọc nhiệt độ",
-        "Kiểm tra điện áp",
-        "Xác minh dung lượng",
-    ];
-
-    const toggleType = (label) => {
-        setReport((prev) => {
-            const has = prev.Loai_bao_cao.includes(label);
-            return {
-                ...prev,
-                Loai_bao_cao: has
-                    ? prev.Loai_bao_cao.filter((x) => x !== label)
-                    : [...prev.Loai_bao_cao, label],
-            };
-        });
-    };
-
-    const handleSubmit = () => {
-        if (!report.Tieu_De.trim() || !report.Noi_Dung.trim()) return;
-        console.log("SUBMIT BAOCAO", report);
-        setOpenReport(false);
-        setReport({
-            Ma_Bao_Cao: "BC-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-4),
-            Tieu_De: "",
-            Noi_Dung: "",
-            Loai_bao_cao: [],
-            Trang_Thai_Xu_Ly: "Mới",
-            Phan_Hoi: "",
-        });
-    };
-
-    // ✅ ĐỔI MẬT KHẨU KHÔNG CẦN MẬT KHẨU CŨ
+    // ================= ĐỔI MẬT KHẨU =================
     const handleChangePassword = async () => {
         if (!newPass.trim() || !confirmPass.trim()) {
             alert("Vui lòng nhập đầy đủ thông tin!");
@@ -77,7 +39,6 @@ function Support() {
 
         setLoadingChange(true);
 
-        // lấy lại dữ liệu user để giữ nguyên khi update
         const resUser = await fetch(`/api/user-service/taixe/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -97,7 +58,7 @@ function Support() {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+                Authorization: `Bearer ${token}`
             },
             body: JSON.stringify(payload)
         });
@@ -115,48 +76,116 @@ function Support() {
         }
     };
 
+    // ================= GỬI BÁO LỖI (KHÔNG DÙNG STATE) =================
+    const handleSubmit = async () => {
+        const token = localStorage.getItem("token");
+        const userId = localStorage.getItem("userId");
+
+        const tieuDe = document.getElementById("tieuDe").value;
+        const noiDung = document.getElementById("noiDung").value;
+
+        if (!userId) {
+            alert("Bạn chưa đăng nhập!");
+            return;
+        }
+
+        if (!tieuDe.trim() || !noiDung.trim()) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        const payload = {
+            maTaiXe: Number(userId),
+            tieuDe,
+            noiDung
+        };
+
+        console.log("Payload gửi đi:", payload);
+
+        try {
+            const res = await fetch("/api/feedback-service/baocao", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert("Gửi báo cáo thành công!");
+                setOpenReport(false);
+                document.getElementById("tieuDe").value = "";
+                document.getElementById("noiDung").value = "";
+            } else {
+                const err = await res.text();
+                alert("Gửi thất bại: " + err);
+            }
+        } catch (err) {
+            alert("Lỗi kết nối server!");
+            console.error(err);
+        }
+    };
+
     return (
         <nav className={styles.wrapper}>
+            {/* ================= LIÊN HỆ HỖ TRỢ ================= */}
             <div className={styles.contactsupport}>
                 <div className={styles.header}>
                     <h1>Liên Hệ Hỗ Trợ</h1>
                     <p>Nhận trợ giúp với trải nghiệm Vinnhot của bạn</p>
                 </div>
+
                 <div className={styles.button}>
                     <Button white blackoutline type="button">
                         <FontAwesomeIcon icon={faPhone} className={styles.icon} />
                         Gọi Hỗ Trợ
                     </Button>
-                    <Button white blackoutline type="button" onClick={() => setOpenReport(true)}>
-                        <FontAwesomeIcon icon={faCircleExclamation} className={styles.icon} />
+
+                    <Button
+                        white
+                        blackoutline
+                        type="button"
+                        onClick={() => setOpenReport(true)}
+                    >
+                        <FontAwesomeIcon
+                            icon={faCircleExclamation}
+                            className={styles.icon}
+                        />
                         Báo Lỗi
                     </Button>
                 </div>
             </div>
 
+            {/* ================= BẢO MẬT ================= */}
             <div className={styles.security}>
                 <div className={styles.header}>
                     <h1>An Toàn & Bảo Mật</h1>
                     <p>Cài đặt bảo mật tài khoản</p>
                 </div>
+
                 <div className={styles.button}>
-                    
-                    <Button white blackoutline type="button" onClick={() => setOpenChangePass(true)}>
+                    <Button
+                        white
+                        blackoutline
+                        type="button"
+                        onClick={() => setOpenChangePass(true)}
+                    >
                         <FontAwesomeIcon icon={faGear} className={styles.icon} />
                         Thay Mật Khẩu
                     </Button>
                 </div>
             </div>
 
+            {/* ================= MODAL ĐỔI MẬT KHẨU ================= */}
             {openChangePass && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modal}>
                         <h1>Đổi Mật Khẩu</h1>
 
                         <div className={styles.formchange}>
-                            <label htmlFor="newpass">Mật khẩu mới</label>
+                            <label>Mật khẩu mới</label>
                             <input
-                                id="newpass"
                                 type="password"
                                 value={newPass}
                                 onChange={(e) => setNewPass(e.target.value)}
@@ -165,9 +194,8 @@ function Support() {
                         </div>
 
                         <div className={styles.formchange}>
-                            <label htmlFor="confirmpass">Xác nhận mật khẩu</label>
+                            <label>Xác nhận mật khẩu</label>
                             <input
-                                id="confirmpass"
                                 type="password"
                                 value={confirmPass}
                                 onChange={(e) => setConfirmPass(e.target.value)}
@@ -176,102 +204,81 @@ function Support() {
                         </div>
 
                         <div className={styles.modalActions}>
-                            <Button change type="button" onClick={handleChangePassword} disabled={loadingChange}>
+                            <Button
+                                change
+                                type="button"
+                                onClick={handleChangePassword}
+                                disabled={loadingChange}
+                            >
                                 {loadingChange ? "Đang lưu..." : "Lưu"}
                             </Button>
-                            <Button white blackoutline type="button" onClick={() => setOpenChangePass(false)}>Hủy</Button>
+                            <Button
+                                white
+                                blackoutline
+                                type="button"
+                                onClick={() => setOpenChangePass(false)}
+                            >
+                                Hủy
+                            </Button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Báo cáo giữ nguyên */}
+            {/* ================= MODAL BÁO LỖI ================= */}
             {openReport && (
-                <div className={styles.modalOverlay} onClick={() => setOpenReport(false)}>
-                    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+                <div
+                    className={styles.modalOverlay}
+                    onClick={() => setOpenReport(false)}
+                >
+                    <div
+                        className={styles.modal}
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className={styles.modalHead}>
                             <div>
                                 <h2>Gửi Báo Cáo</h2>
-                                <p>Kiểm tra và ghi nhận vấn đề để chúng tôi xử lý.</p>
+                                <p>Ghi nhận vấn đề để chúng tôi xử lý</p>
                             </div>
+
                             <button
                                 className={styles.iconClose}
                                 type="button"
-                                aria-label="Đóng"
                                 onClick={() => setOpenReport(false)}
                             >
                                 <FontAwesomeIcon icon={faXmark} />
                             </button>
                         </div>
 
-                        {/* meta */}
-                        <div className={styles.metaGrid}>
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Mã Báo Cáo</span>
-                                <span className={styles.metaValue}>{report.Ma_Bao_Cao}</span>
-                            </div>
-                            <div className={styles.metaItem}>
-                                <span className={styles.metaLabel}>Trạng Thái</span>
-                                <span className={styles.metaValue}>{report.Trang_Thai_Xu_Ly}</span>
-                            </div>
-                        </div>
-
-                        {/* các phần còn lại giữ nguyên */}
                         <div className={styles.formdetail}>
-                            <label htmlFor="title">Tiêu Đề</label>
+                            <label>Tiêu Đề</label>
                             <input
-                                id="title"
+                                id="tieuDe"
                                 type="text"
-                                value={report.Tieu_De}
-                                onChange={(e) => setReport((r) => ({ ...r, Tieu_De: e.target.value }))}
-                                placeholder="VD: Lỗi không nhận thông báo"
+                                placeholder="VD: Trạm 3 lỗi pin"
                             />
                         </div>
 
-                        <div className={styles.checklistBlock}>
-                            <div className={styles.checklistTitle}>Danh Sách Kiểm Tra</div>
-                            <div className={styles.checklistGrid}>
-                                {checklist.map((item) => (
-                                    <label key={item} className={styles.checkboxRow}>
-                                        <input
-                                            type="checkbox"
-                                            checked={report.Loai_bao_cao.includes(item)}
-                                            onChange={() => toggleType(item)}
-                                        />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
                         <div className={styles.formdetail}>
-                            <label htmlFor="content">Nội Dung</label>
+                            <label>Nội Dung</label>
                             <textarea
-                                id="content"
+                                id="noiDung"
                                 rows={4}
-                                value={report.Noi_Dung}
-                                onChange={(e) => setReport((r) => ({ ...r, Noi_Dung: e.target.value }))}
                                 placeholder="Mô tả chi tiết vấn đề..."
                             />
                         </div>
 
-                        <div className={styles.formdetail}>
-                            <label htmlFor="feedback">Ghi Chú Kiểm Tra</label>
-                            <textarea
-                                id="feedback"
-                                rows={3}
-                                value={report.Phan_Hoi}
-                                onChange={(e) => setReport((r) => ({ ...r, Phan_Hoi: e.target.value }))}
-                                placeholder="Bất kỳ vấn đề hoặc quan sát nào..."
-                            />
-                        </div>
-
                         <div className={styles.modalActions}>
-                            <Button white blackoutline type="button" onClick={() => setOpenReport(false)}>
+                            <Button
+                                white
+                                blackoutline
+                                type="button"
+                                onClick={() => setOpenReport(false)}
+                            >
                                 Hủy
                             </Button>
                             <Button change type="button" onClick={handleSubmit}>
-                                Hoàn Thành Kiểm Tra
+                                Gửi Báo Cáo
                             </Button>
                         </div>
                     </div>
