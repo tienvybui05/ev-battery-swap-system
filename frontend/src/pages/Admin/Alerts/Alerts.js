@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDollarSign,
@@ -11,45 +11,136 @@ import {
   faTimesCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./Alerts.module.css";
+import axios from "axios";
+import AlertDetailModal from "./modals/AlertDetailModal/AlertDetailModal";
 
 function Alerts() {
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: "critical",
-      icon: faTimesCircle,
-      title: "Trạm B1 có tình trạng pin dưới 50%",
-      time: "2 phút trước",
-      source: "Trạm Trung Tâm",
-    },
-    {
-      id: 2,
-      type: "warning",
-      icon: faExclamationTriangle,
-      title: "Dự đoán nhu cầu cao trong khung 18h–20h",
-      time: "15 phút trước",
-      source: "Tất cả các trạm",
-    },
-    {
-      id: 3,
-      type: "info",
-      icon: faCheckCircle,
-      title: "Đã đạt chỉ tiêu doanh thu tháng",
-      time: "1 giờ trước",
-      source: "Hệ thống",
-    },
-    {
-      id: 4,
-      type: "critical",
-      icon: faTimesCircle,
-      title: "Lỗi cổng thanh toán — kết nối bị gián đoạn",
-      time: "2 giờ trước",
-      source: "Tất cả các trạm",
-    },
-  ]);
+  const [alerts, setAlerts] = useState([]);
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Helper to format time relative (simple version)
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+
+    // Convert UTC -> local Vietnam time
+    const date = new Date(dateString);
+    const localDate = new Date(date.getTime() + (7 * 60 * 60 * 1000)); // +7h
+
+    const now = new Date();
+    const diffMs = now - localDate;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return "Vừa xong";
+    if (diffMins < 60) return `${diffMins} phút trước`;
+
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+
+    return `${Math.floor(diffHours / 24)} ngày trước`;
+  };
+
+
+  // Map backend status to alert type and icon
+  const mapStatusToType = (status) => {
+    switch (status) {
+      case "MOI":
+        return { type: "critical", icon: faTimesCircle };
+      case "DANG_XU_LY":
+        return { type: "warning", icon: faExclamationTriangle };
+      case "DA_XU_LY":
+        return { type: "info", icon: faCheckCircle };
+      default:
+        return { type: "info", icon: faCheckCircle };
+    }
+  };
+
+  const fetchAlerts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const res = await axios.get("/api/feedback-service/baocao", { headers });
+
+      // Transform data
+      const newAlerts = res.data.map((item) => {
+        const { type, icon } = mapStatusToType(item.trangThaiXuLy);
+        return {
+          id: item.maBaoCao,
+          type: type,
+          icon: icon,
+          title: item.tieuDe,
+          content: item.noiDung,
+          rawStatus: item.trangThaiXuLy,
+          time: formatTime(item.ngayTao),
+          source: item.maTaiXe ? `Tài xế #${item.maTaiXe}` : "Hệ thống",
+          originalData: item, // Store full original data for updates
+        };
+      });
+
+      // Sort by newest first (assuming higher ID is newer or sort by time if needed)
+      // Here we rely on the backend order or reverse it if needed. 
+      // Let's reverse to show newest at top if backend returns chronological.
+      setAlerts(newAlerts.reverse());
+    } catch (error) {
+      console.error("Error fetching alerts:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts(); // Initial fetch
+    const interval = setInterval(fetchAlerts, 5000); // Poll every 5s
+    return () => clearInterval(interval);
+  }, []);
 
   const handleDismiss = (id) => {
     setAlerts(alerts.filter((alert) => alert.id !== id));
+  };
+
+  const handleViewDetails = (alert) => {
+    setSelectedAlert(alert);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateStatus = async (id, newStatus) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      // Find the alert to get original data
+      const alertToUpdate = alerts.find(a => a.id === id);
+      if (!alertToUpdate) return;
+
+      const payload = {
+        ...alertToUpdate.originalData,
+        trangThaiXuLy: newStatus
+      };
+
+      await axios.put(`/api/feedback-service/baocao/${id}`,
+        payload,
+        { headers }
+      );
+
+      // Update local state
+      setAlerts(alerts.map(alert => {
+        if (alert.id === id) {
+          const { type, icon } = mapStatusToType(newStatus);
+          return {
+            ...alert,
+            rawStatus: newStatus,
+            type,
+            icon,
+            originalData: { ...alert.originalData, trangThaiXuLy: newStatus }
+          };
+        }
+        return alert;
+      }));
+
+      alert("Cập nhật trạng thái thành công!");
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Lỗi khi cập nhật trạng thái!");
+    }
   };
 
   const kpiData = [
@@ -117,35 +208,51 @@ function Alerts() {
 
       {/* 🔹 Danh sách cảnh báo */}
       <div className={styles.alertList}>
-        {alerts.map((alert) => (
-          <div
-            key={alert.id}
-            className={`${styles.alertCard} ${styles[alert.type]}`}
-          >
-            <div className={styles.alertMain}>
-              <FontAwesomeIcon
-                icon={alert.icon}
-                className={`${styles.alertIcon} ${styles[alert.type + "Icon"]}`}
-              />
-              <div className={styles.alertInfo}>
-                <p className={styles.alertTitle}>{alert.title}</p>
-                <span className={styles.alertMeta}>
-                  {alert.time} • {alert.source}
-                </span>
+        {alerts.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#666", padding: "20px" }}>Không có thông báo nào.</p>
+        ) : (
+          alerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`${styles.alertCard} ${styles[alert.type]}`}
+            >
+              <div className={styles.alertMain}>
+                <FontAwesomeIcon
+                  icon={alert.icon}
+                  className={`${styles.alertIcon} ${styles[alert.type + "Icon"]}`}
+                />
+                <div className={styles.alertInfo}>
+                  <p className={styles.alertTitle}>{alert.title}</p>
+                  <span className={styles.alertMeta}>
+                    {alert.time} • {alert.source}
+                  </span>
+                </div>
+              </div>
+              <div className={styles.alertActions}>
+                <button
+                  className={styles.viewBtn}
+                  onClick={() => handleViewDetails(alert)}
+                >
+                  Xem chi tiết
+                </button>
+                <button
+                  className={styles.dismissBtn}
+                  onClick={() => handleDismiss(alert.id)}
+                >
+                  Ẩn thông báo
+                </button>
               </div>
             </div>
-            <div className={styles.alertActions}>
-              <button className={styles.viewBtn}>Xem chi tiết</button>
-              <button
-                className={styles.dismissBtn}
-                onClick={() => handleDismiss(alert.id)}
-              >
-                Ẩn thông báo
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
+
+      <AlertDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        alert={selectedAlert}
+        onUpdateStatus={handleUpdateStatus}
+      />
     </div>
   );
 }
