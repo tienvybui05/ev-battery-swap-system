@@ -23,6 +23,9 @@ const StatsHeader = () => {
         maintenance: 0,
     });
 
+    // ⭐ Rating theo trạm
+    const [ratingStation, setRatingStation] = useState(0);
+
     const [loading, setLoading] = useState(true);
 
     const fetchData = async () => {
@@ -50,12 +53,16 @@ const StatsHeader = () => {
             const nhanVien = await nvRes.json();
             const maTram = Number(nhanVien.maTram ?? nhanVien.ma_tram);
 
-            // =============================
-            // 🔹 1) API tổng hệ thống
-            // =============================
-            const totalRes = await fetch(`/api/battery-service/status`, { headers });
-            const totalData = totalRes.ok ? await totalRes.json() : {};
+            const [totalRes, stationRes, ratingRes] = await Promise.all([
+                fetch(`/api/battery-service/status`, { headers }),
+                fetch(`/api/battery-service/status?tram=${maTram}`, { headers }),
+                fetch(`/api/feedback-service/danhgia/tram/${maTram}/trung-binh-sao`, { headers }),
+            ]);
 
+            // =============================
+            // 🔹 Tổng hệ thống
+            // =============================
+            const totalData = totalRes.ok ? await totalRes.json() : {};
             setStatusTotal({
                 day: totalData.day ?? 0,
                 charging: totalData.dangSac ?? 0,
@@ -63,19 +70,22 @@ const StatsHeader = () => {
             });
 
             // =============================
-            // 🔹 2) API theo trạm
+            // 🔹 Theo trạm
             // =============================
-            const stationRes = await fetch(
-                `/api/battery-service/status?tram=${maTram}`,
-                { headers }
-            );
             const stationData = stationRes.ok ? await stationRes.json() : {};
-
             setStatusStation({
                 day: stationData.day ?? 0,
                 charging: stationData.dangSac ?? 0,
                 maintenance: stationData.baoTri ?? 0,
             });
+
+            // =============================
+            // 🔹 Rating theo trạm
+            // =============================
+            if (ratingRes.ok) {
+                const ratingValue = await ratingRes.json();
+                setRatingStation(Number(ratingValue?.toFixed(1)) || 0);
+            }
 
         } catch (err) {
             console.error("⚠️ Lỗi StatsHeader:", err);
@@ -96,9 +106,6 @@ const StatsHeader = () => {
         );
     }
 
-    // =============================
-    // 🔹 Hiển thị 3 card theo trạm / toàn hệ thống
-    // =============================
     const format = (tram, total) => (
         <>
             <div>{tram}</div>
@@ -111,7 +118,14 @@ const StatsHeader = () => {
     const statsData = [
         { id: 1, icon: faChartColumn, color: "#4F46E5", value: "47", label: "Thay Pin Hôm Nay" },
         { id: 2, icon: faDollarSign, color: "#10B981", value: "$1175", label: "Doanh Thu" },
-        { id: 3, icon: faUser, color: "#F97316", value: "4.8", label: "Đánh Giá" },
+
+        {
+            id: 3,
+            icon: faUser,
+            color: "#F97316",
+            value: ratingStation > 0 ? `${ratingStation} ` : "Chưa có",
+            label: "Sao đánh Giá",
+        },
 
         {
             id: 4,

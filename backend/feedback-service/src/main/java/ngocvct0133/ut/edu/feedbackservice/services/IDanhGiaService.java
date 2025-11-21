@@ -10,6 +10,9 @@ public interface IDanhGiaService {
     DanhGia suaDanhGia(Long id, DanhGia danhGia);
 
     DanhGia layDanhGia(Long id);
-
     List<DanhGia> layTatCaDanhSach();
+
+    // ⭐ API mới
+    double tinhTrungBinhSaoTheoTram(Long maTram);
+    double tinhTrungBinhSaoToanHeThong();
 }

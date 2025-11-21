@@ -3,7 +3,7 @@ import styles from "./History.module.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBatteryEmpty, faStar } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
-import FeedbackModal from "../History/Feedback/FeedbackModal"; // Import modal
+import FeedbackModal from "../History/Feedback/FeedbackModal";
 
 function History() {
     const [historyList, setHistoryList] = useState([]);
@@ -11,8 +11,7 @@ function History() {
     const [selectedTransaction, setSelectedTransaction] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const formatMoney = (value) =>
-        value.toLocaleString("vi-VN") + "₫";
+    const formatMoney = (value) => value.toLocaleString("vi-VN") + "₫";
 
     const formatDate = (dateStr) => {
         if (!dateStr) return "--";
@@ -20,17 +19,28 @@ function History() {
         return d.toLocaleDateString("vi-VN") + " lúc " + d.toLocaleTimeString("vi-VN");
     };
 
+    /* ====================== MỞ MODAL ĐÁNH GIÁ ====================== */
     const handleReview = (transaction) => {
         setSelectedTransaction({
             id: transaction.id,
-            stationName: transaction.stationName
+            stationName: transaction.stationName,
+            maTram: transaction.maTram
         });
         setIsModalOpen(true);
     };
 
     const handleFeedbackSubmitted = () => {
-        // Có thể refresh danh sách lịch sử nếu cần
-        console.log("Feedback submitted successfully");
+        // Khi feedback gửi thành công → reload FE-rated
+        const updatedHistory = [...historyList];
+        const ratedList = JSON.parse(localStorage.getItem("ratedTransactions") || "[]");
+
+        updatedHistory.forEach(x => {
+            if (ratedList.includes(x.id)) {
+                x.rated = true;
+            }
+        });
+
+        setHistoryList(updatedHistory);
     };
 
     const closeModal = () => {
@@ -38,6 +48,7 @@ function History() {
         setSelectedTransaction(null);
     };
 
+    /* ====================== FETCH LỊCH SỬ ====================== */
     useEffect(() => {
         const fetchHistory = async () => {
             try {
@@ -58,18 +69,22 @@ function History() {
                     return;
                 }
 
-                // 2) Lấy lịch sử giao dịch (chỉ Đã hoàn thành)
+                // 2) Lấy lịch sử giao dịch
                 const res = await axios.get(
                     `/api/transaction-service/giaodichdoipin/tai-xe/${maTaiXe}`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
+                const ratedList = JSON.parse(localStorage.getItem("ratedTransactions") || "[]");
+
                 const list = res.data.map((gd) => ({
                     id: gd.maGiaoDichDoiPin,
+                    maTram: gd.maTram,
                     stationName: `Trạm #${gd.maTram}`,
                     date: formatDate(gd.ngayGiaoDich),
                     price: formatMoney(gd.thanhtien || 0),
                     status: gd.trangThaiGiaoDich,
+                    rated: ratedList.includes(gd.maGiaoDichDoiPin) // 👈 FE ONLY
                 }));
 
                 setHistoryList(list);
@@ -100,7 +115,8 @@ function History() {
                 <div className={styles.list}>
                     {historyList.map((item) => (
                         <div key={item.id} className={styles.card}>
-                            {/* LEFT: Icon + station */}
+
+                            {/* LEFT */}
                             <div className={styles.left}>
                                 <div className={styles.iconBox}>
                                     <FontAwesomeIcon icon={faBatteryEmpty} />
@@ -113,18 +129,24 @@ function History() {
                                 </div>
                             </div>
 
-                            {/* RIGHT: Price + Review */}
+                            {/* RIGHT */}
                             <div className={styles.right}>
                                 <p className={styles.price}>{item.price}</p>
 
                                 {item.status === "Đã hoàn thành" && (
-                                    <button
-                                        className={styles.reviewBtn}
-                                        onClick={() => handleReview(item)}
-                                    >
-                                        <FontAwesomeIcon icon={faStar} />
-                                        <span>Đánh giá</span>
-                                    </button>
+                                    item.rated ? (
+                                        <span className={styles.ratedBadge}>
+                                            ⭐ Đã đánh giá
+                                        </span>
+                                    ) : (
+                                        <button
+                                            className={styles.reviewBtn}
+                                            onClick={() => handleReview(item)}
+                                        >
+                                            <FontAwesomeIcon icon={faStar} />
+                                            <span>Đánh giá</span>
+                                        </button>
+                                    )
                                 )}
                             </div>
                         </div>
@@ -132,12 +154,13 @@ function History() {
                 </div>
             )}
 
-            {/* Feedback Modal */}
+            {/* Modal */}
             <FeedbackModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 transactionId={selectedTransaction?.id}
                 stationName={selectedTransaction?.stationName}
+                maTram={selectedTransaction?.maTram}
                 onFeedbackSubmitted={handleFeedbackSubmitted}
             />
         </nav>
