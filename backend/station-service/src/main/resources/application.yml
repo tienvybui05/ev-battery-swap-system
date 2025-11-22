@@ -15,3 +15,7 @@ spring:
 
 server:
   port: 8084
+
+tomtom:
+  api:
+    key: ed2BSse4elxl3EtIxrYXSV2rxEHGVN7g

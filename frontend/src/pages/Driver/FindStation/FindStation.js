@@ -23,6 +23,10 @@ function FindStation() {
     const [selectedPinType, setSelectedPinType] = useState(null);
     const [pinAvailableByStation, setPinAvailableByStation] = useState({});
 
+    const [selectedStationId, setSelectedStationId] = useState(null);
+
+    const [searchKeyword, setSearchKeyword] = useState("");
+
 
     const getDistances = async (userLat, userLng, stationList) => {
         const apiKey =
@@ -99,6 +103,42 @@ function FindStation() {
     };
 
 
+    const fetchITSRealtime = async (lat, lng) => {
+        try {
+            const res = await axios.get("/api/station-service/realtime", {
+                params: { originLat: lat, originLng: lng }
+            });
+
+            const data = res.data;
+
+            // GHÉP DỮ LIỆU ITS VÀ DỮ LIỆU TRẠM CŨ
+            const merged = data.map(item => {
+                const old = stations.find(s => s.id === item.stationId) || {};
+
+                return {
+                    ...old,                           // giữ nguyên address, status, battery
+                    id: item.stationId,
+                    name: item.stationName,
+                    lat: item.lat,
+                    lng: item.lng,
+                    time: Math.ceil(item.matrixSummary?.travelTimeInSeconds / 60) + " phút",
+                    distance: (item.matrixSummary?.lengthInMeters / 1000).toFixed(2) + " km",
+                    route: item.route,
+                    score: item.score,
+                    isBest: item.best || false,
+                    // ⭐ VERY IMPORTANT
+                    flow: item.trafficFlow,
+                    incidents: item.trafficIncidents,
+                };
+            });
+
+            setStations(merged);
+
+        } catch (err) {
+            console.error("Lỗi ITS:", err);
+        }
+    };
+
     // 🔹 Bước 2: Hàm xử lý khi nhấn "Sử dụng vị trí của tôi"
     const handleGetLocation = () => {
         if (!navigator.geolocation) {
@@ -112,7 +152,9 @@ function FindStation() {
                 setLocation({ lat: latitude, lng: longitude });
                 console.log("📍 Vị trí hiện tại:", latitude, longitude);
 
-                getDistances(latitude, longitude, stations);
+                // getDistances(latitude, longitude, stations);
+                fetchITSRealtime(latitude, longitude);
+
             },
             (err) => {
                 switch (err.code) {
@@ -328,6 +370,11 @@ function FindStation() {
         }
     };
 
+    const filteredStations = stations.filter(st =>
+        st.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+        st.address.toLowerCase().includes(searchKeyword.toLowerCase())
+    );
+
     return (
         <nav className={styles.wrapper}>
             <div className={styles.nearstation}>
@@ -337,7 +384,11 @@ function FindStation() {
                 </div>
 
                 <div className={styles.map}>
-                    <MapLeaflet userLocation={location} stations={stations} />
+                    <MapLeaflet
+                        userLocation={location}
+                        stations={stations}
+                        selectedStationId={selectedStationId}
+                    />
                 </div>
 
                 {/* Chọn xe giao dịch */}
@@ -377,16 +428,20 @@ function FindStation() {
                 <div className={styles.header}>
                     <h1>Trạm có sẵn</h1>
                     <div className={styles.filter}>
-                        <Button text blackoutline small>Lọc</Button>
                         <div className={styles.input}>
                             <FontAwesomeIcon icon={faMagnifyingGlass} className={styles.faMagnifyingGlass} />
-                            <input type="text" placeholder="Tìm trạm" />
+                            <input
+                                type="text"
+                                placeholder="Tìm trạm"
+                                value={searchKeyword}
+                                onChange={(e) => setSearchKeyword(e.target.value)}
+                            />
                         </div>
                     </div>
                 </div>
 
-                {stations.map((stations) => (
-                    <div key={stations.id} className={styles.station}>
+                {filteredStations.map((stations) => (
+                    < div key={stations.id} className={styles.station} onClick={() => setSelectedStationId(stations.id)}>
                         <div className={styles.local}>
                             <h3>{stations.name}</h3>
                             <p
@@ -423,19 +478,35 @@ function FindStation() {
                             </div>
                             <div className={styles.iconinfo}>
                                 <FontAwesomeIcon icon={faStar} className={styles.faStar} />
-                                <p>{stations.rating} sao</p>
+                                {stations.isBest && (
+                                    <p className={styles.bestTag}>⭐ Tối ưu nhất</p>
+                                )}
                             </div>
                         </div>
                         <div className={styles.price}>
                             <p>{stations.price}</p>
-                            <Button order onClick={() => handleBooking(stations.id)}>
-                                Đặt chỗ
+
+                            <Button
+                                order
+                                className={stations.status === "Bảo trì" || stations.status === "offline" ? styles.disabledButton : ""}
+                                disabled={stations.status === "Bảo trì" || stations.status === "offline"}
+                                onClick={() => {
+                                    if (stations.status === "Bảo trì" || stations.status === "offline") {
+                                        alert("🚫 Trạm đang bảo trì hoặc ngừng hoạt động, không thể đặt chỗ!");
+                                        return;
+                                    }
+                                    handleBooking(stations.id);
+                                }}
+                            >
+                                {stations.status === "Bảo trì" || stations.status === "offline"
+                                    ? "Không khả dụng"
+                                    : "Đặt chỗ"}
                             </Button>
                         </div>
                     </div>
                 ))}
             </div>
-        </nav>
+        </nav >
     )
 
 }

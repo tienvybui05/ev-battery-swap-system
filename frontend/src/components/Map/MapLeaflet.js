@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -8,8 +8,6 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
-import axios from "axios";
-import polyline from "@mapbox/polyline"; // 👈 để giải mã đường đi
 
 const userIcon = new L.Icon({
   iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png",
@@ -21,76 +19,85 @@ const stationIcon = new L.Icon({
   iconSize: [32, 32],
 });
 
-// Tự động fit map theo tuyến đường
-function FitBounds({ routeCoords }) {
+const incidentIcon = new L.Icon({
+  iconUrl: "https://maps.gstatic.com/mapfiles/ms2/micons/caution.png",
+  iconSize: [28, 28],
+});
+
+// Fit map vào route
+function FitBounds({ coords }) {
   const map = useMap();
-
   useEffect(() => {
-    if (routeCoords && routeCoords.length > 0) {
-      const bounds = L.latLngBounds(routeCoords);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [routeCoords, map]);
-
+    if (!coords || coords.length === 0) return;
+    const bounds = L.latLngBounds(coords);
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }, [coords]);
   return null;
 }
 
-function MapLeaflet({ userLocation, stations }) {
-  const [route, setRoute] = useState(null);
-  const [selectedStation, setSelectedStation] = useState(null);
+function MapLeaflet({ userLocation, stations, selectedStationId }) {
+  const [routeCoords, setRouteCoords] = useState(null);
+  const [routeColor, setRouteColor] = useState("blue");
+  const [incidents, setIncidents] = useState([]);
 
-  const apiKey =
-    "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0=";
+  // ⭐ Tạo ref để mở popup
+  const markerRefs = useRef({});
 
-  if (!userLocation.lat) return <p>Chưa có vị trí hiện tại</p>;
+  const decodeTomTomPolyline = (points) =>
+    points.map((p) => [p.latitude, p.longitude]);
 
-  // Khi nhấn vào trạm → vẽ đường đi
-  const handleStationClick = async (st) => {
-    setSelectedStation(st);
-    try {
-      const res = await axios.post(
-        "https://api.openrouteservice.org/v2/directions/driving-car",
-        {
-          coordinates: [
-            [userLocation.lng, userLocation.lat],
-            [st.lng, st.lat],
-          ],
-        },
-        {
-          headers: {
-            Authorization: apiKey,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  const getTrafficColor = (flow) => {
+    if (!flow || !flow.flowSegmentData) return "blue";
+    const cs = flow.flowSegmentData.currentSpeed;
+    const fs = flow.flowSegmentData.freeFlowSpeed;
+    const ratio = cs / fs;
 
-      // 🔹 Giải mã polyline (chuỗi mã hóa) → mảng tọa độ [lat, lng]
-      const encoded = res.data.routes[0].geometry;
-      const decoded = polyline.decode(encoded); // [[lat,lng],[lat,lng],...]
-      const coords = decoded.map((c) => [c[0], c[1]]); // giữ nguyên định dạng
-
-      setRoute(coords);
-    } catch (err) {
-      console.error("Lỗi khi lấy đường đi:", err);
-    }
+    if (ratio > 0.9) return "green";
+    if (ratio > 0.6) return "orange";
+    return "red";
   };
+
+  const handleStationClick = (st) => {
+    if (!st.route?.routes?.length) return;
+
+    const leg = st.route.routes[0].legs[0];
+    const coords = decodeTomTomPolyline(leg.points);
+
+    setRouteCoords(coords);
+    setRouteColor(getTrafficColor(st.flow));
+    setIncidents(st.incidents?.incidents || []);
+  };
+
+  // 🔥 Auto vẽ route + mở popup khi click danh sách
+  useEffect(() => {
+    if (!selectedStationId) return;
+
+    const st = stations.find((s) => s.id === selectedStationId);
+    if (st) {
+      handleStationClick(st);
+
+      // ⭐ Mở popup marker
+      const marker = markerRefs.current[st.id];
+      if (marker) marker.openPopup();
+    }
+  }, [selectedStationId, stations]);
+
+  if (!userLocation.lat) {
+    return <p>Chưa có vị trí hiện tại</p>;
+  }
 
   return (
     <MapContainer
       center={[userLocation.lat, userLocation.lng]}
       zoom={13}
-      style={{
-        height: "300px",
-        width: "100%",
-        borderRadius: "10px",
-      }}
+      style={{ height: "350px", width: "100%", borderRadius: "10px" }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+        attribution="© OpenStreetMap contributors"
       />
 
-      {/* Marker user */}
+      {/* Marker người dùng */}
       <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
         <Popup>Bạn đang ở đây</Popup>
       </Marker>
@@ -101,6 +108,7 @@ function MapLeaflet({ userLocation, stations }) {
           key={st.id}
           position={[st.lat, st.lng]}
           icon={stationIcon}
+          ref={(el) => (markerRefs.current[st.id] = el)} // ⭐ Lưu ref
           eventHandlers={{
             click: () => handleStationClick(st),
           }}
@@ -108,21 +116,40 @@ function MapLeaflet({ userLocation, stations }) {
           <Popup>
             <strong>{st.name}</strong>
             <br />
-            {st.address}
+            🚗 {st.distance}
             <br />
-            🚗 {st.distance ? st.distance : "Đang tính..."}
-            <br />
-            ⏱️ {st.time ? st.time : ""}
+            ⏱ {st.time}
           </Popup>
         </Marker>
       ))}
 
-      {/* Vẽ đường đi */}
-      {route && (
+      {/* Route */}
+      {routeCoords && (
         <>
-          <Polyline positions={route} color="blue" weight={5} opacity={0.7} />
-          <FitBounds routeCoords={route} />
+          <Polyline
+            positions={routeCoords}
+            color={routeColor}
+            weight={6}
+            opacity={0.85}
+          />
+          <FitBounds coords={routeCoords} />
         </>
+      )}
+
+      {/* Incidents */}
+      {incidents.map((inc, index) =>
+        inc.geometry?.coordinates?.length > 0 ? (
+          <Marker
+            key={index}
+            position={[
+              inc.geometry.coordinates[0][1],
+              inc.geometry.coordinates[0][0],
+            ]}
+            icon={incidentIcon}
+          >
+            <Popup>⚠ Sự cố giao thông gần khu vực này</Popup>
+          </Marker>
+        ) : null
       )}
     </MapContainer>
   );

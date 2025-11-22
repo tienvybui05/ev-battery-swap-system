@@ -44,8 +44,7 @@
     width: 100%;
     background-color: var(--color-gray-alpha);
     border-radius: 10px;
-    height: 250px;
-
+    height: 350px;
 }
 
 .faLocationDot {
@@ -96,6 +95,9 @@
     border-radius: 10px;
     padding: var(--a);
     gap: var(--a);
+
+    max-height: 85vh;
+    overflow-y: auto;
 }
 
 
@@ -219,4 +221,13 @@
 .station .information .iconinfo {
     display: flex;
     flex-direction: row;
+}
+
+.disabledButton {
+    opacity: 0.5;
+    background-color: #cccccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    border: 1px solid #bfbfbf !important;
+    pointer-events: none; /* Không cho click */
 }
