@@ -2,6 +2,7 @@ package ngocvct0133.ut.edu.feedbackservice.controllers;
 
 import ngocvct0133.ut.edu.feedbackservice.modules.DanhGia;
 import ngocvct0133.ut.edu.feedbackservice.services.IDanhGiaService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +31,9 @@ public class DanhGiaController {
 
     @PostMapping
     public ResponseEntity<DanhGia> themDanhGia(@RequestBody DanhGia danhGia) {
-        DanhGia saved = danhGiaService.themDanhGia(danhGia);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                danhGiaService.themDanhGia(danhGia)
+        );
     }
 
     @PutMapping("/{id}")
@@ -42,11 +44,19 @@ public class DanhGiaController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> xoaDanhGia(@PathVariable Long id) {
         boolean deleted = danhGiaService.xoaDanhGia(id);
+        return deleted ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
 
-        if (!deleted) {
-            return ResponseEntity.notFound().build();
-        }
+    // ⭐ Trung bình sao theo trạm
+    @GetMapping("/tram/{maTram}/trung-binh-sao")
+    public ResponseEntity<Double> tbTheoTram(@PathVariable Long maTram) {
+        return ResponseEntity.ok(danhGiaService.tinhTrungBinhSaoTheoTram(maTram));
+    }
 
-        return ResponseEntity.noContent().build();
+    // ⭐ Trung bình sao toàn hệ thống
+    @GetMapping("/trung-binh-sao")
+    public ResponseEntity<Double> tbHeThong() {
+        return ResponseEntity.ok(danhGiaService.tinhTrungBinhSaoToanHeThong());
     }
 }

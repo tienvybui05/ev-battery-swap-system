@@ -19,8 +19,9 @@ public class DanhGia {
 
     private Long maLichDat;
 
-    public DanhGia() {
-    }
+    private Long maTram;
+
+    public DanhGia() {}
 
     public DanhGia(Long maDanhGia, String noiDung, int soSao, LocalDate ngayDanhGia) {
         this.maDanhGia = maDanhGia;
@@ -29,43 +30,21 @@ public class DanhGia {
         this.ngayDanhGia = ngayDanhGia;
     }
 
-    public Long getMaDanhGia() {
-        return maDanhGia;
-    }
+    public Long getMaDanhGia() { return maDanhGia; }
+    public void setMaDanhGia(Long maDanhGia) { this.maDanhGia = maDanhGia; }
 
-    public void setMaDanhGia(Long maDanhGia) {
-        this.maDanhGia = maDanhGia;
-    }
+    public String getNoiDung() { return noiDung; }
+    public void setNoiDung(String noiDung) { this.noiDung = noiDung; }
 
-    public String getNoiDung() {
-        return noiDung;
-    }
+    public int getSoSao() { return soSao; }
+    public void setSoSao(int soSao) { this.soSao = soSao; }
 
-    public void setNoiDung(String noiDung) {
-        this.noiDung = noiDung;
-    }
+    public LocalDate getNgayDanhGia() { return ngayDanhGia; }
+    public void setNgayDanhGia(LocalDate ngayDanhGia) { this.ngayDanhGia = ngayDanhGia; }
 
-    public int getSoSao() {
-        return soSao;
-    }
+    public Long getMaLichDat() { return maLichDat; }
+    public void setMaLichDat(Long maLichDat) { this.maLichDat = maLichDat; }
 
-    public void setSoSao(int soSao) {
-        this.soSao = soSao;
-    }
-
-    public LocalDate getNgayDanhGia() {
-        return ngayDanhGia;
-    }
-
-    public void setNgayDanhGia(LocalDate ngayDanhGia) {
-        this.ngayDanhGia = ngayDanhGia;
-    }
-
-    public Long getMaLichDat() {
-        return maLichDat;
-    }
-
-    public void setMaLichDat(Long maLichDat) {
-        this.maLichDat = maLichDat;
-    }
+    public Long getMaTram() { return maTram; }
+    public void setMaTram(Long maTram) { this.maTram = maTram; }
 }

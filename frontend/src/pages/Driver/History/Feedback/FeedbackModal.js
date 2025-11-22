@@ -7,13 +7,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import styles from "./FeedbackModal.module.css";
 
-/* ========= ÁNH XẠ MÀU CHO SỐ SAO ========= */
 const RATING_COLORS = {
-    1: "#EF4444",    // Đỏ - Rất tệ
-    2: "#F59E0B",    // Cam - Tệ
-    3: "#dbea08",    // Vàng - Bình thường
-    4: "#84CC16",    // Xanh lá - Tốt
-    5: "#22C55E"     // Xanh lá đậm - Rất tốt
+    1: "#EF4444",
+    2: "#F59E0B",
+    3: "#dbea08",
+    4: "#84CC16",
+    5: "#22C55E"
 };
 
 function FeedbackModal({
@@ -21,6 +20,7 @@ function FeedbackModal({
                            onClose,
                            transactionId,
                            stationName,
+                           maTram,
                            onFeedbackSubmitted
                        }) {
     const [rating, setRating] = useState(0);
@@ -28,26 +28,21 @@ function FeedbackModal({
     const [hoverRating, setHoverRating] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    /* ===================== XỬ LÝ GỬI ĐÁNH GIÁ ===================== */
     const handleSubmit = async () => {
-        if (rating === 0) {
-            alert("Vui lòng chọn số sao đánh giá!");
-            return;
-        }
-
-        if (!comment.trim()) {
-            alert("Vui lòng nhập nội dung đánh giá!");
-            return;
-        }
+        if (rating === 0) return alert("Vui lòng chọn số sao đánh giá!");
+        if (!comment.trim()) return alert("Vui lòng nhập nội dung đánh giá!");
+        if (!maTram) return alert("Không thể xác định mã trạm!");
 
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem("token");
+
             const feedbackData = {
                 noiDung: comment,
                 soSao: rating,
-                ngayDanhGia: new Date().toISOString().split('T')[0],
-                maLichDat: transactionId
+                ngayDanhGia: new Date().toISOString().split("T")[0],
+                maLichDat: transactionId,
+                maTram: maTram
             };
 
             const response = await fetch("/api/feedback-service/danhgia", {
@@ -60,32 +55,33 @@ function FeedbackModal({
             });
 
             if (response.ok) {
-                alert("✅ Đánh giá của bạn đã được gửi thành công!");
+                // 🔥 Lưu vào localStorage để FE biết giao dịch này đã đánh giá
+                let rated = JSON.parse(localStorage.getItem("ratedTransactions") || "[]");
+                if (!rated.includes(transactionId)) {
+                    rated.push(transactionId);
+                    localStorage.setItem("ratedTransactions", JSON.stringify(rated));
+                }
+
+                alert("✅ Đánh giá của bạn đã được gửi!");
                 resetForm();
                 onFeedbackSubmitted();
                 onClose();
             } else {
                 throw new Error("Gửi đánh giá thất bại");
             }
+
         } catch (error) {
             console.error("❌ Lỗi khi gửi đánh giá:", error);
-            alert("❌ Có lỗi xảy ra khi gửi đánh giá. Vui lòng thử lại!");
+            alert("❌ Có lỗi xảy ra, thử lại!");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    /* ===================== RESET FORM ===================== */
     const resetForm = () => {
         setRating(0);
         setComment("");
         setHoverRating(0);
-    };
-
-    /* ===================== XỬ LÝ ĐÓNG MODAL ===================== */
-    const handleClose = () => {
-        resetForm();
-        onClose();
     };
 
     if (!isOpen) return null;
@@ -94,43 +90,29 @@ function FeedbackModal({
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
 
-                {/* ===== HEADER ===== */}
                 <div className={styles.modalHeader}>
                     <h2>Đánh Giá Dịch Vụ</h2>
-                    <button
-                        className={styles.closeButton}
-                        onClick={handleClose}
-                        disabled={isSubmitting}
-                    >
+                    <button className={styles.closeButton} onClick={onClose}>
                         <FontAwesomeIcon icon={faXmark} />
                     </button>
                 </div>
 
-                {/* ===== BODY ===== */}
                 <div className={styles.modalBody}>
-
-                    {/* Thông tin giao dịch */}
                     <div className={styles.transactionInfo}>
                         <h3>{stationName}</h3>
                         <p>Mã giao dịch: #{transactionId}</p>
+                        <p>Mã trạm: <b>{maTram}</b></p>
                     </div>
 
-                    {/* Đánh giá sao */}
                     <div className={styles.ratingSection}>
-                        <label className={styles.sectionLabel}>
-                            Chất lượng dịch vụ:
-                        </label>
+                        <label className={styles.sectionLabel}>Chất lượng dịch vụ:</label>
+
                         <div className={styles.starsContainer}>
                             {[1, 2, 3, 4, 5].map((star) => {
                                 const isActive = star <= (hoverRating || rating);
-                                const currentColor = isActive
-                                    ? RATING_COLORS[star]
-                                    : "#D1D5DB";
-
                                 return (
                                     <button
                                         key={star}
-                                        type="button"
                                         className={styles.starButton}
                                         onClick={() => setRating(star)}
                                         onMouseEnter={() => setHoverRating(star)}
@@ -139,57 +121,45 @@ function FeedbackModal({
                                     >
                                         <FontAwesomeIcon
                                             icon={faStar}
-                                            style={{ color: currentColor }}
+                                            style={{ color: isActive ? RATING_COLORS[star] : "#D1D5DB" }}
                                         />
                                     </button>
                                 );
                             })}
                         </div>
-                        <div className={styles.ratingText}>
-                            {rating > 0 ? (
-                                <span style={{ color: RATING_COLORS[rating] }}>
-                                    {rating} sao - {
-                                    rating === 1 ? "Rất tệ" :
-                                        rating === 2 ? "Tệ" :
-                                            rating === 3 ? "Bình thường" :
-                                                rating === 4 ? "Tốt" : "Rất tốt"
-                                }
-                                </span>
-                            ) : (
-                                "Chọn số sao để đánh giá"
-                            )}
-                        </div>
+
+                        {rating > 0 ? (
+                            <p className={styles.ratingText} style={{ color: RATING_COLORS[rating] }}>
+                                {rating} sao – {
+                                rating === 1 ? "Rất tệ" :
+                                    rating === 2 ? "Tệ" :
+                                        rating === 3 ? "Bình thường" :
+                                            rating === 4 ? "Tốt" :
+                                                "Rất tốt"
+                            }
+                            </p>
+                        ) : (
+                            <p className={styles.ratingText}>Chọn số sao để đánh giá</p>
+                        )}
+
                     </div>
 
-                    {/* Nhận xét */}
                     <div className={styles.commentSection}>
-                        <label className={styles.sectionLabel}>
-                            Nhận xét của bạn:
-                        </label>
+                        <label className={styles.sectionLabel}>Nhận xét của bạn:</label>
                         <textarea
                             className={styles.commentInput}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            placeholder="Hãy chia sẻ trải nghiệm của bạn về dịch vụ thay pin..."
                             rows="4"
                             disabled={isSubmitting}
                         />
-                        <div className={styles.charCount}>
-                            {comment.length}/500 ký tự
-                        </div>
+                        <div className={styles.charCount}>{comment.length}/500 ký tự</div>
                     </div>
-
                 </div>
 
-                {/* ===== FOOTER ===== */}
                 <div className={styles.modalFooter}>
-                    <button
-                        className={`${styles.button} ${styles.secondaryButton}`}
-                        onClick={handleClose}
-                        disabled={isSubmitting}
-                    >
-                        <FontAwesomeIcon icon={faXmark} />
-                        Hủy
+                    <button className={`${styles.button} ${styles.secondaryButton}`} onClick={onClose}>
+                        <FontAwesomeIcon icon={faXmark} /> Hủy
                     </button>
 
                     <button
@@ -197,17 +167,9 @@ function FeedbackModal({
                         onClick={handleSubmit}
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? (
-                            <>
-                                <div className={styles.spinner}></div>
-                                Đang gửi...
-                            </>
-                        ) : (
-                            <>
-                                <FontAwesomeIcon icon={faPaperPlane} />
-                                Gửi đánh giá
-                            </>
-                        )}
+                        {isSubmitting ? "Đang gửi..." : <>
+                            <FontAwesomeIcon icon={faPaperPlane} /> Gửi đánh giá
+                        </>}
                     </button>
                 </div>
 

@@ -9,6 +9,7 @@ import java.util.List;
 
 @Service
 public class DanhGiaService implements IDanhGiaService {
+
     private final IDanhGiaRepository danhGiaRepository;
 
     public DanhGiaService(IDanhGiaRepository danhGiaRepository) {
@@ -18,16 +19,14 @@ public class DanhGiaService implements IDanhGiaService {
     @Transactional
     @Override
     public DanhGia themDanhGia(DanhGia danhGia) {
-        return this.danhGiaRepository.save(danhGia);
+        return danhGiaRepository.save(danhGia);
     }
 
     @Transactional
     @Override
     public boolean xoaDanhGia(Long id) {
-        if (!this.danhGiaRepository.existsById(id)) {
-            return false;
-        }
-        this.danhGiaRepository.deleteById(id);
+        if (!danhGiaRepository.existsById(id)) return false;
+        danhGiaRepository.deleteById(id);
         return true;
     }
 
@@ -35,19 +34,47 @@ public class DanhGiaService implements IDanhGiaService {
     public DanhGia suaDanhGia(Long id, DanhGia danhGia) {
         DanhGia existing = danhGiaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+
         existing.setNoiDung(danhGia.getNoiDung());
         existing.setSoSao(danhGia.getSoSao());
         existing.setNgayDanhGia(danhGia.getNgayDanhGia());
-        return this.danhGiaRepository.save(existing);
+        existing.setMaTram(danhGia.getMaTram());
+
+        return danhGiaRepository.save(existing);
     }
 
     @Override
     public DanhGia layDanhGia(Long id) {
-        return this.danhGiaRepository.findById(id) .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
+        return danhGiaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá"));
     }
 
     @Override
     public List<DanhGia> layTatCaDanhSach() {
-        return this.danhGiaRepository.findAll();
+        return danhGiaRepository.findAll();
+    }
+
+    // ⭐ Trung bình sao theo trạm
+    @Override
+    public double tinhTrungBinhSaoTheoTram(Long maTram) {
+        List<DanhGia> list = danhGiaRepository.findByMaTram(maTram);
+        if (list.isEmpty()) return 0;
+
+        return list.stream()
+                .mapToInt(DanhGia::getSoSao)
+                .average()
+                .orElse(0);
+    }
+
+    // ⭐ Trung bình sao toàn hệ thống
+    @Override
+    public double tinhTrungBinhSaoToanHeThong() {
+        List<DanhGia> list = danhGiaRepository.findAll();
+        if (list.isEmpty()) return 0;
+
+        return list.stream()
+                .mapToInt(DanhGia::getSoSao)
+                .average()
+                .orElse(0);
     }
 }
