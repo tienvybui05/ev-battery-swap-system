@@ -13,15 +13,23 @@ import { onMessageListener } from "./firebase";
 import { analytics } from "./firebase";
 import { logEvent } from "firebase/analytics";
 
-
 import {
   FindStation,
   History,
   Information,
   ChangeBattery,
-  Support
+  Support,
 } from "./pages/Driver";
-import { Batteries, Customers, Overview, Staff, Stations,ServicePackages } from "./pages/Admin";
+import {
+  Batteries,
+  Customers,
+  Overview,
+  Staff,
+  Stations,
+  ServicePackages,
+  InformationAdmin,
+  Feedback,
+} from "./pages/Admin";
 import { Report, Inventory, QueueManagement, Transaction } from "./pages/Staff";
 import ProtectedRoute from "./components/Shares/ProtectedRoute/ProtectedRoute.js";
 import Unauthorized from "./utils/Unauthorized/Unauthorized.js";
@@ -33,38 +41,36 @@ const ProtectedLayout = ({ children }) => {
 };
 
 function App() {
- useEffect(() => {
-  console.log("App loaded");
+  useEffect(() => {
+    console.log("App loaded");
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user) return;
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return;
 
-  // 👉 chỉ dùng 1 lần requestPermission để lấy FCM token
-  requestPermission().then((fcmToken) => {
-    console.log("FCM Token:", fcmToken);
+    // 👉 chỉ dùng 1 lần requestPermission để lấy FCM token
+    requestPermission().then((fcmToken) => {
+      console.log("FCM Token:", fcmToken);
 
-    if (!fcmToken) return;
+      if (!fcmToken) return;
 
-    // 👉 chỉ gọi API CHUẨN
-    fetch("http://localhost:8080/api/user-service/fcm/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        maNguoiDung: user.id,
-        vaiTro: user.role,
-        token: fcmToken
-      })
+      // 👉 chỉ gọi API CHUẨN
+      fetch("http://localhost:8080/api/user-service/fcm/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          maNguoiDung: user.id,
+          vaiTro: user.role,
+          token: fcmToken,
+        }),
+      });
     });
-  });
 
-
-// 🔔 Lắng nghe thông báo khi web đang mở onMessageListener().then((payload) => { console.log("📨 Nhận thông báo:", payload); alert(${payload.notification.title}\n${payload.notification.body}); }); }, []);
-onMessageListener().then((payload) => {
-  console.log("📨 Nhận thông báo:", payload);
-  alert(`${payload.notification.title}\n${payload.notification.body}`);
-});
-}, []);
-
+    // 🔔 Lắng nghe thông báo khi web đang mở onMessageListener().then((payload) => { console.log("📨 Nhận thông báo:", payload); alert(${payload.notification.title}\n${payload.notification.body}); }); }, []);
+    onMessageListener().then((payload) => {
+      console.log("📨 Nhận thông báo:", payload);
+      alert(`${payload.notification.title}\n${payload.notification.body}`);
+    });
+  }, []);
 
   return (
     <>
@@ -74,7 +80,8 @@ onMessageListener().then((payload) => {
             <Route index element={<Home />} />
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
-            <Route path="unauthorized" element={<Unauthorized />} /> {/* QUAN TRỌNG */}
+            <Route path="unauthorized" element={<Unauthorized />} />{" "}
+            {/* QUAN TRỌNG */}
             <Route path="*" element={<NotFound />} />
           </Route>
 
@@ -222,11 +229,28 @@ onMessageListener().then((payload) => {
                 </ProtectedRoute>
               }
             />
-             <Route
+            <Route
               path="servicePackages"
               element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <ServicePackages/>
+                  <ServicePackages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="informationAdmin"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+      
+                  <InformationAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="feedback"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <Feedback />
                 </ProtectedRoute>
               }
             />

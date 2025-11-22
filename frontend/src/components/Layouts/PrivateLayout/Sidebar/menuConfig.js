@@ -12,6 +12,8 @@ import {
   faComment,
   faBrain,
   faBoxesPacking,
+  faGrip,
+ 
 } from "@fortawesome/free-solid-svg-icons";
 import { href } from "react-router";
 const menu = {
@@ -81,6 +83,16 @@ const menu = {
       {
         title: "Cảnh báo",
         href: "/dashboard/alerts",
+        icon: <FontAwesomeIcon icon={faGrip} />,
+      },
+      {
+        title: "Hồ sơ",
+        href: "/dashboard/informationAdmin",
+        icon: <FontAwesomeIcon icon={faCircleUser} />,
+      },
+      {
+        title: "Đánh giá",
+        href: "/dashboard/feedback",
         icon: <FontAwesomeIcon icon={faComment} />,
       },
       
