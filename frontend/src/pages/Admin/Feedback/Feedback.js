@@ -146,7 +146,7 @@ function Feedback() {
 
       Object.keys(stationFeedbackCount).forEach(stationId => {
         const avgRating = stationRatingSum[stationId] / stationFeedbackCount[stationId];
-        const stationName = stations[stationId] ? stations[stationId].tenTram : `Trạm #${stationId}`;
+        const stationName = stations[stationId] ? stations[stationId].tenTram : `Trạm ${stationId}`;
         
         stats.push({
           id: stationId,
@@ -297,7 +297,7 @@ function Feedback() {
                   </div>
                   <div className={styles.rating}>
                     {renderStars(feedback.soSao)}
-                    <span className={styles.ratingText}>{feedback.soSao}/5</span>
+                    <span className={styles.ratingText}></span>
                   </div>
                 </div>
 

@@ -208,7 +208,7 @@
   padding: 8px 10px;
   background: #f8fafc;
   border-radius: 6px;
-  border-left: 2px solid #e2e8f0;
+  /* border-left: 2px solid #e2e8f0; */
 }
 
 .stationName {
