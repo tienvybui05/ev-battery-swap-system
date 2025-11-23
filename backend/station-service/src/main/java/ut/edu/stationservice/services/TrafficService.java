@@ -302,8 +302,15 @@ public class TrafficService implements ITrafficService {
                 st -> haversine(originLat, originLng, st.getViDo(), st.getKinhDo())
         ));
 
-        // 2. Chỉ lấy 5 trạm gần nhất
-        List<Tram> nearestStations = stations.stream().limit(5).toList();
+        // 2. Chỉ lấy 5 trạm gần nhất VÀ đang hoạt động
+        List<Tram> nearestStations = stations.stream()
+                .filter(st -> {
+                    String s = st.getTrangThai();
+                    return s != null && s.equalsIgnoreCase("Hoạt động");
+                })
+                .limit(5)
+                .toList();
+
 
         if (nearestStations.isEmpty()) {
             return Collections.emptyList();
@@ -318,6 +325,7 @@ public class TrafficService implements ITrafficService {
         // 4. Với từng trạm: lấy route chi tiết + flow + incidents + score
         for (Tram st : nearestStations) {
 
+            Map<String, Object> item = new HashMap<>();
             // ---------- ROUTE CHI TIẾT (draw trên map) ----------
             String routeUrl =
                     "https://api.tomtom.com/routing/1/calculateRoute/"
@@ -364,7 +372,6 @@ public class TrafficService implements ITrafficService {
             double score = computeScore(matrixSummary, incidentData, routePoints);
 
             // ---------- GOM TẤT CẢ LẠI ----------
-            Map<String, Object> item = new HashMap<>();
             item.put("stationId", st.getMaTram());
             item.put("stationName", st.getTenTram());
             item.put("lat", st.getViDo());
@@ -389,5 +396,159 @@ public class TrafficService implements ITrafficService {
         }
 
         return results;
+    }
+
+
+    @Override
+    public Map<String, Object> getRouteDetail(double originLat, double originLng, long stationId) {
+
+        Tram st = tramRepository.findById(stationId)
+                .orElseThrow(() -> new RuntimeException("Station not found"));
+
+        // ===================== 1. Lấy ROUTE =====================
+        String routeUrl =
+                "https://api.tomtom.com/routing/1/calculateRoute/"
+                        + originLat + "," + originLng + ":"
+                        + st.getViDo() + "," + st.getKinhDo()
+                        + "/json"
+                        + "?key=" + apiKey
+                        + "&traffic=true"
+                        + "&maxAlternatives=2"
+                        + "&computeTravelTimeFor=all";
+
+
+        Map<String, Object> routeData = restTemplate.exchange(
+                routeUrl,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        ).getBody();
+
+        // Extract polyline points
+        List<Map<String, Object>> points = new ArrayList<>();
+        if (routeData != null) {
+            Object routesObj = routeData.get("routes");
+            if (routesObj instanceof List<?> list && !list.isEmpty()) {
+                Map<String, Object> route0 = (Map<String, Object>) list.get(0);
+                Object legsObj = route0.get("legs");
+                if (legsObj instanceof List<?> legs && !legs.isEmpty()) {
+                    Map<String, Object> leg0 = (Map<String, Object>) legs.get(0);
+                    Object pts = leg0.get("points");
+                    if (pts instanceof List<?> pList) {
+                        points = (List<Map<String, Object>>) pts;
+                    }
+                }
+            }
+        }
+
+        // ===================== 2. Sampling 15 điểm =====================
+        int sampleCount = Math.min(9, points.size());
+        List<Map<String, Object>> sampled = new ArrayList<>();
+
+        for (int i = 0; i < sampleCount; i++) {
+            int idx = (int) Math.round((double) i / (sampleCount - 1) * (points.size() - 1));
+            sampled.add(points.get(idx));
+        }
+
+// ===================== 3. Gọi Flow API 15 lần =====================
+        List<Double> trafficRatios = new ArrayList<>();
+
+        for (Map<String, Object> p : sampled) {
+            double lat = ((Number) p.get("latitude")).doubleValue();
+            double lng = ((Number) p.get("longitude")).doubleValue();
+
+            Map<String, Object> flow = getTrafficFlow(lat, lng);
+
+            double ratio = 1.0;
+
+            if (flow != null) {
+                Map<String, Object> fsData =
+                        (Map<String, Object>) flow.get("flowSegmentData");
+
+                if (fsData != null) {
+                    double current = ((Number) fsData.getOrDefault("currentSpeed", 1)).doubleValue();
+                    double free = ((Number) fsData.getOrDefault("freeFlowSpeed", 1)).doubleValue();
+
+                    ratio = (free > 0) ? current / free : 1.0;
+                }
+            }
+
+            trafficRatios.add(ratio);
+        }
+
+        // ===================== 4. Ghép lại thành coloredSegments =====================
+        List<Map<String, Object>> coloredSegments = new ArrayList<>();
+
+        for (int i = 0; i < sampleCount - 1; i++) {
+            Map<String, Object> p1 = sampled.get(i);
+            Map<String, Object> p2 = sampled.get(i + 1);
+
+            double ratio = trafficRatios.get(i);
+            String color;
+
+            if (ratio < 0.4) color = "red";
+            else if (ratio < 0.7) color = "orange";
+            else color = "green";
+
+            Map<String, Object> seg = new HashMap<>();
+            seg.put("startLat", p1.get("latitude"));
+            seg.put("startLng", p1.get("longitude"));
+            seg.put("endLat", p2.get("latitude"));
+            seg.put("endLng", p2.get("longitude"));
+            seg.put("color", color);
+
+            coloredSegments.add(seg);
+        }
+
+        // ===================== 5. Lấy incidents quanh trạm (không tốn nhiều) =====================
+        Map<String, Object> incidents =
+                getTrafficIncidents(st.getViDo(), st.getKinhDo());
+
+        // ===================== 6. Trả về JSON cho FE =====================
+        Map<String, Object> result = new HashMap<>();
+        result.put("stationId", stationId);
+        result.put("stationName", st.getTenTram());
+        result.put("lat", st.getViDo());
+        result.put("lng", st.getKinhDo());
+        result.put("coloredSegments", coloredSegments);
+        result.put("incidents", incidents);
+        result.put("route", routeData);
+
+        // ===================== 7. Lấy các tuyến đường thay thế =====================
+        List<Map<String,Object>> alternatives = new ArrayList<>();
+
+        Object routesObj = routeData.get("routes");
+        if (routesObj instanceof List<?> routes && routes.size() > 1) {
+
+            // Bắt đầu từ index 1 vì index 0 là route chính
+            for (int i = 1; i < routes.size(); i++) {
+
+                Map<String, Object> r = (Map<String, Object>) routes.get(i);
+                Map<String, Object> alt = new HashMap<>();
+
+                // summary
+                Map<String,Object> summary = (Map<String,Object>) r.get("summary");
+                alt.put("time", summary.get("travelTimeInSeconds"));
+                alt.put("distance", summary.get("lengthInMeters"));
+
+                // polyline points: routes[i].legs[0].points
+                Object legsObj = r.get("legs");
+                if (legsObj instanceof List<?> legs && !legs.isEmpty()) {
+                    Map<String,Object> leg0 = (Map<String,Object>) legs.get(0);
+                    Object pts = leg0.get("points");
+
+                    if (pts instanceof List<?> ptsList) {
+                        alt.put("points", ptsList);
+                    }
+                }
+
+                alternatives.add(alt);
+            }
+        }
+
+        result.put("alternatives", alternatives);
+
+
+        return result;
     }
 }

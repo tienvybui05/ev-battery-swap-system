@@ -28,78 +28,26 @@ function FindStation() {
     const [searchKeyword, setSearchKeyword] = useState("");
 
 
-    const getDistances = async (userLat, userLng, stationList) => {
-        const apiKey =
-            "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjczNWNlN2JlMWEwYzQ2YjVhY2JjOGQ5N2VjN2FiMzhlIiwiaCI6Im11cm11cjY0In0=";
+    const [routeDetail, setRouteDetail] = useState(null);
 
-        // 🔹 Kiểm tra xem trạm có tọa độ hợp lệ hay không
-        const isValidCoord = (lat, lng) =>
-            Number.isFinite(lat) &&
-            Number.isFinite(lng) &&
-            lat >= -90 &&
-            lat <= 90 &&
-            lng >= -180 &&
-            lng <= 180;
+    const fetchRouteDetail = async (stationId) => {
+        if (!location.lat || !location.lng) return;
 
-        // 🔹 Tạo danh sách promise cho tất cả trạm hợp lệ
-        const promises = stationList.map(async (st) => {
-            // Bỏ qua trạm lỗi tọa độ
-            if (!isValidCoord(st.lat, st.lng)) {
-                return { ...st, distance: "N/A", time: "N/A", error: true };
-            }
+        try {
+            const res = await axios.get("/api/station-service/route-detail", {
+                params: {
+                    originLat: location.lat,
+                    originLng: location.lng,
+                    stationId: stationId
+                }
+            });
 
-            try {
-                const res = await axios.post(
-                    "https://api.openrouteservice.org/v2/directions/driving-car",
-                    {
-                        coordinates: [
-                            [userLng, userLat], // người dùng
-                            [st.lng, st.lat], // trạm
-                        ],
-                    },
-                    {
-                        headers: {
-                            Authorization: apiKey,
-                            "Content-Type": "application/json",
-                        },
-                        timeout: 30000, // ⏱ giới hạn 8s để tránh “chờ vô tận”
-                    }
-                );
+            setRouteDetail(res.data); // ⭐ Lưu để đẩy xuống MapLeaflet
+            console.log("📌 Route detail:", res.data);
 
-                const summary = res.data.routes[0].summary;
-                const distanceKm = summary.distance / 1000; // m → km
-                const durationMin = Math.ceil(summary.duration / 60); // s → phút
-
-                return {
-                    ...st,
-                    distance: `${distanceKm.toFixed(2)} km`,
-                    time: `${durationMin} phút`,
-                };
-            } catch (err) {
-                console.error("Lỗi khi gọi ORS:", st.name, err.message);
-                return { ...st, distance: "N/A", time: "N/A", error: true };
-            }
-        });
-
-        // 🔹 Chờ tất cả hoàn tất (dù lỗi hay thành công)
-        const results = await Promise.allSettled(promises);
-
-        // 🔹 Lấy giá trị fulfilled hoặc rejected đã xử lý ở trên
-        const updated = results.map((r) =>
-            r.status === "fulfilled" ? r.value : { distance: "N/A", time: "N/A" }
-        );
-
-        // 🔹 Sắp xếp trạm gần nhất trước (lọc các trạm hợp lệ)
-        updated.sort((a, b) => {
-            const da = parseFloat(a.distance);
-            const db = parseFloat(b.distance);
-            if (isNaN(da)) return 1;
-            if (isNaN(db)) return -1;
-            return da - db;
-        });
-
-        // 🔹 Cập nhật lại state
-        setStations(updated);
+        } catch (err) {
+            console.error("Lỗi route-detail:", err);
+        }
     };
 
 
@@ -113,7 +61,7 @@ function FindStation() {
 
             // GHÉP DỮ LIỆU ITS VÀ DỮ LIỆU TRẠM CŨ
             const merged = data.map(item => {
-                const old = stations.find(s => s.id === item.stationId) || {};
+                const { route, ...old } = stations.find(s => s.id === item.stationId) || {};
 
                 return {
                     ...old,                           // giữ nguyên address, status, battery
@@ -126,7 +74,6 @@ function FindStation() {
                     route: item.route,
                     score: item.score,
                     isBest: item.best || false,
-                    // ⭐ VERY IMPORTANT
                     flow: item.trafficFlow,
                     incidents: item.trafficIncidents,
                 };
@@ -152,6 +99,7 @@ function FindStation() {
                 setLocation({ lat: latitude, lng: longitude });
                 console.log("📍 Vị trí hiện tại:", latitude, longitude);
 
+                setRouteDetail(null);
                 // getDistances(latitude, longitude, stations);
                 fetchITSRealtime(latitude, longitude);
 
@@ -388,6 +336,8 @@ function FindStation() {
                         userLocation={location}
                         stations={stations}
                         selectedStationId={selectedStationId}
+                        routeDetail={routeDetail}
+                        onStationSelect={(id) => fetchRouteDetail(id)}   // thêm nè
                     />
                 </div>
 
@@ -441,7 +391,13 @@ function FindStation() {
                 </div>
 
                 {filteredStations.map((stations) => (
-                    < div key={stations.id} className={styles.station} onClick={() => setSelectedStationId(stations.id)}>
+                    <div key={stations.id}
+                        className={styles.station}
+                        onClick={() => {
+                            setSelectedStationId(stations.id);
+                            fetchRouteDetail(stations.id);
+                        }}
+                    >
                         <div className={styles.local}>
                             <h3>{stations.name}</h3>
                             <p
@@ -477,9 +433,8 @@ function FindStation() {
                                 <p>{stations.distance}</p>
                             </div>
                             <div className={styles.iconinfo}>
-                                <FontAwesomeIcon icon={faStar} className={styles.faStar} />
                                 {stations.isBest && (
-                                    <p className={styles.bestTag}>⭐ Tối ưu nhất</p>
+                                    <p className={styles.bestTag}><FontAwesomeIcon icon={faStar} className={styles.faStar} /> Tối ưu nhất</p>
                                 )}
                             </div>
                         </div>
