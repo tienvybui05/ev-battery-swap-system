@@ -57,7 +57,7 @@ function Header() {
           <div className={styles.logo}>
             <img src={logo} alt="logo" />
           </div>
-          <span>VinNhot</span>
+          <span>EV Station</span>
         </Link>
       </div>
       <nav className={styles.navbar}>

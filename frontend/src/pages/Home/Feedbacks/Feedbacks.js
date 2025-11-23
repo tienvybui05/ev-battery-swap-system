@@ -4,19 +4,43 @@ import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faStar,
+  faStarHalfAlt,
+  faUser,
+  faMapMarkerAlt,
+  faCalendarDay,
+} from "@fortawesome/free-solid-svg-icons";
 import styles from "./Feedbacks.module.css";
 
 function Feedbacks() {
   const [listFeedback, setListFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stations, setStations] = useState({});
+  const [drivers, setDrivers] = useState({});
 
-  // Hàm lấy danh sách feedback từ API
+  const getAuthToken = () => {
+    return localStorage.getItem("token");
+  };
+
   const fetchFeedbacks = async () => {
     try {
-      const response = await fetch('/api/feedback-service/danhgia');
+      setLoading(true);
+      const token = getAuthToken();
+      
+      const response = await fetch('/api/feedback-service/danhgia', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setListFeedback(data);
+        
+        await Promise.all([
+          fetchStationsInfo(data),
+          fetchDriversInfo(data)
+        ]);
       } else {
         console.error('Lỗi khi lấy danh sách feedback');
       }
@@ -27,31 +51,89 @@ function Feedbacks() {
     }
   };
 
+  const fetchStationsInfo = async (feedbacksData) => {
+    try {
+      const token = getAuthToken();
+      const stationIds = [...new Set(feedbacksData.map(fb => fb.maTram).filter(id => id))];
+      const stationsMap = {};
+
+      for (const stationId of stationIds) {
+        const response = await fetch(`/api/station-service/tram/${stationId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (response.ok) {
+          const stationData = await response.json();
+          stationsMap[stationId] = stationData;
+        }
+      }
+      setStations(stationsMap);
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin trạm:", error);
+    }
+  };
+
+  const fetchDriversInfo = async (feedbacksData) => {
+    try {
+      const token = getAuthToken();
+      const driversMap = {};
+
+      for (const feedback of feedbacksData) {
+        if (feedback.maLichDat) {
+          const transactionResponse = await fetch(`/api/transaction-service/giaodichdoipin/${feedback.maLichDat}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+
+          if (transactionResponse.ok) {
+            const transactionData = await transactionResponse.json();
+            const maTaiXe = transactionData.maTaiXe;
+
+            if (maTaiXe) {
+              const driverResponse = await fetch(`/api/user-service/taixe/info/${maTaiXe}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+              });
+
+              if (driverResponse.ok) {
+                const driverData = await driverResponse.json();
+                driversMap[feedback.maDanhGia] = driverData;
+              }
+            }
+          }
+        }
+      }
+      setDrivers(driversMap);
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin tài xế:", error);
+    }
+  };
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, index) => {
+      const starNumber = index + 1;
+      if (rating >= starNumber) {
+        return <FontAwesomeIcon key={index} icon={faStar} className={styles.starFilled} />;
+      } else if (rating >= starNumber - 0.5) {
+        return <FontAwesomeIcon key={index} icon={faStarHalfAlt} className={styles.starFilled} />;
+      } else {
+        return <FontAwesomeIcon key={index} icon={faStar} className={styles.starEmpty} />;
+      }
+    });
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const getUserName = (feedbackId) => {
+    const driverInfo = drivers[feedbackId];
+    if (driverInfo && driverInfo.hoTen) {
+      return driverInfo.hoTen;
+    }
+    return "Tài xế EV";
+  };
+
   useEffect(() => {
     fetchFeedbacks();
   }, []);
-
-  // Hàm render số sao
-  const renderStars = (soSao) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span 
-          key={i} 
-          className={i <= soSao ? styles.starFilled : styles.starEmpty}
-        >
-          {i <= soSao ? '★' : '☆'}
-        </span>
-      );
-    }
-    return <div className={styles.starsContainer}>{stars}</div>;
-  };
-
-  // Format ngày
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-  };
 
   if (loading) {
     return (
@@ -81,7 +163,6 @@ function Feedbacks() {
               modules={[Pagination]}
               spaceBetween={24}
               slidesPerView={3}
-              navigation
               pagination={{ clickable: true }}
               loop={listFeedback.length > 3}
               breakpoints={{
@@ -94,13 +175,26 @@ function Feedbacks() {
               {listFeedback.map((item) => (
                 <SwiperSlide key={item.maDanhGia} className={styles.card}>
                   <div className={styles.cardHeader}>
-                    <span className={styles.name}>Khách hàng #{item.maDanhGia}</span>
-                    {renderStars(item.soSao)}
+                    <div className={styles.userInfo}>
+                      <span className={styles.name}>{getUserName(item.maDanhGia)}</span>
+                      <div className={styles.rating}>
+                        {renderStars(item.soSao)}
+                        <span className={styles.ratingText}></span>
+                      </div>
+                    </div>
+                    <div className={styles.date}>
+                      {formatDate(item.ngayDanhGia)}
+                    </div>
                   </div>
+                  
                   <p className={styles.contentFeedback}>{item.noiDung}</p>
-                  <div className={styles.date}>
-                    {formatDate(item.ngayDanhGia)}
-                  </div>
+                  
+                  {item.maTram && stations[item.maTram] && (
+                    <div className={styles.stationInfo}>
+                      <FontAwesomeIcon icon={faMapMarkerAlt} />
+                      <span>{stations[item.maTram].tenTram} - {stations[item.maTram].diaChi}</span>
+                    </div>
+                  )}
                 </SwiperSlide>
               ))}
             </Swiper>

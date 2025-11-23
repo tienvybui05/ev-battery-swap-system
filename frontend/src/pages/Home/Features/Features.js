@@ -14,7 +14,9 @@ function Features() {
         <div className={styles.header}>
           <span>Tính năng mạnh mẽ</span>
           <p>
-           VinNhot mang đến cho bạn lợi thế với các công cụ tiên tiến được thiết kế dành cho cả người mới bắt đầu và nhà giao dịch chuyên nghiệp.
+            EV Station mang đến cho bạn lợi thế với các công cụ tiên tiến được
+            thiết kế dành cho cả người mới bắt đầu và nhà giao dịch chuyên
+            nghiệp.
           </p>
         </div>
         <div className={styles.content}>
@@ -23,43 +25,47 @@ function Features() {
               icon={faBoltLightning}
               className={styles.faBoltLightning}
             />
-            <span>Sạc Nhanh Tức Thì</span>
+            <span>Đổi Pin Nhanh Chóng</span>
             <p>
-              Sạc đầy pin trong vòng 20–30 phút với công nghệ sạc nhanh tiên
-              tiến – tiết kiệm thời gian cho mọi hành trình
+              Thay pin chỉ trong 1–2 phút tại trạm đổi pin tự động – không cần
+              chờ sạc, sẵn sàng tiếp tục hành trình ngay lập tức.
             </p>
           </div>
+
           <div className={styles.card}>
             <FontAwesomeIcon
               icon={faBatteryFull}
               className={styles.faBatteryFull}
             />
-            <span>Luôn Sẵn Sàng</span>
+            <span>Pin Luôn Ở Trạng Thái Tốt Nhất</span>
             <p>
-              Sạc đầy pin trong vòng 20–30 phút với công nghệ sạc nhanh tiên
-              tiến – tiết kiệm thời gian cho mọi hành trình
+              Hệ thống quản lý pin thông minh đảm bảo mỗi viên pin được bảo
+              dưỡng, kiểm tra và cân bằng trước khi bạn sử dụng.
             </p>
           </div>
+
           <div className={styles.card}>
             <FontAwesomeIcon
               icon={faLocationDot}
               className={styles.faLocationDot}
             />
-            <span>Phủ Sóng Toàn Quốc</span>
+            <span>Mạng Lưới Rộng Khắp</span>
             <p>
-              Hơn 30 trạm và đang mở rộng tại các thành phố lớn, trung tâm
-              thương mại và tuyến cao tốc
+              Hơn 30 trạm đổi pin trên toàn quốc và đang tiếp tục mở rộng tại
+              các thành phố, trung tâm thương mại và tuyến giao thông trọng
+              điểm.
             </p>
           </div>
+
           <div className={styles.card}>
             <FontAwesomeIcon
               icon={faUserShield}
               className={styles.faUserShield}
             />
-            <span>An Toàn & Tin Cậy</span>
+            <span>An Toàn & Đảm Bảo</span>
             <p>
-              Tất cả trạm sạc được kiểm định nghiêm ngặt, đảm bảo an toàn điện
-              và hiệu suất tối ưu cho xe của bạn
+              Quy trình đổi pin tự động, đạt chuẩn an toàn điện, cùng hệ thống
+              theo dõi thời gian thực giúp bạn an tâm trên mọi hành trình.
             </p>
           </div>
         </div>

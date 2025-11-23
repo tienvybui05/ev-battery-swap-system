@@ -1,8 +1,4 @@
-/* ===============================
-   AI INSIGHTS PAGE
-   Đồng bộ style với Stations / Staff / Customers
-=============================== */
-
+/* AI INSIGHTS MODULE CSS - ENHANCED */
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -11,7 +7,52 @@
   animation: fadeIn 0.45s ease-in-out;
 }
 
-/* KPI Section */
+/* Header với AI Info */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.headerMain {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.aiInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aiTag {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.modelInfo {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* KPI Grid */
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -30,62 +71,19 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.25s ease;
 }
+
 .kpiCard:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
-  background-color: #f9fafb;
-}
-.kpiTitle {
-  font-size: 14px;
-  color: #6b7280;
-}
-.kpiValue {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  margin: 6px 0;
-}
-.kpiSub {
-  font-size: 13px;
-  color: #16a34a;
-  font-weight: 500;
-}
-.kpiIcon {
-  font-size: 22px;
-  padding: 12px;
-  border-radius: 12px;
-  background-color: #f3f4f6;
 }
 
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.tag {
-  background: #f3f4f6;
-  color: #7c3aed;
-  padding: 6px 12px;
-  font-size: 13px;
-  border-radius: 20px;
-  font-weight: 600;
-}
-
-/* Grid */
+/* Insights Grid */
 .insightsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 24px;
 }
+
 .card {
   background: #fff;
   border-radius: 14px;
@@ -94,58 +92,63 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.25s ease;
 }
+
 .card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
 }
-.card h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.card p {
-  font-size: 14px;
-  color: #6b7280;
-  margin-bottom: 10px;
-}
 
-/* Recommendations Section - ĐƠN GIẢN & HIỆN ĐẠI */
-.recommendationsSection {
-  margin-bottom: 30px;
-}
-
-.sectionTitle {
-  color: #1f2937;
-  margin-bottom: 20px;
+/* AI Methods */
+.aiMethods {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.aiMethodItem {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.aiBadge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
 }
 
+.confidenceValue {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+/* Recommendation Cards - Enhanced */
 .recommendationsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
 }
 
-/* Recommendation Card - Minimalist Design */
 .recommendationCard {
   background: #fff;
-  border-radius: 12px;
-  padding: 18px;
+  border-radius: 14px;
+  padding: 20px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
 .recommendationCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: #d1d5db;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
 }
 
 .recommendationCard::before {
@@ -153,9 +156,9 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 5px;
   height: 100%;
-  
+  /* background: linear-gradient(135deg, #3b82f6, #8b5cf6); */
 }
 
 /* Card Header */
@@ -169,21 +172,39 @@
 
 .stationInfo {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
   flex: 1;
 }
 
 .stationInfo h4 {
   margin: 0;
   color: #111827;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dataQuality {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.qualityBadge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #ffffff;
   font-weight: 600;
 }
 
-.stationInfo svg {
-  color: #6b7280;
-  font-size: 14px;
+.aiMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .confidence {
@@ -192,73 +213,162 @@
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
- 
 }
 
 /* Prediction Section */
-.prediction {
+.predictionSection {
   margin-bottom: 16px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
 }
 
 .demand {
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .demand strong {
-  font-size: 28px;
+  font-size: 32px;
   color: #1f2937;
   display: block;
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .demand span {
   color: #6b7280;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.analysis {
-  color: #4b5563;
+.growthInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.growth {
   font-size: 13px;
-  margin: 8px 0 0 0;
-  line-height: 1.4;
-  text-align: center;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* Recommendation Content */
-.recommendation {
+.historical {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.peakHours {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #92400e;
+}
+
+/* AI Insight */
+.aiInsight {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 16px;
   background: #f0f9ff;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid #e0f2fe;
   margin-bottom: 12px;
 }
 
-.recommendation p {
-  margin: 0;
-  color: #075985;
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 500;
-  flex: 1;
-}
-
-.faBolt {
+.insightIcon {
   color: #0ea5e9;
-  font-size: 14px;
-  margin-top: 1px;
+  font-size: 16px;
+  margin-top: 2px;
   flex-shrink: 0;
 }
 
-/* Prediction Date */
+.insightText {
+  flex: 1;
+}
+
+.insightText p {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.insightText p:last-child {
+  margin-bottom: 0;
+}
+
+/* Recommendation */
+.recommendation {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #f0fdf4;
+  border-radius: 10px;
+  border: 1px solid #dcfce7;
+  margin-bottom: 12px;
+}
+
+.faBolt {
+  color: #16a34a;
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.recommendationText {
+  flex: 1;
+}
+
+.recommendationText p {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.recommendationText p:last-child {
+  margin-bottom: 0;
+}
+
+/* Hourly Predictions */
+.hourlySection {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.hourlySection h5 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.hourlyChart {
+  height: 60px;
+}
+
 .predictionDate {
   color: #9ca3af;
   font-size: 12px;
@@ -266,21 +376,6 @@
   padding: 8px 0 0 0;
   border-top: 1px solid #f3f4f6;
   margin-top: 8px;
-}
-
-/* No Data State */
-.noData {
-  text-align: center;
-  padding: 40px 20px;
-  color: #9ca3af;
-  background: #f9fafb;
-  border-radius: 12px;
-  border: 2px dashed #d1d5db;
-}
-
-.noData p {
-  margin: 0;
-  font-size: 14px;
 }
 
 /* Loading & Error States */
@@ -291,6 +386,18 @@
   background: #fff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading small {
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .retryButton {
@@ -310,7 +417,6 @@
   background: #2563eb;
 }
 
-/* Refresh Button */
 .refreshButton {
   background: #f8fafc;
   border: 1px solid #e5e7eb;
@@ -334,8 +440,24 @@
   font-size: 13px;
   color: #6b7280;
 }
+.sectionTitle{
+  padding: 20px 0px;
+}
+.noData {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+}
 
-/* Animation */
+.noData p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -347,11 +469,11 @@
   }
 }
 
-/* Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .recommendationsGrid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 16px;
   }
   
   .cardHeader {
@@ -360,16 +482,21 @@
     gap: 8px;
   }
   
-  .confidence {
-    align-self: flex-start;
+  .aiMeta {
+    align-items: flex-start;
   }
   
-  .recommendationCard {
-    padding: 16px;
+  .insightsGrid {
+    grid-template-columns: 1fr;
   }
   
-  .demand strong {
-    font-size: 24px;
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .headerInfo {
+    align-self: flex-end;
   }
 }
 
@@ -378,17 +505,15 @@
     grid-template-columns: 1fr;
   }
   
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+  
   .stationInfo h4 {
-    font-size: 14px;
+    font-size: 15px;
   }
   
-  .recommendation {
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
-  }
-  
-  .faBolt {
-    align-self: center;
+  .demand strong {
+    font-size: 28px;
   }
 }

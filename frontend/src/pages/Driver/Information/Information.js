@@ -37,7 +37,6 @@ function Information() {
             }
 
             try {
-                // Sử dụng endpoint /user/{userId} để lấy thông tin tài xế theo mã người dùng
                 const response = await fetch(`/api/user-service/taixe/user/${userId}`, {
                     headers: { 
                         Authorization: `Bearer ${token}`,
@@ -52,11 +51,9 @@ function Information() {
                 const data = await response.json();
                 console.log("User data received:", data);
                 
-                // Data trả về là đối tượng TaiXe, có chứa thông tin NguoiDung
                 setMaTaiXe(data.maTaiXe);
                 setUserInfo(data);
 
-                // Tách thông tin từ TaiXe và NguoiDung
                 const nguoiDung = data.nguoiDung;
                 setEditUserInfo({
                     hoTen: nguoiDung?.hoTen || "",
@@ -94,11 +91,9 @@ function Information() {
             gioiTinh: editUserInfo.gioiTinh,
             ngaySinh: formatDate(editUserInfo.ngaySinh),
             bangLaiXe: editUserInfo.bangLaiXe
-            // Không gửi mật khẩu - backend sẽ giữ nguyên mật khẩu cũ
         };
 
         try {
-            // Sử dụng mã tài xế để update (endpoint /{id} với id là maTaiXe)
             const response = await fetch(`/api/user-service/taixe/${maTaiXe}`, {
                 method: "PUT",
                 headers: {
@@ -116,7 +111,6 @@ function Information() {
             const result = await response.json();
             alert("Cập nhật thành công!");
             
-            // Cập nhật lại state userInfo
             setUserInfo(prev => ({
                 ...prev,
                 bangLaiXe: payload.bangLaiXe,
@@ -146,6 +140,18 @@ function Information() {
                     <div>Đang tải dữ liệu...</div>
                 ) : (
                     <form className={styles.form} onSubmit={e => e.preventDefault()}>
+                        {/* Hiển thị ID tài xế */}
+                        <div className={styles.formdetail}>
+                            <label htmlFor="maTaiXe">Mã Tài Xế</label>
+                            <input
+                                id="maTaiXe"
+                                type="text"
+                                value={maTaiXe || ""}
+                                readOnly
+                                className={styles.input}
+                            />
+                        </div>
+
                         <div className={styles.formdetail}>
                             <label htmlFor="hoTen">Tên Đầy Đủ</label>
                             <input
@@ -211,7 +217,6 @@ function Information() {
             </div>
 
             {/* ====== Component Quản lý Xe riêng ====== */}
-            {/* Truyền maTaiXe xuống CarManagement để sử dụng trong các API call */}
             <CarManagement maTaiXe={maTaiXe} />
         </nav>
     );
